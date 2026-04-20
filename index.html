@@ -325,21 +325,13 @@
     }
 </script>
 
-<!-- Tải bộ thư viện Firebase của Google -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <!-- Cấu hình kết nối vào Đám mây của Hiệp -->
 <script>
-  const firebaseConfig = {
-    // Đường link trung tâm
-    databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/"
-  };
-
- // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE CỦA HIỆP
+    // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE CỦA HIỆP (CHỈ KHAI BÁO 1 LẦN)
     const firebaseConfig = {
         databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/" 
     };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     console.log("Đã kết nối thành công với trạm Firebase!");
@@ -360,7 +352,6 @@
         });
     }
     quetNguoiDungKhac(); // Bật máy quét luôn
-
 </script>
 </body>
 </html>

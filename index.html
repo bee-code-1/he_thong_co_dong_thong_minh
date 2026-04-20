@@ -257,8 +257,16 @@
         const fog = document.getElementById('fog-layer');
         polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
 
-        gpsWatcherId = navigator.geolocation.watchPosition(position => {
+ gpsWatcherId = navigator.geolocation.watchPosition(position => {
             const lat = position.coords.latitude, lng = position.coords.longitude;
+            
+            // 🚀 BẮT ĐẦU ĐOẠN THÊM MỚI: BẮN TỌA ĐỘ LÊN MÂY 🚀
+            // Lấy tên tài khoản bạn đang đăng nhập
+            let username = localStorage.getItem('currentUser') || 'nguoi_dung_test';
+            // Gọi hàm bắn tọa độ
+            banToaDoLenMay(username, lat, lng);
+            // ---------------------------------------------
+
             const currentLatLng = L.latLng(lat, lng);
             const heading = position.coords.heading || 0;
             latestLatLng = currentLatLng;

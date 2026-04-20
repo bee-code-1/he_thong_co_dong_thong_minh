@@ -117,7 +117,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
     // --- TẢI DỮ LIỆU QGIS (Thanh Oai) ---
-    fetch('bando_thanhoai.geojson')
+    fetch('bando_thanhoai.geojson.gpkg')
         .then(response => response.json())
         .then(data => {
             const thanhOaiLayer = L.geoJSON(data, {

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>con chó</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -334,12 +336,31 @@
     databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/"
   };
 
-  // Khởi động Đám mây
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-  
-  console.log("Đã kết nối thành công với trạm Firebase!");
-</script>
+ // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE CỦA HIỆP
+    const firebaseConfig = {
+        databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/" 
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    console.log("Đã kết nối thành công với trạm Firebase!");
 
+    // 2. TÍNH NĂNG: BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
+    function banToaDoLenMay(username, lat, lng) {
+        db.ref('nguoi_dung/' + username).update({
+            toa_do_lat: lat,
+            toa_do_lng: lng,
+            trang_thai: "Đang online",
+            thoi_gian_cap_nhat: Date.now()
+        });
+    }
+    
+    function quetNguoiDungKhac() {
+        db.ref('nguoi_dung').on('value', (snapshot) => {
+            console.log("📡 Tín hiệu từ các tài khoản khác:", snapshot.val());
+        });
+    }
+    quetNguoiDungKhac(); // Bật máy quét luôn
+
+</script>
 </body>
 </html>

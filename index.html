@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>con chó</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+        
+        /* Modal UI */
+        .overlay-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 0 20px rgba(0,123,255,0.5); }
+        .modal-content h2 { margin-top: 0; color: #007bff; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        .modal-content button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background-color: #007bff; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .modal-content button.skip-btn { background-color: #6c757d; margin-top: 5px; }
+        .modal-content button.danger-btn { background-color: #dc3545; }
+        .switch-link { font-size: 13px; margin-top: 15px; color: #555; }
+        .switch-link a { color: #007bff; font-weight: bold; text-decoration: none; cursor: pointer;}
+        
+        /* App UI Components */
+        #app-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        
+        /* Tối ưu hiệu năng render Sương mù */
+        #fog-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); pointer-events: none;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+            will-change: mask-image, -webkit-mask-image;
+        }
+        
+        #stats-window { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px; border: 2px solid #4285F4; box-shadow: 0 4px 15px rgba(0,0,0,0.2); pointer-events: auto; min-width: 200px; }
+        #stats-window h3 { margin: 0 0 10px 0; font-size: 16px; color: #007bff; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
+        #stats-window p { margin: 6px 0; font-size: 14px; font-weight: bold; color: #333;}
+        .stat-val { font-size: 15px; }
+        .text-blue { color: #007bff; } .text-green { color: #28a745; } .text-orange { color: #fd7e14; } .text-red { color: #dc3545; }
+        
+        #lightbulb-container { position: absolute; bottom: 30px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto; }
+        #lightbulb-btn { font-size: 24px; background: white; border: 2px solid #ffc107; border-radius: 50%; width: 55px; height: 55px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #fog-menu { display: none; flex-direction: column; background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 15px; }
+        #fog-menu button { margin: 4px 0; padding: 8px 15px; border: none; border-radius: 6px; background-color: #343a40; color: white; cursor: pointer; }
+        
+        #action-btns-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
+        .action-btn { padding: 15px 30px; border-radius: 30px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer; font-size: 16px; font-weight: bold; color: white; transition: 0.2s; }
+        #start-btn { background-color: #28a745; min-width: 150px; } 
+        #pause-btn { background-color: #ffc107; color: #333; display: none; } 
+        #end-btn { background-color: #dc3545; display: none; }
+        
+        .user-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid #ff0000; transform-origin: 50% 50%; will-change: transform; }
+        .leaflet-control-attribution { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="auth-modal" class="overlay-modal">
+        <div class="modal-content" id="login-form">
+            <h2>Đăng Nhập</h2>
+            <input type="text" id="login-user" placeholder="Tên đăng nhập" required>
+            <input type="password" id="login-pass" placeholder="Mật khẩu" required>
+            <button onclick="processAuth('login')">Đăng nhập</button>
+            <p class="switch-link">Chưa có tài khoản? <a onclick="toggleAuthMode()">Đăng ký ngay</a></p>
+        </div>
+        <div class="modal-content" id="register-form" style="display: none;">
+            <h2>Đăng Ký Tài Khoản</h2>
+            <input type="text" id="reg-user" placeholder="Tên đăng nhập mới" required>
+            <input type="password" id="reg-pass" placeholder="Tạo mật khẩu" required>
+            <button onclick="processAuth('register')">Tiếp tục</button>
+            <p class="switch-link">Đã có tài khoản? <a onclick="toggleAuthMode()">Đăng nhập</a></p>
+        </div>
+    </div>
+
+    <div id="onboarding-modal" class="overlay-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Chỉ số Cơ thể</h2>
+            <select id="gender"><option value="male">Nam giới</option><option value="female">Nữ giới</option></select>
+            <input type="number" id="height" placeholder="Chiều cao (cm) - VD: 170">
+            <input type="number" id="weight" placeholder="Cân nặng (kg) - VD: 65">
+            <button onclick="saveProfile(false)">Hoàn tất</button>
+            <button class="skip-btn" onclick="saveProfile(true)">Bỏ qua</button>
+        </div>
+    </div>
+ <!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
+    <div id="app-container">
+        <div id="fog-layer"></div>
+        <div id="stats-window">
+            <h3>📊 Tiến độ hôm nay</h3>
+            <p>⏱ Thời gian: <span id="time-display" class="stat-val text-red">00:00</span></p>
+            <p>🚶 Bước chân: <span id="step-display" class="stat-val text-green">0</span></p>
+            <p>📍 Đã đi: <span id="dist-display" class="stat-val text-blue">0.00</span> km</p>
+            <p>🔥 Tiêu thụ: <span id="cal-display" class="stat-val text-orange">0.0</span> calo</p>
+        </div>
+
+        <div id="lightbulb-container">
+            <div id="fog-menu">
+                <button onclick="toggleFog()">Bật/Tắt Sương mù</button>
+                <button onclick="changeOpacity(0.5)">Giảm sáng 50%</button>
+                <button onclick="changeOpacity(0.9)">Giảm sáng 90%</button>
+            </div>
+            <button id="lightbulb-btn" onclick="toggleLightbulbMenu()">💡</button>
+        </div>
+
+        <div id="action-btns-container">
+            <button id="start-btn" class="action-btn" onclick="startTrackingAction()">▶ BẮT ĐẦU</button>
+            <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()">⏸ TẠM DỪNG</button>
+            <button id="end-btn" class="action-btn" onclick="executeEndTracking()">⏹ KẾT THÚC</button>
+        </div>
+    </div>
+
+<script>
+    // --- KHỞI TẠO BẢN ĐỒ ---
+    const map = L.map('map', { zoomControl: false }).setView([21.028511, 105.804817], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    // --- TẢI DỮ LIỆU QGIS (Thanh Oai) ---
+    fetch('bando_thanhoai.geojson.gpkp')
+        .then(response => response.json())
+        .then(data => {
+            const thanhOaiLayer = L.geoJSON(data, {
+                style: function (feature) {
+                    return { color: "#ff7800", weight: 2, opacity: 0.8, fillColor: "#ffff00", fillOpacity: 0.2 };
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties) {
+                        let popupContent = "<b>Thông tin khu vực:</b><br>";
+                        for (let key in feature.properties) {
+                            popupContent += `${key}: ${feature.properties[key]}<br>`;
+                        }
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            }).addTo(map);
+            // Tự động zoom đến khu vực Thanh Oai
+            map.fitBounds(thanhOaiLayer.getBounds());
+            console.log("Đã tải thành công dữ liệu Thanh Oai!");
+        })
+        .catch(error => {
+            console.warn("Chưa tải được dữ liệu Thanh Oai hoặc sai định dạng:", error);
+        });
+
+    // --- BIẾN TOÀN CỤC ---
+    let currentUser = "", userWeight = 65, stepsPerMeter = 0;
+    let isTracking = false, isPaused = false, elapsedSeconds = 0, timerInterval = null;
+    let latestLatLng = null, userMarker = null, polyline = null;
+    let totalDistanceMeter = 0, pathLatLngs = [];
+    let gpsWatcherId = null, isDrawingFog = false, fogEnabled = true;
+
+    // --- LOGIC TÀI KHOẢN ---
+    function toggleAuthMode() {
+        const login = document.getElementById('login-form'), reg = document.getElementById('register-form');
+        login.style.display = login.style.display === 'none' ? 'block' : 'none';
+        reg.style.display = reg.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function processAuth(mode) {
+        const user = document.getElementById(mode === 'login' ? 'login-user' : 'reg-user').value.trim();
+        const pass = document.getElementById(mode === 'login' ? 'login-pass' : 'reg-pass').value.trim();
+        if(!user || !pass) return alert("Nhập đủ thông tin!");
+
+        if (mode === 'register') {
+            if (localStorage.getItem("appUser_" + user)) return alert("Tài khoản đã tồn tại!");
+            localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
+            currentUser = user;
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('onboarding-modal').style.display = 'flex';
+        } else {
+            const data = JSON.parse(localStorage.getItem("appUser_" + user));
+            if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
+            currentUser = user; userWeight = data.weight || 65; stepsPerMeter = 1 / (data.strideLength || 0.7);
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+        }
+    }
+
+    function saveProfile(skip) {
+        const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
+        const w = skip ? 65 : parseFloat(document.getElementById('weight').value) || 65;
+        userWeight = w; stepsPerMeter = 1 / ((h / 100) * 0.415);
+        
+        const data = JSON.parse(localStorage.getItem("appUser_" + currentUser));
+        data.weight = w; data.strideLength = (h / 100) * 0.415;
+        localStorage.setItem("appUser_" + currentUser, JSON.stringify(data));
+        
+        document.getElementById('onboarding-modal').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+    }
+
+    // --- UI CONTROLS ---
+    function toggleLightbulbMenu() { 
+        const menu = document.getElementById('fog-menu'); 
+        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; 
+    }
+    function toggleFog() { 
+        fogEnabled = !fogEnabled; 
+        document.getElementById('fog-layer').style.opacity = fogEnabled ? '1' : '0'; 
+    }
+    function changeOpacity(val) { 
+        if(fogEnabled) document.getElementById('fog-layer').style.backgroundColor = `rgba(0, 0, 0, ${val})`; 
+    }
+
+    // --- TRACKING ACTIONS ---
+    function startTrackingAction() {
+        if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+        
+        document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
+        if (!gpsWatcherId) initGPS();
+
+        if (latestLatLng) {
+            isTracking = true; isPaused = false;
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('pause-btn').style.display = 'block';
+            document.getElementById('end-btn').style.display = 'block';
+            
+            if(!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if(!isPaused) {
+                        elapsedSeconds++;
+                        const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                        const s = String(elapsedSeconds % 60).padStart(2, '0');
+                        document.getElementById('time-display').innerText = `${m}:${s}`;
+                    }
+                }, 1000);
+            }
+        }
+    }
+
+    function pauseTrackingAction() {
+        isPaused = !isPaused;
+        const btn = document.getElementById('pause-btn');
+        btn.innerText = isPaused ? '▶ TIẾP TỤC' : '⏸ TẠM DỪNG';
+        btn.style.backgroundColor = isPaused ? '#17a2b8' : '#ffc107';
+        btn.style.color = isPaused ? 'white' : '#333';
+    }
+
+    function executeEndTracking() {
+        if(!confirm("Bạn chắc chắn muốn kết thúc hành trình?")) return;
+        isTracking = false; isPaused = false; elapsedSeconds = 0; totalDistanceMeter = 0; pathLatLngs = [];
+        clearInterval(timerInterval); timerInterval = null;
+
+        document.querySelectorAll('.stat-val').forEach(el => el.innerText = el.id === 'time-display' ? '00:00' : '0');
+        document.getElementById('start-btn').style.display = 'block';
+        document.getElementById('start-btn').innerText = '▶ BẮT ĐẦU';
+        document.getElementById('pause-btn').style.display = 'none';
+        document.getElementById('end-btn').style.display = 'none';
+        
+        if (polyline) polyline.setLatLngs([]);
+    }
+
+    // --- GPS LÕI ---
+    function initGPS() {
+        const fog = document.getElementById('fog-layer');
+        polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
+
+        gpsWatcherId = navigator.geolocation.watchPosition(position => {
+            const lat = position.coords.latitude, lng = position.coords.longitude;
+            const currentLatLng = L.latLng(lat, lng);
+            const heading = position.coords.heading || 0;
+            latestLatLng = currentLatLng;
+
+            if (document.getElementById('start-btn').innerText === "ĐANG KẾT NỐI GPS...") {
+                map.setView([lat, lng], 18);
+                startTrackingAction();
+            }
+
+            if (!userMarker) {
+                const icon = L.divIcon({ className: 'user-icon', html: `<div class="user-arrow" style="transform: rotate(${heading}deg);"></div>`, iconSize: [20, 24], iconAnchor: [10, 12]});
+                userMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 1000}).addTo(map);
+            } else {
+                userMarker.setLatLng([lat, lng]);
+                userMarker.getElement().querySelector('.user-arrow').style.transform = `rotate(${heading}deg)`;
+            }
+
+            if (pathLatLngs.length > 0 && isTracking && !isPaused) {
+                const lastPoint = pathLatLngs[pathLatLngs.length - 1];
+                const dist = map.distance(lastPoint, currentLatLng);
+                
+                if (dist > 15) { 
+                    fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.routes && data.routes[0]) {
+                            totalDistanceMeter += data.routes[0].distance;
+                            document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+                            document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * stepsPerMeter);
+                            document.getElementById('cal-display').innerText = (0.5 * userWeight * (totalDistanceMeter / 1000)).toFixed(1);
+
+                            data.routes[0].geometry.coordinates.forEach(coord => pathLatLngs.push(L.latLng(coord[1], coord[0])));
+                            polyline.setLatLngs(pathLatLngs);
+                        }
+                    }).catch(err => console.error("Lỗi mạng:", err));
+                }
+            } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
+                pathLatLngs.push(currentLatLng);
+            }
+
+            function updateFog() {
+                if (!latestLatLng || isDrawingFog) return;
+                isDrawingFog = true;
+                requestAnimationFrame(() => {
+                    const point = map.latLngToContainerPoint(latestLatLng);
+                    const zoom = map.getZoom();
+                    const metersPerPixel = 40075016.686 * Math.abs(Math.cos(lat * Math.PI/180)) / Math.pow(2, zoom + 8);
+                    const radius = 10 / metersPerPixel; 
+                    const eraserStyle = `radial-gradient(circle at ${point.x}px ${point.y}px, transparent ${radius}px, black ${radius + 20}px)`;
+                    fog.style.webkitMaskImage = eraserStyle;
+                    fog.style.maskImage = eraserStyle;
+                    isDrawingFog = false;
+                });
+            }
+            
+            map.off('move', updateFog); map.off('zoom', updateFog);
+            map.on('move', updateFog); map.on('zoom', updateFog);
+            updateFog();
+
+        }, err => {
+            alert("Lỗi GPS: " + err.message + ". Vui lòng bật Vị trí trên điện thoại.");
+            document.getElementById('start-btn').innerText = "▶ BẮT ĐẦU";
+        }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+    }
+</script>
+</body>
+</html>

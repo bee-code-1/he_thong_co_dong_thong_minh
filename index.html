@@ -199,22 +199,46 @@
     function processAuth(mode) {
         const user = document.getElementById(mode === 'login' ? 'login-user' : 'reg-user').value.trim();
         const pass = document.getElementById(mode === 'login' ? 'login-pass' : 'reg-pass').value.trim();
+        
         if(!user || !pass) return alert("Nhập đủ thông tin!");
+        
+        // Giới hạn 8 ký tự + không chứa khoảng trắng
+        if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự");
+        if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng");
 
         if (mode === 'register') {
             if (localStorage.getItem("appUser_" + user)) return alert("Tài khoản đã tồn tại!");
             localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
             currentUser = user;
+            localStorage.setItem('currentUser', user); //  Lưu thẻ nhớ phiên đăng nhập
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('onboarding-modal').style.display = 'flex';
         } else {
             const data = JSON.parse(localStorage.getItem("appUser_" + user));
             if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
-            currentUser = user; userWeight = data.weight || 65; stepsPerMeter = 1 / (data.strideLength || 0.7);
+            currentUser = user; 
+            userWeight = data.weight || 65; 
+            stepsPerMeter = 1 / (data.strideLength || 0.7);
+            localStorage.setItem('currentUser', user); //  Lưu thẻ nhớ phiên đăng nhập
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
         }
     }
+
+    //  tự động log in nếu f5
+    window.addEventListener('load', function() {
+        let savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            const data = JSON.parse(localStorage.getItem("appUser_" + savedUser));
+            if (data) {
+                currentUser = savedUser;
+                userWeight = data.weight || 65;
+                stepsPerMeter = 1 / (data.strideLength || 0.7);
+                document.getElementById('auth-modal').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+            }
+        }
+    });
 
     function saveProfile(skip) {
         const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
@@ -295,7 +319,7 @@
         }, 1000);
     }
 
-    // === XỬ LÝ NÚT TẠM DỪNG ===
+    // nút tạm dừng
     function pauseTrackingAction() {
         if (!isTracking) return;
         isPaused = !isPaused;
@@ -313,13 +337,11 @@
  gpsWatcherId = navigator.geolocation.watchPosition(position => {
             const lat = position.coords.latitude, lng = position.coords.longitude;
             
-            //  BẮN TỌA ĐỘ LÊN ĐÁM MÂY
-            // Lấy tên tài khoản 
-  // BẮN TỌA ĐỘ LÊN ĐÁM MÂY (CÓ KIỂM SOÁT BẰNG NÚT BẤM)
-        let username = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || ('Khach_' + Math.floor(Math.random() * 10000));
+        // BẮN TỌA ĐỘ LÊN ĐÁM MÂY 
+        let username = localStorage.getItem('currentUser');
         
-        // CHỈ BẮN LÊN FIREBASE NẾU NGƯỜI DÙNG CHO PHÉP (isSharingLocation = true)
-        if (typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
+        //  Nếu không có tài khoản hoặc chưa share thì ko gửi tọa độ lên mạng
+        if (username && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
             banToaDoLenMay(username, lat, lng);
         }
             const currentLatLng = L.latLng(lat, lng);
@@ -336,7 +358,7 @@
                 isFirstLocation = false;
             }
 
-        // === TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN ===
+        //  TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN 
         let myAvatar = `https://ui-avatars.com/api/?name=${username}&background=random`;
         const myGPSHtml = `
             <div style="position: relative; width: 40px; height: 50px;">
@@ -345,6 +367,11 @@
                           fill="#dc3545" stroke="black" stroke-width="2"/>
                 </svg>
                 <img src="${myAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+                
+                <!-- BẢNG TÊN CỐ ĐỊNH -->
+                <div style="position: absolute; top: 45px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    ${username}
+                </div>
             </div>
         `;
         

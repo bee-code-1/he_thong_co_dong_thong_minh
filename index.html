@@ -430,13 +430,145 @@
         });
     }
     
-    // 3. HÀM QUÉT TÌM BẠN BÈ XUNG QUANH
-    function quetNguoiDungKhac() {
-        db.ref('nguoi_dung').on('value', (snapshot) => {
-            console.log("📡 Tín hiệu từ các tài khoản khác:", snapshot.val());
-        });
+    // TÍNH NĂNG RADAR CỘNG ĐỒNG 
+    let isRadarOn = false;
+    let friendMarkers = {}; // Cuốn sổ lưu trữ các mũi tên của bạn bè trên bản đồ
+
+    function toggleRadar() {
+        const btn = document.getElementById('btn-cong-dong');
+        isRadarOn = !isRadarOn; 
+
+        // Lấy biến map
+        let banDoHienTai = typeof map !== 'undefined' ? map : null;
+
+        if (isRadarOn) {
+            // trạng thái on = xanh lá
+            btn.innerHTML = "📡 Đang quét Cộng đồng... (ON)";
+            btn.style.backgroundColor = "#4CAF50"; 
+            btn.style.animation = "radar-pulse 1.5s infinite";
+            console.log("Radar BẬT: Bắt đầu quét Firebase...");
+            
+            // Lấy tên mình để không tự vẽ chính mình lên bản đồ
+            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || "";
+
+            // 2. Bật máy quét Firebase liên tục
+            db.ref('nguoi_dung').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                // Duyệt qua từng người đang có trên đám mây
+                for (const user in data) {
+                    if (user === currentUser) continue; // Bỏ qua bản thân
+
+                    const lat = data[user].toa_do_lat;
+                    const lng = data[user].toa_do_lng;
+                    const trangThai = data[user].trang_thai;
+                    const thoiGian = data[user].thoi_gian_cap_nhat;
+
+                    // Hiển thị những người online trong vòng 10 phút 
+                    if (lat && lng && (Date.now() - thoiGian < 600000)) {
+                        if (friendMarkers[user]) {
+                            // Nếu bạn bè này đã có trên bản đồ -> Di chuyển icon của họ đến tọa độ mới
+                            friendMarkers[user].setLatLng([lat, lng]);
+                        } else {
+                            // Nếu là người mới -> Vẽ một Icon Avatar lên bản đồ
+                            const friendIcon = L.divIcon({
+                                className: 'friend-icon',
+                                html: `<div style="background-color: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; text-align: center; line-height: 35px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6); font-size: 16px;">😎</div>`,
+                                iconSize: [1],
+                                iconAnchor: [1, 2], // Chân icon cắm đúng tọa độ
+                                popupAnchor: [0, -35]
+                            });
+
+                            const newMarker = L.marker([lat, lng], {icon: friendIcon});
+                            newMarker.bindPopup(`<b>Tài khoản: ${user}</b><br>Trạng thái: ${trangThai}`);
+                            
+                            // Thêm vào bản đồ
+                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
+                            
+                            // Lưu vào sổ
+                            friendMarkers[user] = newMarker;
+                        }
+                    }
+                }
+            });
+
+        } else {
+            // 3. TRẠNG THÁI TẮT: Đổi lại giao diện nút sang Cam
+            btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
+            btn.style.backgroundColor = "#ff9800";
+            btn.style.animation = "none";
+            console.log("Radar TẮT: Đã ngắt kết nối.");
+            
+            // Tắt máy quét Firebase
+            db.ref('nguoi_dung').off();
+
+            // Xóa sạch các Avatar bạn bè khỏi bản đồ
+            for (const user in friendMarkers) {
+                if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
+            }
+            friendMarkers = {}; // Làm rỗng danh sách
+        }
     }
-    quetNguoiDungKhac(); // Bật máy quét luôn
+        // === XỬ LÝ NÚT KẾT THÚC (GIỮ 3 GIÂY ĐỂ MỞ RECAP) ===
+    const endBtn = document.getElementById('end-btn');
+    let holdTimer;
+
+    // Khi người dùng bắt đầu nhấn (hỗ trợ cả chuột máy tính và chạm màn hình điện thoại)
+    function startHold(e) {
+        if (!isTracking) return; // Chỉ cho phép kết thúc khi đang chạy
+        e.preventDefault(); 
+        endBtn.innerText = "ĐANG GIỮ...";
+        endBtn.style.backgroundColor = "#ff5722"; // Đổi màu cam cảnh báo
+        
+        holdTimer = setTimeout(() => {
+            hienThiRecap(); // Giữ đủ 3 giây thì gọi cái Bảng Recap của bạn ra
+        }, 3000);
+    }
+
+    // Khi người dùng nhả tay ra trước khi đủ 3 giây (Hủy kết thúc)
+    function cancelHold() {
+        clearTimeout(holdTimer);
+        endBtn.innerText = "⏹ KẾT THÚC";
+        endBtn.style.backgroundColor = ""; // Trả lại màu cũ
+    }
+
+    // Gắn sự kiện lắng nghe thao tác giữ nút
+    endBtn.addEventListener('mousedown', startHold);
+    endBtn.addEventListener('touchstart', startHold);
+    endBtn.addEventListener('mouseup', cancelHold);
+    endBtn.addEventListener('mouseleave', cancelHold);
+    endBtn.addEventListener('touchend', cancelHold);
+
+    // === HÀM LẤY SỐ LIỆU ĐƯA VÀO BẢNG RECAP ===
+    function hienThiRecap() {
+        // 1. Tạm dừng hệ thống đếm giờ và GPS
+        isPaused = true; 
+        document.getElementById('pause-btn').innerText = "▶ TIẾP TỤC";
+        
+        // 2. Chuyển dữ liệu từ bảng đang chạy sang Bảng chúc mừng (cái mà bạn vừa bôi đen)
+        document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
+        document.getElementById('recap-distance').innerText = document.getElementById('distance-display').innerText;
+        document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
+        document.getElementById('recap-calo').innerText = document.getElementById('calo-display').innerText;
+        
+        // 3. Đổi display từ 'none' sang 'flex' để bảng hiện ra giữa màn hình
+        document.getElementById('recap-modal').style.display = 'flex';
+        endBtn.innerText = "⏹ KẾT THÚC"; 
+    }
+
+    // === HÀM BẤM NÚT "LƯU VÀO TIẾN TRÌNH" BÊN TRONG BẢNG RECAP ===
+    function luuTienTrinh() {
+        // Sau này chúng ta sẽ viết code đẩy dữ liệu lưu lên Firebase ở đây
+        console.log("Đã lưu dữ liệu thành công!");
+        
+        // Đóng popup lại và giữ nguyên số liệu trên màn hình (không xóa trắng nữa)
+        document.getElementById('recap-modal').style.display = 'none';
+        
+        // Đổi trạng thái để người dùng biết đã kết thúc phiên
+        isTracking = false;
+        document.getElementById('start-btn').innerText = "▶ BẮT ĐẦU LẠI";
+    }
 </script>
 </body>
 </html>

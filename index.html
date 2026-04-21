@@ -27,11 +27,12 @@
         /* App UI Components */
         #app-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
         
-        /* Tối ưu hiệu năng render Sương mù */
+   /* Tối ưu hiệu năng render Sương mù */
         #fog-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); pointer-events: none;
             transition: background-color 0.3s ease, opacity 0.3s ease;
             will-change: mask-image, -webkit-mask-image;
+            display: none !important; /* THÊM DÒNG NÀY ĐỂ TẮT HẲN LỚP ĐEN */
         }
         
         #stats-window { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px; border: 2px solid #4285F4; box-shadow: 0 4px 15px rgba(0,0,0,0.2); pointer-events: auto; min-width: 200px; }

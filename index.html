@@ -741,7 +741,6 @@
             }
         }
     };
-
 // === HÀM BẬT / TẮT BỤI MỊN (KẾT HỢP BẢN ĐỒ NHIỆT WAQI VÀ HIỆU ỨNG KHÓI) ===
 let lopBanDoBui = null; 
 let lopKhoiBuiThuCong = L.layerGroup().addTo(map);
@@ -752,34 +751,34 @@ window.toggleBuiMin = function() {
     const btn = document.getElementById('btn-bui-min');
     
     if (isHienBui) {
-        btn.style.backgroundColor = '#dc3545'; // Nút Đỏ
+        btn.style.backgroundColor = '#dc3545'; 
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
         
-        // 1. BẬT BẢN ĐỒ SỐ LIỆU TOÀN CẦU (Các ô màu WAQI)
+        // 1. BẬT BẢN ĐỒ SỐ LIỆU TOÀN CẦU (WAQI)
         if (!lopBanDoBui) {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18,
-                opacity: 0.90, // Độ đậm 90% để nhìn rõ số liệu
+                opacity: 0.90, 
                 attribution: 'Air Quality by WAQI'
             });
         }
         lopBanDoBui.addTo(map);
 
-        // 2. BẬT HIỆU ỨNG KHÓI ĐEN TẠI CHỖ (Dựa trên GPS)
+        // 2. BẬT HIỆU ỨNG KHÓI ĐEN TẠI CHỖ (Cần có GPS)
         if (typeof latestLatLng !== 'undefined' && latestLatLng) {
             window.veHieuUngKhoiBui(latestLatLng.lat, latestLatLng.lng);
         }
 
     } else {
-        btn.style.backgroundColor = '#555'; // Nút Xám
+        btn.style.backgroundColor = '#555'; 
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
-
+        
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
         lopKhoiBuiThuCong.clearLayers();
     }
 };
 
-// HÀM VẼ VÒNG TRÒN KHÓI ẢO GIÁC
+// === HÀM VẼ VÒNG TRÒN KHÓI ẢO GIÁC BÁM THEO GPS ===
 window.veHieuUngKhoiBui = function(lat, lng) {
     if (!isHienBui) return;
 
@@ -790,7 +789,6 @@ window.veHieuUngKhoiBui = function(lat, lng) {
             if(data.list && data.list.length > 0) {
                 const mucDoBui = data.list.components.pm2_5; 
                 
-                // Nồng độ PM2.5 càng cao thì khói càng đặc (30% - 95%)
                 let doMo = 0.30 + Math.floor((mucDoBui - 1) / 50) * 0.15;
                 if (doMo > 0.95) doMo = 0.95;
                 if (doMo < 0.30) doMo = 0.30;
@@ -798,12 +796,10 @@ window.veHieuUngKhoiBui = function(lat, lng) {
                 lopKhoiBuiThuCong.clearLayers();
                 L.circle([lat, lng], {
                     color: 'transparent',
-                    fillColor: '#1a1a1a', // Màu đen sẫm
+                    fillColor: '#1a1a1a', 
                     fillOpacity: doMo,
                     radius: 500 
                 }).addTo(lopKhoiBuiThuCong);
-                
-                console.log(`📡 Cập nhật Bụi PM2.5 = ${mucDoBui}, Độ mờ khói = ${(doMo*100).toFixed(0)}%`);
             }
         })
         .catch(err => console.error("Lỗi tải hiệu ứng khói:", err));

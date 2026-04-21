@@ -325,13 +325,31 @@
                 isFirstLocation = false;
             }
 
-            if (!userMarker) {
-                const icon = L.divIcon({ className: 'user-icon', html: `<div class="user-arrow" style="transform: rotate(${heading}deg);"></div>`, iconSize: [20, 24], iconAnchor: [10, 12]});
-                userMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 1000}).addTo(map);
-            } else {
-                userMarker.setLatLng([lat, lng]);
-                userMarker.getElement().querySelector('.user-arrow').style.transform = `rotate(${heading}deg)`;
-            }
+        // === TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN ===
+        let myAvatar = `https://ui-avatars.com/api/?name=${username}&background=random`;
+        const myGPSHtml = `
+            <div style="position: relative; width: 40px; height: 50px;">
+                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z"
+                          fill="#dc3545" stroke="black" stroke-width="2"/>
+                </svg>
+                <img src="${myAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+            </div>
+        `;
+        
+        const myIcon = L.divIcon({
+            className: 'user-icon',
+            html: myGPSHtml,
+            iconSize: [2, 3],
+            iconAnchor: [3, 4]
+        });
+
+        if (!userMarker) {
+            userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map);
+        } else {
+            userMarker.setLatLng([lat, lng]);
+            userMarker.setIcon(myIcon);
+        }
 
             if (pathLatLngs.length > 0 && isTracking && !isPaused) {
                 const lastPoint = pathLatLngs[pathLatLngs.length - 1];

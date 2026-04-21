@@ -152,11 +152,11 @@
     </div>
 
 <script>
-    // --- KHỞI TẠO BẢN ĐỒ ---
+    //  KHỞI TẠO BẢN ĐỒ 
     const map = L.map('map', { zoomControl: false }).setView([21.028511, 105.804817], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-    // --- TẢI DỮ LIỆU QGIS (Thanh Oai) ---
+    // TẢI DỮ LIỆU QGIS Thanh Oai
     fetch('bando_thanhoai.geojson')
         .then(response => response.json())
         .then(data => {
@@ -182,14 +182,14 @@
             console.warn("Chưa tải được dữ liệu Thanh Oai hoặc sai định dạng:", error);
         });
 
-    // --- BIẾN TOÀN CỤC ---
+    //  BIẾN TOÀN CỤC
     let currentUser = "", userWeight = 65, stepsPerMeter = 0;
     let isTracking = false, isPaused = false, elapsedSeconds = 0, timerInterval = null;
     let latestLatLng = null, userMarker = null, polyline = null;
     let totalDistanceMeter = 0, pathLatLngs = [];
     let gpsWatcherId = null, isDrawingFog = false, fogEnabled = true;
 
-    // --- LOGIC TÀI KHOẢN ---
+    //  LOGIC TÀI KHOẢN 
     function toggleAuthMode() {
         const login = document.getElementById('login-form'), reg = document.getElementById('register-form');
         login.style.display = login.style.display === 'none' ? 'block' : 'none';
@@ -202,12 +202,12 @@
         
         if(!user || !pass) return alert("Nhập đủ thông tin!");
         
-        // 1. LUẬT ĐĂNG KÝ: Giới hạn 8 ký tự và không chứa khoảng trắng
+        // Giới hạn 8 ký tự và không chứa khoảng trắng
         if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự!");
         if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng!");
 
         if (mode === 'register') {
-            // === MỤC TIÊU 4: KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE) ===
+            // KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE)
             if (typeof db !== 'undefined') {
                 // Gọi lên đám mây Firebase hỏi xem tên này có ai xài chưa
                 db.ref('nguoi_dung/' + user).once('value').then(function(snapshot) {
@@ -220,7 +220,7 @@
                         currentUser = user;
                         localStorage.setItem('currentUser', user); 
                         
-                        // Đồng thời tạo ngay một "chỗ trống" trên Firebase để xí phần tên này vĩnh viễn
+                        // tạo chỗ trống lưu tên người dùng
                         db.ref('nguoi_dung/' + user).set({
                             trang_thai: "Vừa tạo tài khoản",
                             thoi_gian_cap_nhat: Date.now()
@@ -236,7 +236,7 @@
                 alert("Hệ thống chưa kết nối được với máy chủ Firebase!");
             }
         } else {
-            // 2. LOGIC ĐĂNG NHẬP (Giữ nguyên)
+            //  LOGIC ĐĂNG NHẬP 
             const data = JSON.parse(localStorage.getItem("appUser_" + user));
             if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
             currentUser = user; 
@@ -276,7 +276,7 @@
         document.getElementById('app-container').style.display = 'block';
     }
 
-    // --- UI CONTROLS ---
+    //  UI CONTROLS 
     function toggleLightbulbMenu() { 
         const menu = document.getElementById('fog-menu'); 
         menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; 
@@ -304,11 +304,11 @@
     }
 
     // --- TRACKING ACTIONS ---
-    // === XỬ LÝ NÚT BẮT ĐẦU ===
+    //  XỬ LÝ NÚT BẮT ĐẦU
     function startTrackingAction() {
         if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
 
-        // 1. Reset sạch sẽ dữ liệu
+        //  Reset sạch sẽ dữ liệu
         latestLatLng = null; 
         totalDistanceMeter = 0;
         elapsedSeconds = 0;
@@ -317,7 +317,7 @@
         isTracking = true; 
         isPaused = false;
 
-        // 2. ÉP GIAO DIỆN CHUYỂN NÚT NGAY LẬP TỨC (Không bắt hệ thống phải chờ đợi)
+        //  ÉP GIAO DIỆN CHUYỂN NÚT NGAY LẬP TỨC 
         document.getElementById('start-btn').style.display = 'none';
         document.getElementById('pause-btn').style.display = 'inline-block';
         document.getElementById('end-btn').style.display = 'inline-block';
@@ -325,12 +325,12 @@
         document.getElementById('pause-btn').innerText = "⏸ TẠM DỪNG";
         document.getElementById('pause-btn').style.backgroundColor = "#ff9800"; // Đổi màu Cam
 
-        // 3. Kích hoạt bộ thu sóng GPS chạy ngầm
+        //  Kích hoạt bộ thu sóng GPS chạy ngầm
         if (typeof gpsWatcherId === 'undefined' || !gpsWatcherId) {
             if (typeof initGPS === 'function') initGPS();
         }
 
-        // 4. Bật đồng hồ đếm thời gian
+        //  Bật đồng hồ đếm thời gian
         if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); 
         timerInterval = setInterval(() => {
             if (isTracking && !isPaused) { 
@@ -416,17 +416,28 @@
                 const lastPoint = pathLatLngs[pathLatLngs.length - 1];
                 const dist = map.distance(lastPoint, currentLatLng);
                 
-                if (dist > 15) { 
+                if (dist > 15) {
+                    // === BỘ LỌC LỊCH SỬ DI CHUYỂN ===
+                    // CHỈ lưu vết tích khám phá lên Firebase khi thực sự di chuyển > 15 mét
+                    let savedUser = localStorage.getItem('currentUser');
+                    if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
+                        db.ref('lich_su_di_chuyen/' + savedUser).push({
+                            lat: lat,
+                            lng: lng,
+                            thoi_gian: Date.now()
+                        });
+                    }
+
                     fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
                     .then(res => res.json())
                     .then(data => {
-                        if(data.routes && data.routes[0]) {
-                            totalDistanceMeter += data.routes[0].distance;
+                        if(data.routes && data.routes) {
+                            totalDistanceMeter += data.routes.distance;
                             document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
                             document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * stepsPerMeter);
                             document.getElementById('cal-display').innerText = (0.5 * userWeight * (totalDistanceMeter / 1000)).toFixed(1);
 
-                            data.routes[0].geometry.coordinates.forEach(coord => pathLatLngs.push(L.latLng(coord[1], coord[0])));
+                            data.routes.geometry.coordinates.forEach(coord => pathLatLngs.push(L.latLng(coord[1], coord)));
                             polyline.setLatLngs(pathLatLngs);
                         }
                     }).catch(err => console.error("Lỗi mạng:", err));
@@ -496,17 +507,9 @@
             calo_tieu_thu: typeof totalCalories !== 'undefined' ? totalCalories : 0,
             thoi_gian_tap_giay: typeof elapsedSeconds !== 'undefined' ? elapsedSeconds : 0
         });
-
-        // 4. LƯU VẾT KHÁM PHÁ (Sương mù)
-        // Tạo một nhánh riêng chứa danh sách tất cả các điểm đã đi qua
-        db.ref('lich_su_di_chuyen/' + username).push({
-            lat: lat,
-            lng: lng,
-            thoi_gian: Date.now()
-        });
     }
     
-    // === 1. TÍNH NĂNG RADAR CỘNG ĐỒNG (TÍCH HỢP ICON MỚI) ===
+    //  TÍNH NĂNG RADAR CỘNG ĐỒNG
     let isRadarOn = false;
     let friendMarkers = {}; 
 

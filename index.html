@@ -575,13 +575,16 @@
     if (endBtnObj2) endBtnObj2.onclick = window.handleEndClick;
 
 
-    // === 3. HIỂN THỊ RECAP VÀ RESET TRẠNG THÁI (TRỊ DỨT ĐIỂM LỖI) ===
+    // === 3. HIỂN THỊ RECAP VÀ RESET TRẠNG THÁI (ĐÃ FIX LỖI ID) ===
     window.hienThiRecap = function() {
         isPaused = true; 
         if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); // Chặn đứng đồng hồ
         
-        document.getElementById('pause-btn').innerText = "▶ TIẾP TỤC";
-        document.getElementById('pause-btn').style.backgroundColor = "#4CAF50";
+        const pauseBtnObj = document.getElementById('pause-btn');
+        if(pauseBtnObj) {
+            pauseBtnObj.innerText = "▶ TIẾP TỤC";
+            pauseBtnObj.style.backgroundColor = "#4CAF50";
+        }
         
         // Cập nhật số liệu
         const rTime = document.getElementById('recap-time');
@@ -590,12 +593,13 @@
         const rCalo = document.getElementById('recap-calo');
         const rModal = document.getElementById('recap-modal');
 
-        if(rTime) rTime.innerText = document.getElementById('time-display').innerText;
-        if(rDist) rDist.innerText = document.getElementById('distance-display').innerText;
-        if(rStep) rStep.innerText = document.getElementById('step-display').innerText;
-        if(rCalo) rCalo.innerText = document.getElementById('calo-display').innerText;
+        // ĐÃ SỬA ID CHUẨN KHỚP 100% VỚI THẺ HTML Ở TRÊN: dist-display và cal-display
+        if(rTime && document.getElementById('time-display')) rTime.innerText = document.getElementById('time-display').innerText;
+        if(rDist && document.getElementById('dist-display')) rDist.innerText = document.getElementById('dist-display').innerText;
+        if(rStep && document.getElementById('step-display')) rStep.innerText = document.getElementById('step-display').innerText;
+        if(rCalo && document.getElementById('cal-display')) rCalo.innerText = document.getElementById('cal-display').innerText;
         
-        // Hiện bảng Recap
+        // Bật cửa sổ Popup chúc mừng
         if(rModal) rModal.style.display = 'flex';
     };
 
@@ -611,11 +615,11 @@
         latestLatLng = null; // Tránh văng GPS ở lần chạy sau
         if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
 
-        // 2. Trả số liệu hiển thị về 0
-        document.getElementById('time-display').innerText = "00:00";
-        document.getElementById('distance-display').innerText = "0";
-        document.getElementById('step-display').innerText = "0";
-        document.getElementById('calo-display').innerText = "0";
+        // 2. Trả số liệu hiển thị về 0 (ĐÃ SỬA ID CHUẨN)
+        if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
+        if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
+        if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
+        if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
 
         // 3. Khôi phục trạng thái nút BẤT ĐẦU như lúc mới mở web
         const btnStart = document.getElementById('start-btn');

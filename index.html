@@ -741,7 +741,7 @@
             }
         }
     };
-// === HÀM BẬT / TẮT BỤI MỊN (DÙNG DỮ LIỆU IQAIR + HIỆU ỨNG SƯƠNG MÙ) ===
+// === HÀM BẬT / TẮT BỤI MỊN (GIỮ NGUYÊN MÀU SẮC CỦA IQAIR) ===
 let lopBanDoBui = null; 
 
 window.toggleBuiMin = function() {
@@ -749,44 +749,31 @@ window.toggleBuiMin = function() {
     isHienBui = !isHienBui;
     const btn = document.getElementById('btn-bui-min');
     
-    // Can thiệp thẳng vào Lớp ngói nền của Leaflet để tạo hiệu ứng sương mù
-    const lopNenBanDo = document.querySelector('.leaflet-tile-pane');
-    
     if (isHienBui) {
         btn.style.backgroundColor = '#dc3545'; 
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
         
-        // 1. Kéo bản đồ chất lượng không khí từ IQAir bằng API Key của Hiệp
+        // Kéo bản đồ chất lượng không khí từ IQAir bằng API Key của bạn
         if (!lopBanDoBui) {
             const iqairKey = '81c6968c-cb92-414d-a30a-1930da5bfb8d'; 
             const iqairUrl = `https://api.airvisual.com/v2/map/aqi/{z}/{x}/{y}?key=${iqairKey}`;
 
             lopBanDoBui = L.tileLayer(iqairUrl, {
                 maxZoom: 18,
-                opacity: 0.85, // Giữ độ mờ 85% để hòa quyện
+                // Đặt độ mờ 65% để các mảng màu ô nhiễm (Xanh, Đỏ, Tím) 
+                // phủ mờ lên bản đồ nhưng vẫn nhìn xuyên xuống đường xá được
+                opacity: 0.65, 
                 attribution: 'Air Quality Data by IQAir'
             });
         }
         lopBanDoBui.addTo(map);
 
-        // 2. MA THUẬT BAO PHỦ SƯƠNG MÙ TOÀN CẢNH
-        // Rút cạn màu sắc của cả thành phố, kéo tối màn hình để tạo cảm giác bị khói bụi che phủ
-        if (lopNenBanDo) {
-            lopNenBanDo.style.filter = "grayscale(100%) contrast(110%) brightness(50%)";
-            lopNenBanDo.style.transition = "filter 0.5s ease-in-out"; 
-        }
-
     } else {
         btn.style.backgroundColor = '#555'; 
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
         
-        // Gỡ lớp IQAir ra khỏi bản đồ
+        // Gỡ lớp màu IQAir ra khỏi bản đồ
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
-        
-        // Trả lại ánh sáng mặt trời và màu sắc tươi sáng cho thành phố
-        if (lopNenBanDo) {
-            lopNenBanDo.style.filter = "none";
-        }
     }
 };
 </script>

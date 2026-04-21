@@ -250,30 +250,40 @@
     // --- TRACKING ACTIONS ---
     // === XỬ LÝ NÚT BẮT ĐẦU ===
     function startTrackingAction() {
-        latestLatLng = null;
-        
         if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
-        
-        document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
-        if (!gpsWatcherId) initGPS();
 
-        if (latestLatLng) {
-            isTracking = true; isPaused = false;
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('pause-btn').style.display = 'block';
-            document.getElementById('end-btn').style.display = 'block';
-            
-            if(!timerInterval) {
-                timerInterval = setInterval(() => {
-                    if(!isPaused) {
-                        elapsedSeconds++;
-                        const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
-                        const s = String(elapsedSeconds % 60).padStart(2, '0');
-                        document.getElementById('time-display').innerText = `${m}:${s}`;
-                    }
-                }, 1000);
-            }
+        // 1. Reset sạch sẽ dữ liệu để chống lỗi văng GPS 119km
+        latestLatLng = null; 
+        totalDistanceMeter = 0;
+        elapsedSeconds = 0;
+        if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
+        
+        isTracking = true; 
+        isPaused = false;
+
+        // 2. ÉP GIAO DIỆN CHUYỂN NÚT NGAY LẬP TỨC (Không bắt hệ thống phải chờ đợi)
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('pause-btn').style.display = 'inline-block';
+        document.getElementById('end-btn').style.display = 'inline-block';
+        
+        document.getElementById('pause-btn').innerText = "⏸ TẠM DỪNG";
+        document.getElementById('pause-btn').style.backgroundColor = "#ff9800"; // Đổi màu Cam
+
+        // 3. Kích hoạt bộ thu sóng GPS chạy ngầm
+        if (typeof gpsWatcherId === 'undefined' || !gpsWatcherId) {
+            if (typeof initGPS === 'function') initGPS();
         }
+
+        // 4. Bật đồng hồ đếm thời gian
+        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); 
+        timerInterval = setInterval(() => {
+            if (isTracking && !isPaused) { 
+                elapsedSeconds++;
+                const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                const s = String(elapsedSeconds % 60).padStart(2, '0');
+                document.getElementById('time-display').innerText = `${m}:${s}`;
+            }
+        }, 1000);
     }
 
     // === XỬ LÝ NÚT TẠM DỪNG ===

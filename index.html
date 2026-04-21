@@ -741,7 +741,7 @@
             }
         }
     };
-// === HÀM BẬT / TẮT BỤI MỊN (GIỮ NGUYÊN MÀU SẮC CỦA IQAIR) ===
+// === HÀM BẬT / TẮT BỤI MỊN (TRẢ LẠI BIỂN BÁO SỐ LIỆU WAQI CHUẨN) ===
 let lopBanDoBui = null; 
 
 window.toggleBuiMin = function() {
@@ -749,21 +749,22 @@ window.toggleBuiMin = function() {
     isHienBui = !isHienBui;
     const btn = document.getElementById('btn-bui-min');
     
+    // 1. Lệnh "Khử độc": Ép bản đồ xóa bỏ mọi hiệu ứng xám/đen bị kẹt từ trước
+    const lopNenBanDo = document.querySelector('.leaflet-tile-pane');
+    if (lopNenBanDo) {
+        lopNenBanDo.style.filter = "none";
+    }
+    
     if (isHienBui) {
         btn.style.backgroundColor = '#dc3545'; 
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
         
-        // Kéo bản đồ chất lượng không khí từ IQAir bằng API Key của bạn
+        // 2. Kéo lại lớp các biển báo chứa con số mức độ bụi (WAQI)
         if (!lopBanDoBui) {
-            const iqairKey = '81c6968c-cb92-414d-a30a-1930da5bfb8d'; 
-            const iqairUrl = `https://api.airvisual.com/v2/map/aqi/{z}/{x}/{y}?key=${iqairKey}`;
-
-            lopBanDoBui = L.tileLayer(iqairUrl, {
+            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18,
-                // Đặt độ mờ 65% để các mảng màu ô nhiễm (Xanh, Đỏ, Tím) 
-                // phủ mờ lên bản đồ nhưng vẫn nhìn xuyên xuống đường xá được
-                opacity: 0.65, 
-                attribution: 'Air Quality Data by IQAir'
+                opacity: 0.95, // Giữ độ nét cao nhất để đọc được số trên biển báo
+                attribution: 'Air Quality by WAQI'
             });
         }
         lopBanDoBui.addTo(map);
@@ -772,7 +773,7 @@ window.toggleBuiMin = function() {
         btn.style.backgroundColor = '#555'; 
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
         
-        // Gỡ lớp màu IQAir ra khỏi bản đồ
+        // Gỡ các biển báo ra khỏi bản đồ
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
     }
 };

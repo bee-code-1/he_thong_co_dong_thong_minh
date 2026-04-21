@@ -741,7 +741,7 @@
             }
         }
     };
-// === HÀM BẬT / TẮT BỤI MỊN (BIẾN BẢN ĐỒ SỐ LIỆU THÀNH SƯƠNG MÙ) ===
+// === HÀM BẬT / TẮT BỤI MỊN (HIỆU ỨNG THÀNH PHỐ SƯƠNG MÙ TOÀN CẢNH) ===
 let lopBanDoBui = null; 
 
 window.toggleBuiMin = function() {
@@ -749,32 +749,36 @@ window.toggleBuiMin = function() {
     isHienBui = !isHienBui;
     const btn = document.getElementById('btn-bui-min');
     
+    // Can thiệp thẳng vào Lớp ngói nền của Leaflet (Nơi chứa toàn bộ đường xá và nhà cửa)
+    const lopNenBanDo = document.querySelector('.leaflet-tile-pane');
+    
     if (isHienBui) {
         btn.style.backgroundColor = '#dc3545'; 
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
         
-        // 1. Kéo bản đồ chất lượng không khí toàn cầu về (Giống IQAir)
+        // 1. Kéo các tấm bảng số liệu chất lượng không khí về
         if (!lopBanDoBui) {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18,
-                opacity: 0.85, // Độ mờ 85% để hòa quyện vào bản đồ nền
+                opacity: 0.85, 
                 attribution: 'Air Quality by WAQI'
             });
         }
         lopBanDoBui.addTo(map);
 
-        // 2. MA THUẬT NẰM Ở ĐÂY: Dùng CSS lột sạch màu sắc, biến thành Khói Xám/Đen
-        // - grayscale(100%): Khử toàn bộ màu (thành trắng đen)
-        // - contrast(150%): Tăng độ tương phản để khói đen đặc hơn
-        // - brightness(60%): Kéo tối toàn bộ mảng màu xuống cho giống sương mù
-        lopBanDoBui.getContainer().style.filter = "grayscale(100%) contrast(150%) brightness(60%)";
+        // 2. MA THUẬT BAO PHỦ SƯƠNG MÙ TOÀN CẢNH
+        // Rút cạn màu sắc của cả thành phố, kéo tối màn hình để tạo cảm giác bị khói bụi che phủ
+        lopNenBanDo.style.filter = "grayscale(100%) contrast(110%) brightness(50%)";
+        lopNenBanDo.style.transition = "filter 0.5s ease-in-out"; // Hiệu ứng tối dần mượt mà
 
     } else {
         btn.style.backgroundColor = '#555'; 
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
         
-        // Tắt lớp sương mù đi
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
+        
+        // Trả lại ánh sáng mặt trời và màu sắc tươi sáng cho thành phố
+        lopNenBanDo.style.filter = "none";
     }
 };
 </script>

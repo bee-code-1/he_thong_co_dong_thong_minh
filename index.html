@@ -427,11 +427,11 @@
         });
     }
     
-    // === 1. TÍNH NĂNG RADAR CỘNG ĐỒNG ===
+    // === 1. TÍNH NĂNG RADAR CỘNG ĐỒNG (TÍCH HỢP ICON MỚI) ===
     let isRadarOn = false;
     let friendMarkers = {}; 
 
-    function toggleRadar() {
+    window.toggleRadar = function() {
         const btn = document.getElementById('btn-cong-dong');
         if (!btn) return;
         
@@ -450,6 +450,8 @@
                     const data = snapshot.val();
                     if (!data) return;
 
+                    const danhSachBanBe = ["Hiep", "Long", "Minh"]; // Khai báo bạn bè
+
                     for (const user in data) {
                         if (user === currentUser) continue; 
                         const lat = data[user].toa_do_lat;
@@ -460,17 +462,31 @@
                             if (friendMarkers[user]) {
                                 friendMarkers[user].setLatLng([lat, lng]);
                             } else {
-                                // ĐÃ FIX CHUẨN KÍCH THƯỚC LEAFLET: 35x35 pixel
+                                // TẠO ICON GIỌT NƯỚC (Xanh dương cho Bạn, Xám cho Lạ)
+                                const isFriend = danhSachBanBe.includes(user);
+                                const pinColor = isFriend ? "#2196F3" : "#9E9E9E"; 
+                                const userAvatar = `https://ui-avatars.com/api/?name=${user}&background=random`;
+
+                                const customGPSHtml = `
+                                    <div style="position: relative; width: 40px; height: 50px;">
+                                        <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                                            <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" 
+                                                  fill="${pinColor}" stroke="black" stroke-width="2"/>
+                                        </svg>
+                                        <img src="${userAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #000; background-color: white;" />
+                                    </div>
+                                `;
+
                                 const friendIcon = L.divIcon({
-                                    className: 'friend-icon',
-                                    html: `<div style="background-color: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; text-align: center; line-height: 35px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6); font-size: 16px;">😎</div>`,
-                                    iconSize: [2],      
-                                    iconAnchor: [2, 3],    
-                                    popupAnchor: [0, -35]    
+                                    className: 'custom-gps-icon',
+                                    html: customGPSHtml,
+                                    iconSize: [2, 3],   // ĐÃ FIX LỖI CÚ PHÁP LEAFLET
+                                    iconAnchor: [3, 4], // Cắm chân chuẩn xác
+                                    popupAnchor: [0, -40] 
                                 });
 
                                 const newMarker = L.marker([lat, lng], {icon: friendIcon});
-                                newMarker.bindPopup(`<b>${user}</b>`);
+                                newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
                                 if (banDoHienTai) newMarker.addTo(banDoHienTai);
                                 friendMarkers[user] = newMarker;
                             }
@@ -482,93 +498,123 @@
             btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
             btn.style.backgroundColor = "#ff9800";
             btn.style.animation = "none";
-            
             if (typeof db !== 'undefined') db.ref('nguoi_dung').off();
-
             for (const user in friendMarkers) {
                 if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
             }
             friendMarkers = {}; 
         }
-    }
+    };
 
-    // ÉP CỨNG SỰ KIỆN CLICK CHO NÚT RADAR (Trị dứt điểm lỗi liệt nút)
-    const radarBtn = document.getElementById('btn-cong-dong');
-    if (radarBtn) {
-        radarBtn.onclick = toggleRadar;
-    }
+    // Ép sự kiện click (Trị dứt điểm liệt nút Radar)
+    const radarBtnObj = document.getElementById('btn-cong-dong');
+    if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
 
 
-    // === 2. XỬ LÝ NÚT KẾT THÚC (CƠ CHẾ BẤM 2 LẦN) ===
-    const endBtn = document.getElementById('end-btn');
+    // === 2. XỬ LÝ NÚT KẾT THÚC (BẤM 2 LẦN) ===
     let confirmTimeout;
     let countdownInterval;
     let isConfirming = false;
 
-    function handleEndClick(e) {
+    window.handleEndClick = function(e) {
         if (!isTracking) return; 
         if (e) e.preventDefault(); 
+        const endBtnObj = document.getElementById('end-btn');
 
         if (!isConfirming) {
-            // LẦN 1: Hiện cảnh báo và bắt đầu đếm 3 giây
             isConfirming = true;
             let timeLeft = 3;
-            endBtn.innerText = `⏳ BẤM LẦN NỮA ĐỂ CHỐT (${timeLeft}s)`;
-            endBtn.style.backgroundColor = "#ff5722"; 
+            endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
+            endBtnObj.style.backgroundColor = "#ff5722"; 
 
             countdownInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft > 0) {
-                    endBtn.innerText = `⏳ BẤM LẦN NỮA ĐỂ CHỐT (${timeLeft}s)`;
+                    endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
                 }
             }, 1000);
 
-            // NẾU HẾT 3 GIÂY MÀ KHÔNG BẤM TIẾP -> TỰ ĐỘNG HỦY THAO TÁC
             confirmTimeout = setTimeout(() => {
                 clearInterval(countdownInterval);
                 isConfirming = false;
-                endBtn.innerText = "⏹ KẾT THÚC";
-                endBtn.style.backgroundColor = ""; 
+                endBtnObj.innerText = "⏹ KẾT THÚC";
+                endBtnObj.style.backgroundColor = ""; 
             }, 3000);
 
         } else {
-            // LẦN 2: Đã bấm chốt ngay trong lúc đếm ngược -> BẬT BẢNG RECAP NGAY
             clearInterval(countdownInterval);
             clearTimeout(confirmTimeout);
             isConfirming = false;
             
-            endBtn.innerText = "⏹ KẾT THÚC"; 
-            endBtn.style.backgroundColor = ""; 
+            endBtnObj.innerText = "⏹ KẾT THÚC"; 
+            endBtnObj.style.backgroundColor = ""; 
             
-            hienThiRecap(); 
+            window.hienThiRecap(); 
         }
-    }
+    };
 
-    if (endBtn) {
-        endBtn.onclick = handleEndClick;
-    }
+    const endBtnObj2 = document.getElementById('end-btn');
+    if (endBtnObj2) endBtnObj2.onclick = window.handleEndClick;
 
-    // === HÀM HIỂN THỊ VÀ LƯU RECAP ===
-    function hienThiRecap() {
+
+    // === 3. HIỂN THỊ RECAP VÀ RESET TRẠNG THÁI (TRỊ DỨT ĐIỂM LỖI) ===
+    window.hienThiRecap = function() {
         isPaused = true; 
+        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); // Chặn đứng đồng hồ
+        
         document.getElementById('pause-btn').innerText = "▶ TIẾP TỤC";
+        document.getElementById('pause-btn').style.backgroundColor = "#4CAF50";
         
-        document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
-        document.getElementById('recap-distance').innerText = document.getElementById('distance-display').innerText;
-        document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
-        document.getElementById('recap-calo').innerText = document.getElementById('calo-display').innerText;
-        
-        document.getElementById('recap-modal').style.display = 'flex';
-    }
+        // Cập nhật số liệu
+        const rTime = document.getElementById('recap-time');
+        const rDist = document.getElementById('recap-distance');
+        const rStep = document.getElementById('recap-steps');
+        const rCalo = document.getElementById('recap-calo');
+        const rModal = document.getElementById('recap-modal');
 
-    function luuTienTrinh() {
-        document.getElementById('recap-modal').style.display = 'none';
+        if(rTime) rTime.innerText = document.getElementById('time-display').innerText;
+        if(rDist) rDist.innerText = document.getElementById('distance-display').innerText;
+        if(rStep) rStep.innerText = document.getElementById('step-display').innerText;
+        if(rCalo) rCalo.innerText = document.getElementById('calo-display').innerText;
+        
+        // Hiện bảng Recap
+        if(rModal) rModal.style.display = 'flex';
+    };
+
+    window.luuTienTrinh = function() {
+        const rModal = document.getElementById('recap-modal');
+        if (rModal) rModal.style.display = 'none';
+
+        // 1. Dọn dẹp sạch sẽ dữ liệu định vị
         isTracking = false;
-        document.getElementById('start-btn').style.display = 'inline-block';
-        document.getElementById('start-btn').innerText = "▶ BẮT ĐẦU LẠI";
-        document.getElementById('pause-btn').style.display = 'none';
-        document.getElementById('end-btn').style.display = 'none';
-    }
+        isPaused = false;
+        totalDistanceMeter = 0;
+        elapsedSeconds = 0;
+        latestLatLng = null; // Tránh văng GPS ở lần chạy sau
+        if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
+
+        // 2. Trả số liệu hiển thị về 0
+        document.getElementById('time-display').innerText = "00:00";
+        document.getElementById('distance-display').innerText = "0";
+        document.getElementById('step-display').innerText = "0";
+        document.getElementById('calo-display').innerText = "0";
+
+        // 3. Khôi phục trạng thái nút BẤT ĐẦU như lúc mới mở web
+        const btnStart = document.getElementById('start-btn');
+        const btnPause = document.getElementById('pause-btn');
+        const btnEnd = document.getElementById('end-btn');
+
+        if(btnStart) {
+            btnStart.style.display = 'inline-block';
+            btnStart.innerText = "▶ BẮT ĐẦU";
+        }
+        if(btnPause) btnPause.style.display = 'none';
+        if(btnEnd) {
+            btnEnd.style.display = 'none';
+            btnEnd.innerText = "⏹ KẾT THÚC";
+            btnEnd.style.backgroundColor = "";
+        }
+    };
 </script>
 </body>
 </html>

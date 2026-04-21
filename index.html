@@ -102,16 +102,6 @@
         <p>📍 Đã đi: <span id="dist-display" class="stat-val text-blue">0.00</span> km</p>
         <p>🔥 Tiêu thụ: <span id="cal-display" class="stat-val text-orange">0.0</span> calo</p>
     </div>
-    <!-- MENU SƯƠNG MÙ
-        <div id="lightbulb-container">
-            <div id="fog-menu">
-                <button onclick="toggleFog()">Bật/Tắt Sương mù</button>
-                <button onclick="changeOpacity(0.5)">Giảm sáng 50%</button>
-                <button onclick="changeOpacity(0.9)">Giảm sáng 90%</button>
-            </div>
-            <button id="lightbulb-btn" onclick="toggleLightbulbMenu()">💡</button>
-        </div>
-        -->
 <!-- NÚT HIỂN THỊ CỘNG ĐỒNG VÀ CHIA SẺ VỊ TRÍ -->
 <div style="text-align: center; margin-top: 10px; margin-bottom: 15px; z-index: 1000; position: relative; pointer-events: auto;">
     <button id="btn-cong-dong" style="background-color: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer;">
@@ -769,7 +759,7 @@
                 // Dùng API ngói (Tile) của WAQI (World Air Quality Index)
                 lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                     maxZoom: 18,
-                    opacity: 0.65, // Độ mờ 65% để vẫn nhìn thấy đường xá bên dưới
+                    opacity: 0.9, // Độ mờ 65% để vẫn nhìn thấy đường xá bên dưới
                     attribution: 'Air Quality by WAQI'
                 });
             }

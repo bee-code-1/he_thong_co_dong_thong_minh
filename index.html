@@ -434,23 +434,27 @@
                         });
                     }
 
-                    fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(data.routes && data.routes) {
-                            totalDistanceMeter += data.routes.distance;
-                            document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-                            document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * stepsPerMeter);
-                            document.getElementById('cal-display').innerText = (0.5 * userWeight * (totalDistanceMeter / 1000)).toFixed(1);
+                fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.routes && data.routes[ 0 ]) {
+                        totalDistanceMeter += data.routes[ 0 ].distance;
+                        
+                        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+                        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * stepsPerMeter);
+                        document.getElementById('cal-display').innerText = (0.5 * userWeight * (totalDistanceMeter / 1000)).toFixed(1);
 
-                            data.routes.geometry.coordinates.forEach(coord => pathLatLngs.push(L.latLng(coord[1], coord)));
-                            polyline.setLatLngs(pathLatLngs);
-                        }
-                    }).catch(err => console.error("Lỗi mạng:", err));
-                }
-            } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
-                pathLatLngs.push(currentLatLng);
+                        // Thêm [ 0 ] vào coord để lấy chuẩn Kinh độ
+                        data.routes[ 0 ].geometry.coordinates.forEach(coord => {
+                            pathLatLngs.push(L.latLng(coord[ 1 ], coord[ 0 ]));
+                        });
+                        polyline.setLatLngs(pathLatLngs);
+                    }
+                }).catch(err => console.error("Lỗi mạng:", err));
             }
+        } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
+            pathLatLngs.push(currentLatLng);
+        }
 
             /* TẠM TẮT TÍNH NĂNG TÍNH TOÁN SƯƠNG MÙ
             function updateFog() {

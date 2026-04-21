@@ -188,6 +188,7 @@
     let latestLatLng = null, userMarker = null, polyline = null;
     let totalDistanceMeter = 0, pathLatLngs = [];
     let gpsWatcherId = null, isDrawingFog = false, fogEnabled = true;
+    let lopBuiMin = L.layerGroup().addTo(map);
 
     //  LOGIC TÀI KHOẢN 
     function toggleAuthMode() {
@@ -416,9 +417,8 @@
                 const lastPoint = pathLatLngs[pathLatLngs.length - 1];
                 const dist = map.distance(lastPoint, currentLatLng);
                 
-                if (dist > 15) {
+                if (dist > 10) {
                     // === BỘ LỌC LỊCH SỬ DI CHUYỂN ===
-                    // CHỈ lưu vết tích khám phá lên Firebase khi thực sự di chuyển > 15 mét
                     let savedUser = localStorage.getItem('currentUser');
                     if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
                         db.ref('lich_su_di_chuyen/' + savedUser).push({
@@ -716,14 +716,50 @@
             btnChiaSe.innerHTML = "🔕 Đang ẩn vị trí (Private)";
             btnChiaSe.style.backgroundColor = "#6c757d"; // Về lại màu Xám
             
-            // Xóa luôn dữ liệu trên Firebase khi bấm ẩn để người khác không nhìn thấy mình nữa
-            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser');
+           // Xóa luôn dữ liệu trên Firebase khi bấm ẩn để người khác không nhìn thấy mình nữa
+            let currentUser = localStorage.getItem('currentUser');
             if (currentUser && typeof db !== 'undefined') {
                 db.ref('nguoi_dung/' + currentUser + '/toa_do_lat').remove();
                 db.ref('nguoi_dung/' + currentUser + '/toa_do_lng').remove();
             }
         }
     };
+
+    //  LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG MÀU XÁM 
+    function capNhatLopBui(lat, lng) {
+        const apiKey = 'e5ffd72440bbfad8ea7b2144b4a0655b'; 
+        const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lng}&appid=${apiKey}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(data.list && data.list) {
+                    // Lấy chỉ số nồng độ bụi mịn PM2.5 thực tế từ vệ tinh
+                    const mucDoBui = data.list.components.pm2_5; 
+
+                    let doMo = 0.10 + Math.floor((mucDoBui - 1) / 50) * 0.05;
+                    
+                    if (doMo > 0.60) doMo = 0.60;
+                    if (doMo < 0.10) doMo = 0.10;
+
+                    // Xóa mảng bụi cũ 
+                    if (typeof lopBuiMin !== 'undefined') {
+                        lopBuiMin.clearLayers();
+
+                        // Vẽ một màn khói xám bao phủ khu vực
+                        L.circle([lat, lng], {
+                            color: 'transparent',
+                            fillColor: '#555555',
+                            fillOpacity: doMo,
+                            radius: 400
+                        }).addTo(lopBuiMin);
+                    }
+
+                    console.log(`📡 Cập nhật Bụi: Nồng độ = ${mucDoBui}, Phủ mờ = ${(doMo*100).toFixed(0)}%`);
+                }
+            })
+            .catch(err => console.error("Không thể lấy dữ liệu ô nhiễm:", err));
+    }
 </script>
 </body>
 </html>

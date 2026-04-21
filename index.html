@@ -490,33 +490,55 @@
         }
     }
 
-    // === XỬ LÝ NÚT KẾT THÚC (GIỮ 3 GIÂY ĐỂ MỞ RECAP) ===
+    // === XỬ LÝ NÚT KẾT THÚC (BẤM 2 LẦN KÈM ĐẾM NGƯỢC 3 GIÂY) ===
     const endBtn = document.getElementById('end-btn');
-    let holdTimer;
+    let confirmTimeout;
+    let countdownInterval;
+    let isConfirming = false;
 
-    function startHold(e) {
+    function handleEndClick(e) {
         if (!isTracking) return; 
-        e.preventDefault(); 
-        endBtn.innerText = "ĐANG GIỮ...";
-        endBtn.style.backgroundColor = "#ff5722"; 
-        
-        holdTimer = setTimeout(() => {
-            hienThiRecap(); 
-        }, 3000);
-    }
+        if (e) e.preventDefault(); 
 
-    function cancelHold() {
-        clearTimeout(holdTimer);
-        endBtn.innerText = "⏹ KẾT THÚC";
-        endBtn.style.backgroundColor = ""; 
+        if (!isConfirming) {
+            // BẤM LẦN 1: Bật chế độ chờ xác nhận và đếm lùi 3 giây
+            isConfirming = true;
+            let timeLeft = 3;
+            endBtn.innerText = `⏳ XÁC NHẬN (${timeLeft}s)`;
+            endBtn.style.backgroundColor = "#ff5722"; // Chuyển sang màu Cam cảnh báo
+
+            // Đồng hồ đếm lùi nhảy số ngay trên nút
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    endBtn.innerText = `⏳ XÁC NHẬN (${timeLeft}s)`;
+                }
+            }, 1000);
+
+            // Nếu hết 3 giây mà KHÔNG bấm lần 2 -> Tự hủy, trở về bình thường
+            confirmTimeout = setTimeout(() => {
+                clearInterval(countdownInterval);
+                isConfirming = false;
+                endBtn.innerText = "⏹ KẾT THÚC";
+                endBtn.style.backgroundColor = ""; 
+            }, 3000);
+
+        } else {
+            // BẤM LẦN 2: Người dùng chốt kết thúc khi đang đếm ngược
+            clearInterval(countdownInterval);
+            clearTimeout(confirmTimeout);
+            isConfirming = false;
+            
+            endBtn.innerText = "⏹ KẾT THÚC"; // Trả lại giao diện nút
+            endBtn.style.backgroundColor = ""; 
+            
+            hienThiRecap(); // Gọi bảng Tổng kết thành tích ra
+        }
     }
 
     if (endBtn) {
-        endBtn.addEventListener('mousedown', startHold);
-        endBtn.addEventListener('touchstart', startHold);
-        endBtn.addEventListener('mouseup', cancelHold);
-        endBtn.addEventListener('mouseleave', cancelHold);
-        endBtn.addEventListener('touchend', cancelHold);
+        // Gắn sự kiện click 1 chạm thay vì bắt phải giữ lì
+        endBtn.onclick = handleEndClick;
     }
 
     function hienThiRecap() {

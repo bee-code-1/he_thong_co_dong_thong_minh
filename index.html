@@ -281,8 +281,9 @@
             const lat = position.coords.latitude, lng = position.coords.longitude;
             
             //  BẮN TỌA ĐỘ LÊN ĐÁM MÂY
-            // Lấy tên tài khoản đăng nhập
-            let username = localStorage.getItem('currentUser') || 'nguoi_dung_test';
+            // Lấy tên tài khoản 
+            let username = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || ('Khach_' + Math.floor(Math.random() * 10000));
+            
             // Gọi hàm bắn tọa độ
             banToaDoLenMay(username, lat, lng);
 
@@ -368,18 +369,41 @@
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    console.log("Đã kết nối thành công với trạm Firebase!");
-
-    // 2. TÍNH NĂNG: BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
+       // 2. TÍNH NĂNG: BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
     function banToaDoLenMay(username, lat, lng) {
+        // Lấy các chỉ số sức khỏe đã lưu ở LocalStorage (nếu có)
+        let userHeight = localStorage.getItem('appUser_height') || "Chưa nhập";
+        let userWeight = localStorage.getItem('appUser_weight') || "Chưa nhập";
+
+        // Cập nhật toàn bộ trạng thái lên Firebase
         db.ref('nguoi_dung/' + username).update({
+            // 1. Tọa độ & Trạng thái (Phục vụ Mạng xã hội bản đồ)
             toa_do_lat: lat,
             toa_do_lng: lng,
             trang_thai: "Đang online",
-            thoi_gian_cap_nhat: Date.now()
+            thoi_gian_cap_nhat: Date.now(),
+
+            // 2. Chỉ số cá nhân (Phục vụ AI tư vấn sức khỏe)
+            chieu_cao: userHeight,
+            can_nang: userWeight,
+
+            // 3. Tiến trình thể thao (Phục vụ Recap thành quả)
+            tong_quang_duong_m: typeof totalDistanceMeter !== 'undefined' ? totalDistanceMeter : 0,
+            tong_so_buoc: typeof totalSteps !== 'undefined' ? totalSteps : 0,
+            calo_tieu_thu: typeof totalCalories !== 'undefined' ? totalCalories : 0,
+            thoi_gian_tap_giay: typeof elapsedSeconds !== 'undefined' ? elapsedSeconds : 0
+        });
+
+        // 4. LƯU VẾT KHÁM PHÁ (Sương mù)
+        // Tạo một nhánh riêng chứa danh sách tất cả các điểm đã đi qua
+        db.ref('lich_su_di_chuyen/' + username).push({
+            lat: lat,
+            lng: lng,
+            thoi_gian: Date.now()
         });
     }
     
+    // 3. HÀM QUÉT TÌM BẠN BÈ XUNG QUANH
     function quetNguoiDungKhac() {
         db.ref('nguoi_dung').on('value', (snapshot) => {
             console.log("📡 Tín hiệu từ các tài khoản khác:", snapshot.val());

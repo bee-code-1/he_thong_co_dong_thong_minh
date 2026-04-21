@@ -248,11 +248,10 @@
     }
 
     // --- TRACKING ACTIONS ---
+    // === XỬ LÝ NÚT BẮT ĐẦU ===
     function startTrackingAction() {
-        if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+        latestLatLng = null;
         
-        document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
-        if (!gpsWatcherId) initGPS();
         if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
         
         document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
@@ -277,26 +276,14 @@
         }
     }
 
+    // === XỬ LÝ NÚT TẠM DỪNG ===
     function pauseTrackingAction() {
+        if (!isTracking) return;
         isPaused = !isPaused;
         const btn = document.getElementById('pause-btn');
         btn.innerText = isPaused ? '▶ TIẾP TỤC' : '⏸ TẠM DỪNG';
         btn.style.backgroundColor = isPaused ? '#17a2b8' : '#ffc107';
         btn.style.color = isPaused ? 'white' : '#333';
-    }
-
-    function executeEndTracking() {
-        if(!confirm("Bạn chắc chắn muốn kết thúc hành trình?")) return;
-        isTracking = false; isPaused = false; elapsedSeconds = 0; totalDistanceMeter = 0; pathLatLngs = [];
-        clearInterval(timerInterval); timerInterval = null;
-
-        document.querySelectorAll('.stat-val').forEach(el => el.innerText = el.id === 'time-display' ? '00:00' : '0');
-        document.getElementById('start-btn').style.display = 'block';
-        document.getElementById('start-btn').innerText = '▶ BẮT ĐẦU';
-        document.getElementById('pause-btn').style.display = 'none';
-        document.getElementById('end-btn').style.display = 'none';
-        
-        if (polyline) polyline.setLatLngs([]);
     }
 
     // --- GPS LÕI ---
@@ -387,16 +374,16 @@
     }
 </script>
 
-<!-- Cấu hình kết nối vào Đám mây của Hiệp -->
+<!-- Cấu hình kết nối vào Đám mây  -->
 <script>
-    // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE CỦA HIỆP (CHỈ KHAI BÁO 1 LẦN)
+    // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE  (CHỈ KHAI BÁO 1 LẦN)
     const firebaseConfig = {
         databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/" 
     };
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-       // 2. TÍNH NĂNG: BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
+       // 2. TÍNH NĂNG BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
     function banToaDoLenMay(username, lat, lng) {
         // Lấy các chỉ số sức khỏe đã lưu ở LocalStorage (nếu có)
         let userHeight = localStorage.getItem('appUser_height') || "Chưa nhập";
@@ -410,11 +397,11 @@
             trang_thai: "Đang online",
             thoi_gian_cap_nhat: Date.now(),
 
-            // 2. Chỉ số cá nhân (Phục vụ AI tư vấn sức khỏe)
+            // 2. Chỉ số cá nhân
             chieu_cao: userHeight,
             can_nang: userWeight,
 
-            // 3. Tiến trình thể thao (Phục vụ Recap thành quả)
+            // 3. Tiến trình thể thao (recap)
             tong_quang_duong_m: typeof totalDistanceMeter !== 'undefined' ? totalDistanceMeter : 0,
             tong_so_buoc: typeof totalSteps !== 'undefined' ? totalSteps : 0,
             calo_tieu_thu: typeof totalCalories !== 'undefined' ? totalCalories : 0,
@@ -430,85 +417,118 @@
         });
     }
     
-    // === TÍNH NĂNG RADAR CỘNG ĐỒNG (THẤY NHAU TRÊN BẢN ĐỒ) ===
+     // === TÍNH NĂNG RADAR CỘNG ĐỒNG ===
     let isRadarOn = false;
-    let friendMarkers = {}; // Cuốn sổ lưu trữ các mũi tên của bạn bè trên bản đồ
+    let friendMarkers = {}; 
 
     function toggleRadar() {
         const btn = document.getElementById('btn-cong-dong');
         isRadarOn = !isRadarOn; 
 
-        // Lấy biến bản đồ
         let banDoHienTai = typeof map !== 'undefined' ? map : null;
 
         if (isRadarOn) {
-            // 1. TRẠNG THÁI BẬT: Đổi giao diện nút sang Xanh lá
             btn.innerHTML = "📡 Đang quét Cộng đồng... (ON)";
             btn.style.backgroundColor = "#4CAF50"; 
             btn.style.animation = "radar-pulse 1.5s infinite";
-            console.log("Radar BẬT: Bắt đầu quét Firebase...");
             
-            // Lấy tên mình để không tự vẽ chính mình lên bản đồ
             let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || "";
 
-            // 2. Bật máy quét Firebase (lắng nghe liên tục)
-            db.ref('nguoi_dung').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
+            if (typeof db !== 'undefined') {
+                db.ref('nguoi_dung').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (!data) return;
 
-                // Duyệt qua từng người đang có trên đám mây
-                for (const user in data) {
-                    if (user === currentUser) continue; // Bỏ qua bản thân
+                    for (const user in data) {
+                        if (user === currentUser) continue; 
+                        const lat = data[user].toa_do_lat;
+                        const lng = data[user].toa_do_lng;
+                        const thoiGian = data[user].thoi_gian_cap_nhat;
 
-                    const lat = data[user].toa_do_lat;
-                    const lng = data[user].toa_do_lng;
-                    const trangThai = data[user].trang_thai;
-                    const thoiGian = data[user].thoi_gian_cap_nhat;
+                        if (lat && lng && (Date.now() - thoiGian < 600000)) {
+                            if (friendMarkers[user]) {
+                                friendMarkers[user].setLatLng([lat, lng]);
+                            } else {
+                                const friendIcon = L.divIcon({
+                                    className: 'friend-icon',
+                                    html: `<div style="background-color: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; text-align: center; line-height: 35px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6); font-size: 16px;">😎</div>`,
+                                    iconSize: [2],      
+                                    iconAnchor: [2, 3],    
+                                    popupAnchor: [0, -35]    
+                                });
 
-                    // Chỉ hiển thị những người online trong vòng 10 phút qua 
-                    if (lat && lng && (Date.now() - thoiGian < 600000)) {
-                        if (friendMarkers[user]) {
-                            // Nếu bạn bè này đã có trên bản đồ -> Di chuyển icon của họ đến tọa độ mới
-                            friendMarkers[user].setLatLng([lat, lng]);
-                        } else {
-                            // Nếu là người mới -> Vẽ một Icon Avatar cực xịn lên bản đồ
-                            const friendIcon = L.divIcon({
-                                className: 'friend-icon',
-                                html: `<div style="background-color: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; text-align: center; line-height: 35px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6); font-size: 16px;">😎</div>`,
-                                iconSize: [2],      // Đã sửa chuẩn kích thước 35x35
-                                iconAnchor: [2, 3],    // Đã sửa chuẩn điểm cắm (ở giữa cạnh đáy)
-                                popupAnchor: [0, -35]    // Hiện popup lên trên đỉnh đầu
-                            });
-
-                            const newMarker = L.marker([lat, lng], {icon: friendIcon});
-                            newMarker.bindPopup(`<b>Tài khoản: ${user}</b><br>Trạng thái: ${trangThai}`);
-                            
-                            // Thêm vào bản đồ
-                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
-                            
-                            // Lưu vào sổ
-                            friendMarkers[user] = newMarker;
+                                const newMarker = L.marker([lat, lng], {icon: friendIcon});
+                                newMarker.bindPopup(`<b>${user}</b>`);
+                                if (banDoHienTai) newMarker.addTo(banDoHienTai);
+                                friendMarkers[user] = newMarker;
+                            }
                         }
                     }
-                }
-            });
-
+                });
+            }
         } else {
-            // 3. TRẠNG THÁI TẮT: Đổi lại giao diện nút sang Cam
             btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
             btn.style.backgroundColor = "#ff9800";
             btn.style.animation = "none";
-            console.log("Radar TẮT: Đã ngắt kết nối.");
             
-            // Tắt máy quét Firebase
-            db.ref('nguoi_dung').off();
+            if (typeof db !== 'undefined') db.ref('nguoi_dung').off();
 
-            // Xóa sạch các Avatar bạn bè khỏi bản đồ
             for (const user in friendMarkers) {
                 if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
             }
-            friendMarkers = {}; // Làm rỗng danh sách
+            friendMarkers = {}; 
         }
+    }
+
+    // === XỬ LÝ NÚT KẾT THÚC (GIỮ 3 GIÂY ĐỂ MỞ RECAP) ===
+    const endBtn = document.getElementById('end-btn');
+    let holdTimer;
+
+    function startHold(e) {
+        if (!isTracking) return; 
+        e.preventDefault(); 
+        endBtn.innerText = "ĐANG GIỮ...";
+        endBtn.style.backgroundColor = "#ff5722"; 
+        
+        holdTimer = setTimeout(() => {
+            hienThiRecap(); 
+        }, 3000);
+    }
+
+    function cancelHold() {
+        clearTimeout(holdTimer);
+        endBtn.innerText = "⏹ KẾT THÚC";
+        endBtn.style.backgroundColor = ""; 
+    }
+
+    if (endBtn) {
+        endBtn.addEventListener('mousedown', startHold);
+        endBtn.addEventListener('touchstart', startHold);
+        endBtn.addEventListener('mouseup', cancelHold);
+        endBtn.addEventListener('mouseleave', cancelHold);
+        endBtn.addEventListener('touchend', cancelHold);
+    }
+
+    function hienThiRecap() {
+        isPaused = true; 
+        document.getElementById('pause-btn').innerText = "▶ TIẾP TỤC";
+        
+        document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
+        document.getElementById('recap-distance').innerText = document.getElementById('distance-display').innerText;
+        document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
+        document.getElementById('recap-calo').innerText = document.getElementById('calo-display').innerText;
+        
+        document.getElementById('recap-modal').style.display = 'flex';
+        if (endBtn) endBtn.innerText = "⏹ KẾT THÚC"; 
+    }
+
+    function luuTienTrinh() {
+        document.getElementById('recap-modal').style.display = 'none';
+        isTracking = false;
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('start-btn').innerText = "▶ BẮT ĐẦU LẠI";
+        document.getElementById('pause-btn').style.display = 'none';
+        document.getElementById('end-btn').style.display = 'none';
     }
 </script>
 </body>

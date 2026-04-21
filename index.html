@@ -437,18 +437,35 @@
                 fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
                 .then(res => res.json())
                 .then(data => {
-                    if(data.routes && data.routes[ 0 ]) {
-                        totalDistanceMeter += data.routes[ 0 ].distance;
+                    if(data.routes && data.routes.length > 0) {
+                        // 1. ÉP KIỂU VÀ BẢO VỆ DỮ LIỆU KHOẢNG CÁCH
+                        let khoangCachMoi = parseFloat(data.routes.distance);
+                        if (isNaN(khoangCachMoi)) khoangCachMoi = 0; // Chống lỗi từ OSRM
                         
-                        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-                        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * stepsPerMeter);
-                        document.getElementById('cal-display').innerText = (0.5 * userWeight * (totalDistanceMeter / 1000)).toFixed(1);
+                        // Nếu tổng quãng đường bị "nhiễm độc" NaN từ trước, lập tức reset về 0
+                        if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
+                        totalDistanceMeter += khoangCachMoi;
 
-                        // Thêm [ 0 ] vào coord để lấy chuẩn Kinh độ
-                        data.routes[ 0 ].geometry.coordinates.forEach(coord => {
-                            pathLatLngs.push(L.latLng(coord[ 1 ], coord[ 0 ]));
-                        });
-                        polyline.setLatLngs(pathLatLngs);
+                        // 2. ÉP KIỂU AN TOÀN CHO CHỈ SỐ CƠ THỂ
+                        let canNang = parseFloat(userWeight);
+                        if (isNaN(canNang) || canNang <= 0) canNang = 65; // Mặc định 65kg nếu lỗi
+                        
+                        let buoc = parseFloat(stepsPerMeter);
+                        if (isNaN(buoc) || buoc <= 0) buoc = 1.42; // Mặc định ~1.42 bước/mét nếu lỗi
+
+                        // 3. IN RA MÀN HÌNH (Chắc chắn 100% ra số cụ thể)
+                        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+                        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
+                        document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+
+                        // 4. VẼ ĐƯỜNG ĐI CHUẨN XÁC
+                        if (data.routes.geometry && data.routes.geometry.coordinates) {
+                            data.routes.geometry.coordinates.forEach(coord => {
+                                // coord[5] là Vĩ độ (lat), coord là Kinh độ (lng)
+                                pathLatLngs.push(L.latLng(coord[5], coord));
+                            });
+                            polyline.setLatLngs(pathLatLngs);
+                        }
                     }
                 }).catch(err => console.error("Lỗi mạng:", err));
             }

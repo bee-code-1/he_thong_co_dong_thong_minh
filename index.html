@@ -87,16 +87,21 @@
             <button class="skip-btn" onclick="saveProfile(true)">Bỏ qua</button>
         </div>
     </div>
- <!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
-    <div id="app-container">
-        <div id="fog-layer"></div>
-        <div id="stats-window">
-            <h3>📊 Tiến độ hôm nay</h3>
-            <p>⏱ Thời gian: <span id="time-display" class="stat-val text-red">00:00</span></p>
-            <p>🚶 Bước chân: <span id="step-display" class="stat-val text-green">0</span></p>
-            <p>📍 Đã đi: <span id="dist-display" class="stat-val text-blue">0.00</span> km</p>
-            <p>🔥 Tiêu thụ: <span id="cal-display" class="stat-val text-orange">0.0</span> calo</p>
-        </div>
+<!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
+<div id="app-container">
+    
+    <div id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; right: 15px; top: 120px; width: 60px; height: 60px; background-color: #555; color: white; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 11px; font-weight: bold; border-radius: 10px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; pointer-events: auto; transition: 0.3s;">
+        BỤI MỊN<br>🔴 OFF
+    </div>
+
+    <div id="fog-layer"></div>
+    <div id="stats-window">
+        <h3>📊 Tiến độ hôm nay</h3>
+        <p>⏱ Thời gian: <span id="time-display" class="stat-val text-red">00:00</span></p>
+        <p>🚶 Bước chân: <span id="step-display" class="stat-val text-green">0</span></p>
+        <p>📍 Đã đi: <span id="dist-display" class="stat-val text-blue">0.00</span> km</p>
+        <p>🔥 Tiêu thụ: <span id="cal-display" class="stat-val text-orange">0.0</span> calo</p>
+    </div>
     <!-- MENU SƯƠNG MÙ
         <div id="lightbulb-container">
             <div id="fog-menu">
@@ -189,6 +194,7 @@
     let totalDistanceMeter = 0, pathLatLngs = [];
     let gpsWatcherId = null, isDrawingFog = false, fogEnabled = true;
     let lopBuiMin = L.layerGroup().addTo(map);
+    let isHienBui = false; // Trạng thái mặc định là Tắt bụi
 
     //  LOGIC TÀI KHOẢN 
     function toggleAuthMode() {
@@ -725,8 +731,34 @@
         }
     };
 
-    //  LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG MÀU XÁM 
+    // === HÀM BẬT / TẮT LỚP BỤI MỊN ===
+    window.toggleBuiMin = function() {
+        isHienBui = !isHienBui;
+        const btn = document.getElementById('btn-bui-min');
+        
+        if (isHienBui) {
+            btn.style.backgroundColor = '#dc3545'; // Chuyển nút sang Đỏ rực
+            btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
+            
+            // Nếu đã có tọa độ GPS thì ép quét bụi hiện lên NGAY LẬP TỨC
+            if (latestLatLng) {
+                capNhatLopBui(latestLatLng.lat, latestLatLng.lng);
+            } else {
+                alert("Đang đợi tín hiệu GPS. Bụi sẽ hiện ra ngay khi bạn di chuyển!");
+            }
+        } else {
+            btn.style.backgroundColor = '#555'; // Trả về màu Xám
+            btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
+            // Xóa sạch mảng xám trên bản đồ
+            if (typeof lopBuiMin !== 'undefined') lopBuiMin.clearLayers();
+        }
+    };
+
+    // === HÀM LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG KHÓI ===
     function capNhatLopBui(lat, lng) {
+        // Nếu nút đang TẮT thì không thèm vẽ gì cả
+        if (!isHienBui) return;
+
         const apiKey = 'e5ffd72440bbfad8ea7b2144b4a0655b'; 
         const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lng}&appid=${apiKey}`;
 
@@ -734,22 +766,20 @@
             .then(res => res.json())
             .then(data => {
                 if(data.list && data.list) {
-                    // Lấy chỉ số nồng độ bụi mịn PM2.5 thực tế từ vệ tinh
                     const mucDoBui = data.list.components.pm2_5; 
-
-                    let doMo = 0.10 + Math.floor((mucDoBui - 1) / 50) * 0.05;
+                    let doMo = 0.30 + Math.floor((mucDoBui - 1) / 50) * 0.10;
                     
-                    if (doMo > 0.60) doMo = 0.60;
-                    if (doMo < 0.10) doMo = 0.10;
+                    // Khóa trần ở mức 90% 
+                    if (doMo > 0.90) doMo = 0.90;
+                    // Khóa đáy ở mức 30% (
+                    if (doMo < 0.30) doMo = 0.30;
 
-                    // Xóa mảng bụi cũ 
                     if (typeof lopBuiMin !== 'undefined') {
                         lopBuiMin.clearLayers();
 
-                        // Vẽ một màn khói xám bao phủ khu vực
                         L.circle([lat, lng], {
                             color: 'transparent',
-                            fillColor: '#555555',
+                            fillColor: '#2b2b2b',
                             fillOpacity: doMo,
                             radius: 400
                         }).addTo(lopBuiMin);

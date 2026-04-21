@@ -774,10 +774,9 @@
             if (typeof lopBuiMin !== 'undefined') lopBuiMin.clearLayers();
         }
     };
-
-    // === HÀM LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG KHÓI ===
+    
+    //  HÀM LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG KHÓI 
     function capNhatLopBui(lat, lng) {
-        // Nếu nút đang TẮT thì không thèm vẽ gì cả
         if (!isHienBui) return;
 
         const apiKey = 'e5ffd72440bbfad8ea7b2144b4a0655b'; 
@@ -786,13 +785,14 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                if(data.list && data.list) {
-                    const mucDoBui = data.list.components.pm2_5; 
+                if(data.list && data.list.length > 0) {
+                    const mucDoBui = data.list[ 0 ].components.pm2_5; 
+
                     let doMo = 0.30 + Math.floor((mucDoBui - 1) / 50) * 0.10;
                     
                     // Khóa trần ở mức 90% 
                     if (doMo > 0.90) doMo = 0.90;
-                    // Khóa đáy ở mức 30% (
+                    // Khóa đáy ở mức 30%
                     if (doMo < 0.30) doMo = 0.30;
 
                     if (typeof lopBuiMin !== 'undefined') {

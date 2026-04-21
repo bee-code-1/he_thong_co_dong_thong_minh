@@ -107,11 +107,38 @@
             <button id="lightbulb-btn" onclick="toggleLightbulbMenu()">💡</button>
         </div>
         -->
+        <!-- NÚT HIỂN THỊ CỘNG ĐỒNG NHỎ GỌN -->
+        <div style="text-align: center; margin-top: 10px; margin-bottom: 15px; z-index: 1000; position: relative;">
+            <button id="btn-cong-dong" style="background-color: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer;">
+                👥 Mở radar Cộng đồng
+            </button>
+        </div>
+
+        <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
+        <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+            <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                <h2 style="color: #4CAF50; margin-top: 0;">🎉 CHÚC MỪNG! 🎉</h2>
+                <p style="color: #555; font-size: 14px;">Bạn đã hoàn thành xuất sắc lộ trình hôm nay.</p>
+                
+                <div style="text-align: left; background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; line-height: 1.8;">
+                    ⏱ <b>Thời gian:</b> <span id="recap-time" style="color: #2196F3;">0</span><br>
+                    📏 <b>Quãng đường:</b> <span id="recap-distance" style="color: #2196F3;">0</span><br>
+                    👟 <b>Bước chân:</b> <span id="recap-steps" style="color: #2196F3;">0</span> bước<br>
+                    🔥 <b>Calo tiêu thụ:</b> <span id="recap-calo" style="color: #2196F3;">0</span> kcal
+                </div>
+
+                <button onclick="luuTienTrinh()" style="background-color: #4CAF50; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    LƯU VÀO TIẾN TRÌNH
+                </button>
+            </div>
+        </div>
+
         <div id="action-btns-container">
             <button id="locate-me-btn" class="action-btn" onclick="flyToMyLocation()" style="background-color: #2196F3;">📍 VỊ TRÍ CỦA TÔI</button>
             <button id="start-btn" class="action-btn" onclick="startTrackingAction()">▶ BẮT ĐẦU</button>
             <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()">⏸ TẠM DỪNG</button>
-            <button id="end-btn" class="action-btn" onclick="executeEndTracking()">⏹ KẾT THÚC</button>
+            <!-- LƯU Ý: Đã xóa onclick="executeEndTracking()" ở nút dưới để chuẩn bị làm tính năng giữ 3 giây -->
+            <button id="end-btn" class="action-btn" style="user-select: none; -webkit-user-select: none;">⏹ KẾT THÚC</button>
         </div>
     </div>
 

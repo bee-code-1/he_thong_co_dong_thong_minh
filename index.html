@@ -203,10 +203,28 @@
     }
     function changeOpacity(val) { 
         if(fogEnabled) document.getElementById('fog-layer').style.backgroundColor = `rgba(0, 0, 0, ${val})`; 
+} 
+
+    let isFirstLocation = true; 
+
+    //  gọi bản đồ bay về vị trí hiện tại
+    function flyToMyLocation() {
+        if (latestLatLng) { 
+            map.flyTo(latestLatLng, 18, {
+                animate: true,
+                duration: 1.5
+            });
+        } else {
+            alert("Đang tìm tín hiệu GPS, vui lòng đợi...");
+        }
     }
 
     // --- TRACKING ACTIONS ---
     function startTrackingAction() {
+        if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+        
+        document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
+        if (!gpsWatcherId) initGPS();
         if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
         
         document.getElementById('start-btn').innerText = "ĐANG KẾT NỐI GPS...";
@@ -261,20 +279,24 @@
  gpsWatcherId = navigator.geolocation.watchPosition(position => {
             const lat = position.coords.latitude, lng = position.coords.longitude;
             
-            // 🚀 BẮT ĐẦU ĐOẠN THÊM MỚI: BẮN TỌA ĐỘ LÊN MÂY 🚀
-            // Lấy tên tài khoản bạn đang đăng nhập
+            //  BẮN TỌA ĐỘ LÊN ĐÁM MÂY
+            // Lấy tên tài khoản đăng nhập
             let username = localStorage.getItem('currentUser') || 'nguoi_dung_test';
             // Gọi hàm bắn tọa độ
             banToaDoLenMay(username, lat, lng);
-            // ---------------------------------------------
 
             const currentLatLng = L.latLng(lat, lng);
             const heading = position.coords.heading || 0;
             latestLatLng = currentLatLng;
 
             if (document.getElementById('start-btn').innerText === "ĐANG KẾT NỐI GPS...") {
-                map.setView([lat, lng], 18);
                 startTrackingAction();
+            }
+
+            // Chỉ căn giữa bản đồ đúng lần đầu tiên
+            if (isFirstLocation) {
+                map.setView([lat, lng], 18); 
+                isFirstLocation = false;
             }
 
             if (!userMarker) {

@@ -752,31 +752,9 @@
         }
     };
 
-    // === HÀM BẬT / TẮT LỚP BỤI MỊN ===
-    window.toggleBuiMin = function() {
-        isHienBui = !isHienBui;
-        const btn = document.getElementById('btn-bui-min');
-        
-        if (isHienBui) {
-            btn.style.backgroundColor = '#dc3545'; // Chuyển nút sang Đỏ rực
-            btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
-            
-            // Nếu đã có tọa độ GPS thì ép quét bụi hiện lên NGAY LẬP TỨC
-            if (latestLatLng) {
-                capNhatLopBui(latestLatLng.lat, latestLatLng.lng);
-            } else {
-                alert("Đang đợi tín hiệu GPS. Bụi sẽ hiện ra ngay khi bạn di chuyển!");
-            }
-        } else {
-            btn.style.backgroundColor = '#555'; // Trả về màu Xám
-            btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
-            // Xóa sạch mảng xám trên bản đồ
-            if (typeof lopBuiMin !== 'undefined') lopBuiMin.clearLayers();
-        }
-    };
-    
-    //  HÀM LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG KHÓI 
+    // === HÀM LẤY DỮ LIỆU BỤI VÀ VẼ MẢNG KHÓI ===
     function capNhatLopBui(lat, lng) {
+        // Nếu nút đang TẮT thì không thèm vẽ gì cả
         if (!isHienBui) return;
 
         const apiKey = 'e5ffd72440bbfad8ea7b2144b4a0655b'; 
@@ -785,6 +763,7 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
+                // ĐÃ SỬA: Thêm length > 0 và [ 0 ] để trỏ đúng vào phần tử dữ liệu đầu tiên
                 if(data.list && data.list.length > 0) {
                     const mucDoBui = data.list[ 0 ].components.pm2_5; 
 

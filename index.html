@@ -308,6 +308,7 @@
                 pathLatLngs.push(currentLatLng);
             }
 
+            /* TẠM TẮT TÍNH NĂNG TÍNH TOÁN SƯƠNG MÙ
             function updateFog() {
                 if (!latestLatLng || isDrawingFog) return;
                 isDrawingFog = true;
@@ -322,6 +323,7 @@
                     isDrawingFog = false;
                 });
             }
+            */
             
             map.off('move', updateFog); map.off('zoom', updateFog);
             map.on('move', updateFog); map.on('zoom', updateFog);

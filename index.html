@@ -107,10 +107,15 @@
             <button id="lightbulb-btn" onclick="toggleLightbulbMenu()">💡</button>
         </div>
         -->
-<!-- NÚT HIỂN THỊ CỘNG ĐỒNG NHỎ GỌN -->
+<!-- NÚT HIỂN THỊ CỘNG ĐỒNG VÀ CHIA SẺ VỊ TRÍ -->
 <div style="text-align: center; margin-top: 10px; margin-bottom: 15px; z-index: 1000; position: relative; pointer-events: auto;">
     <button id="btn-cong-dong" style="background-color: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer;">
         👥 Mở radar Cộng đồng
+    </button>
+    <br>
+    <!-- NÚT CHIA SẺ VỊ TRÍ MỚI -->
+    <button id="btn-chia-se" onclick="window.toggleChiaSe()" style="margin-top: 8px; background-color: #6c757d; color: white; padding: 5px 12px; border: none; border-radius: 15px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🔕 Đang ẩn vị trí
     </button>
 </div>
 
@@ -310,11 +315,13 @@
             
             //  BẮN TỌA ĐỘ LÊN ĐÁM MÂY
             // Lấy tên tài khoản 
-            let username = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || ('Khach_' + Math.floor(Math.random() * 10000));
-            
-            // Gọi hàm bắn tọa độ
+  // BẮN TỌA ĐỘ LÊN ĐÁM MÂY (CÓ KIỂM SOÁT BẰNG NÚT BẤM)
+        let username = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || ('Khach_' + Math.floor(Math.random() * 10000));
+        
+        // CHỈ BẮN LÊN FIREBASE NẾU NGƯỜI DÙNG CHO PHÉP (isSharingLocation = true)
+        if (typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
             banToaDoLenMay(username, lat, lng);
-
+        }
             const currentLatLng = L.latLng(lat, lng);
             const heading = position.coords.heading || 0;
             latestLatLng = currentLatLng;
@@ -640,6 +647,28 @@
             btnEnd.style.display = 'none';
             btnEnd.innerText = "⏹ KẾT THÚC";
             btnEnd.style.backgroundColor = "";
+        }
+    };
+      // 5. CHỨC NĂNG BẬT/TẮT CHIA SẺ VỊ TRÍ
+    window.isSharingLocation = false; // Mặc định luôn ẩn vị trí khi mới vào app
+
+    window.toggleChiaSe = function() {
+        window.isSharingLocation = !window.isSharingLocation;
+        const btnChiaSe = document.getElementById('btn-chia-se');
+        
+        if (window.isSharingLocation) {
+            btnChiaSe.innerHTML = "🌍 Đang chia sẻ vị trí (Public)";
+            btnChiaSe.style.backgroundColor = "#2196F3"; // Chuyển màu Xanh dương
+        } else {
+            btnChiaSe.innerHTML = "🔕 Đang ẩn vị trí (Private)";
+            btnChiaSe.style.backgroundColor = "#6c757d"; // Về lại màu Xám
+            
+            // Xóa luôn dữ liệu trên Firebase khi bấm ẩn để người khác không nhìn thấy mình nữa
+            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser');
+            if (currentUser && typeof db !== 'undefined') {
+                db.ref('nguoi_dung/' + currentUser + '/toa_do_lat').remove();
+                db.ref('nguoi_dung/' + currentUser + '/toa_do_lng').remove();
+            }
         }
     };
 </script>

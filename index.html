@@ -202,24 +202,47 @@
         
         if(!user || !pass) return alert("Nhập đủ thông tin!");
         
-        // Giới hạn 8 ký tự + không chứa khoảng trắng
-        if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự");
-        if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng");
+        // 1. LUẬT ĐĂNG KÝ: Giới hạn 8 ký tự và không chứa khoảng trắng
+        if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự!");
+        if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng!");
 
         if (mode === 'register') {
-            if (localStorage.getItem("appUser_" + user)) return alert("Tài khoản đã tồn tại!");
-            localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
-            currentUser = user;
-            localStorage.setItem('currentUser', user); //  Lưu thẻ nhớ phiên đăng nhập
-            document.getElementById('auth-modal').style.display = 'none';
-            document.getElementById('onboarding-modal').style.display = 'flex';
+            // === MỤC TIÊU 4: KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE) ===
+            if (typeof db !== 'undefined') {
+                // Gọi lên đám mây Firebase hỏi xem tên này có ai xài chưa
+                db.ref('nguoi_dung/' + user).once('value').then(function(snapshot) {
+                    if (snapshot.exists()) {
+                        // Tên đã bị xí phần trên mạng lưới
+                        alert("Tên tài khoản '" + user + "' đã có người sử dụng. Vui lòng chọn tên khác!");
+                    } else {
+                        // Tên hợp lệ, chưa ai dùng -> Lưu vào máy
+                        localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
+                        currentUser = user;
+                        localStorage.setItem('currentUser', user); 
+                        
+                        // Đồng thời tạo ngay một "chỗ trống" trên Firebase để xí phần tên này vĩnh viễn
+                        db.ref('nguoi_dung/' + user).set({
+                            trang_thai: "Vừa tạo tài khoản",
+                            thoi_gian_cap_nhat: Date.now()
+                        });
+
+                        document.getElementById('auth-modal').style.display = 'none';
+                        document.getElementById('onboarding-modal').style.display = 'flex';
+                    }
+                }).catch(function(error) {
+                    alert("Lỗi kết nối mạng: Không thể kiểm tra dữ liệu!");
+                });
+            } else {
+                alert("Hệ thống chưa kết nối được với máy chủ Firebase!");
+            }
         } else {
+            // 2. LOGIC ĐĂNG NHẬP (Giữ nguyên)
             const data = JSON.parse(localStorage.getItem("appUser_" + user));
             if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
             currentUser = user; 
             userWeight = data.weight || 65; 
             stepsPerMeter = 1 / (data.strideLength || 0.7);
-            localStorage.setItem('currentUser', user); //  Lưu thẻ nhớ phiên đăng nhập
+            localStorage.setItem('currentUser', user); // Lưu thẻ nhớ phiên đăng nhập
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
         }

@@ -427,22 +427,23 @@
         });
     }
     
-     // === TÍNH NĂNG RADAR CỘNG ĐỒNG ===
+    // === 1. TÍNH NĂNG RADAR CỘNG ĐỒNG ===
     let isRadarOn = false;
     let friendMarkers = {}; 
 
     function toggleRadar() {
         const btn = document.getElementById('btn-cong-dong');
+        if (!btn) return;
+        
         isRadarOn = !isRadarOn; 
-
         let banDoHienTai = typeof map !== 'undefined' ? map : null;
 
         if (isRadarOn) {
-            btn.innerHTML = "📡 Đang quét Cộng đồng... (ON)";
+            btn.innerHTML = "📡 Đang quét... (ON)";
             btn.style.backgroundColor = "#4CAF50"; 
             btn.style.animation = "radar-pulse 1.5s infinite";
             
-            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || "";
+            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || "Khach";
 
             if (typeof db !== 'undefined') {
                 db.ref('nguoi_dung').on('value', (snapshot) => {
@@ -459,6 +460,7 @@
                             if (friendMarkers[user]) {
                                 friendMarkers[user].setLatLng([lat, lng]);
                             } else {
+                                // ĐÃ FIX CHUẨN KÍCH THƯỚC LEAFLET: 35x35 pixel
                                 const friendIcon = L.divIcon({
                                     className: 'friend-icon',
                                     html: `<div style="background-color: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; text-align: center; line-height: 35px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6); font-size: 16px;">😎</div>`,
@@ -490,7 +492,14 @@
         }
     }
 
-    // === XỬ LÝ NÚT KẾT THÚC (BẤM 2 LẦN KÈM ĐẾM NGƯỢC 3 GIÂY) ===
+    // ÉP CỨNG SỰ KIỆN CLICK CHO NÚT RADAR (Trị dứt điểm lỗi liệt nút)
+    const radarBtn = document.getElementById('btn-cong-dong');
+    if (radarBtn) {
+        radarBtn.onclick = toggleRadar;
+    }
+
+
+    // === 2. XỬ LÝ NÚT KẾT THÚC (CƠ CHẾ BẤM 2 LẦN) ===
     const endBtn = document.getElementById('end-btn');
     let confirmTimeout;
     let countdownInterval;
@@ -501,21 +510,20 @@
         if (e) e.preventDefault(); 
 
         if (!isConfirming) {
-            // BẤM LẦN 1: Bật chế độ chờ xác nhận và đếm lùi 3 giây
+            // LẦN 1: Hiện cảnh báo và bắt đầu đếm 3 giây
             isConfirming = true;
             let timeLeft = 3;
-            endBtn.innerText = `⏳ XÁC NHẬN (${timeLeft}s)`;
-            endBtn.style.backgroundColor = "#ff5722"; // Chuyển sang màu Cam cảnh báo
+            endBtn.innerText = `⏳ BẤM LẦN NỮA ĐỂ CHỐT (${timeLeft}s)`;
+            endBtn.style.backgroundColor = "#ff5722"; 
 
-            // Đồng hồ đếm lùi nhảy số ngay trên nút
             countdownInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft > 0) {
-                    endBtn.innerText = `⏳ XÁC NHẬN (${timeLeft}s)`;
+                    endBtn.innerText = `⏳ BẤM LẦN NỮA ĐỂ CHỐT (${timeLeft}s)`;
                 }
             }, 1000);
 
-            // Nếu hết 3 giây mà KHÔNG bấm lần 2 -> Tự hủy, trở về bình thường
+            // NẾU HẾT 3 GIÂY MÀ KHÔNG BẤM TIẾP -> TỰ ĐỘNG HỦY THAO TÁC
             confirmTimeout = setTimeout(() => {
                 clearInterval(countdownInterval);
                 isConfirming = false;
@@ -524,23 +532,23 @@
             }, 3000);
 
         } else {
-            // BẤM LẦN 2: Người dùng chốt kết thúc khi đang đếm ngược
+            // LẦN 2: Đã bấm chốt ngay trong lúc đếm ngược -> BẬT BẢNG RECAP NGAY
             clearInterval(countdownInterval);
             clearTimeout(confirmTimeout);
             isConfirming = false;
             
-            endBtn.innerText = "⏹ KẾT THÚC"; // Trả lại giao diện nút
+            endBtn.innerText = "⏹ KẾT THÚC"; 
             endBtn.style.backgroundColor = ""; 
             
-            hienThiRecap(); // Gọi bảng Tổng kết thành tích ra
+            hienThiRecap(); 
         }
     }
 
     if (endBtn) {
-        // Gắn sự kiện click 1 chạm thay vì bắt phải giữ lì
         endBtn.onclick = handleEndClick;
     }
 
+    // === HÀM HIỂN THỊ VÀ LƯU RECAP ===
     function hienThiRecap() {
         isPaused = true; 
         document.getElementById('pause-btn').innerText = "▶ TIẾP TỤC";
@@ -551,7 +559,6 @@
         document.getElementById('recap-calo').innerText = document.getElementById('calo-display').innerText;
         
         document.getElementById('recap-modal').style.display = 'flex';
-        if (endBtn) endBtn.innerText = "⏹ KẾT THÚC"; 
     }
 
     function luuTienTrinh() {

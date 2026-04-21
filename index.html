@@ -741,9 +741,8 @@
             }
         }
     };
-// === HÀM BẬT / TẮT BỤI MỊN (KẾT HỢP BẢN ĐỒ NHIỆT WAQI VÀ HIỆU ỨNG KHÓI) ===
+// === HÀM BẬT / TẮT BỤI MỊN (BIẾN BẢN ĐỒ SỐ LIỆU THÀNH SƯƠNG MÙ) ===
 let lopBanDoBui = null; 
-let lopKhoiBuiThuCong = L.layerGroup().addTo(map);
 
 window.toggleBuiMin = function() {
     if (typeof isHienBui === 'undefined') window.isHienBui = false;
@@ -754,56 +753,30 @@ window.toggleBuiMin = function() {
         btn.style.backgroundColor = '#dc3545'; 
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
         
-        // 1. BẬT BẢN ĐỒ SỐ LIỆU TOÀN CẦU (WAQI)
+        // 1. Kéo bản đồ chất lượng không khí toàn cầu về (Giống IQAir)
         if (!lopBanDoBui) {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18,
-                opacity: 0.90, 
+                opacity: 0.85, // Độ mờ 85% để hòa quyện vào bản đồ nền
                 attribution: 'Air Quality by WAQI'
             });
         }
         lopBanDoBui.addTo(map);
 
-        // 2. BẬT HIỆU ỨNG KHÓI ĐEN TẠI CHỖ (Cần có GPS)
-        if (typeof latestLatLng !== 'undefined' && latestLatLng) {
-            window.veHieuUngKhoiBui(latestLatLng.lat, latestLatLng.lng);
-        }
+        // 2. MA THUẬT NẰM Ở ĐÂY: Dùng CSS lột sạch màu sắc, biến thành Khói Xám/Đen
+        // - grayscale(100%): Khử toàn bộ màu (thành trắng đen)
+        // - contrast(150%): Tăng độ tương phản để khói đen đặc hơn
+        // - brightness(60%): Kéo tối toàn bộ mảng màu xuống cho giống sương mù
+        lopBanDoBui.getContainer().style.filter = "grayscale(100%) contrast(150%) brightness(60%)";
 
     } else {
         btn.style.backgroundColor = '#555'; 
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
         
+        // Tắt lớp sương mù đi
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
-        lopKhoiBuiThuCong.clearLayers();
     }
 };
-
-// === HÀM VẼ VÒNG TRÒN KHÓI ẢO GIÁC BÁM THEO GPS ===
-window.veHieuUngKhoiBui = function(lat, lng) {
-    if (!isHienBui) return;
-
-    const apiKey = 'e5ffd72440bbfad8ea7b2144b4a0655b'; 
-    fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lng}&appid=${apiKey}`)
-        .then(res => res.json())
-        .then(data => {
-            if(data.list && data.list.length > 0) {
-                const mucDoBui = data.list.components.pm2_5; 
-                
-                let doMo = 0.30 + Math.floor((mucDoBui - 1) / 50) * 0.15;
-                if (doMo > 0.95) doMo = 0.95;
-                if (doMo < 0.30) doMo = 0.30;
-
-                lopKhoiBuiThuCong.clearLayers();
-                L.circle([lat, lng], {
-                    color: 'transparent',
-                    fillColor: '#1a1a1a', 
-                    fillOpacity: doMo,
-                    radius: 500 
-                }).addTo(lopKhoiBuiThuCong);
-            }
-        })
-        .catch(err => console.error("Lỗi tải hiệu ứng khói:", err));
-}
 </script>
 </body>
 </html>

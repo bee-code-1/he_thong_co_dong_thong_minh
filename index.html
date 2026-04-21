@@ -115,7 +115,7 @@
         </div>
 
         <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
-        <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
             <!-- Đã thêm position: relative; vào thẻ div dưới đây để làm gốc tọa độ cho nút X -->
             <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
                 
@@ -137,7 +137,6 @@
                 </button>
             </div>
         </div>
-
         <div id="action-btns-container">
             <button id="locate-me-btn" class="action-btn" onclick="flyToMyLocation()" style="background-color: #2196F3;">📍 VỊ TRÍ CỦA TÔI</button>
             <button id="start-btn" class="action-btn" onclick="startTrackingAction()">▶ BẮT ĐẦU</button>

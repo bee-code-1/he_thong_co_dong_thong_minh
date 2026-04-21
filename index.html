@@ -116,7 +116,12 @@
 
         <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
         <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-            <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <!-- Đã thêm position: relative; vào thẻ div dưới đây để làm gốc tọa độ cho nút X -->
+            <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
+                
+                <!-- NÚT X TẮT POPUP Ở GÓC TRÊN BÊN PHẢI -->
+                <span onclick="window.luuTienTrinh()" style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+
                 <h2 style="color: #4CAF50; margin-top: 0;">🎉 CHÚC MỪNG! 🎉</h2>
                 <p style="color: #555; font-size: 14px;">Bạn đã hoàn thành xuất sắc lộ trình hôm nay.</p>
                 
@@ -127,7 +132,7 @@
                     🔥 <b>Calo tiêu thụ:</b> <span id="recap-calo" style="color: #2196F3;">0</span> kcal
                 </div>
 
-                <button onclick="luuTienTrinh()" style="background-color: #4CAF50; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                <button onclick="window.luuTienTrinh()" style="background-color: #4CAF50; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
                     LƯU VÀO TIẾN TRÌNH
                 </button>
             </div>
@@ -252,7 +257,7 @@
     function startTrackingAction() {
         if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
 
-        // 1. Reset sạch sẽ dữ liệu để chống lỗi văng GPS 119km
+        // 1. Reset sạch sẽ dữ liệu
         latestLatLng = null; 
         totalDistanceMeter = 0;
         elapsedSeconds = 0;
@@ -498,8 +503,8 @@
                                 const friendIcon = L.divIcon({
                                     className: 'custom-gps-icon',
                                     html: customGPSHtml,
-                                    iconSize: [2, 3],   // ĐÃ FIX LỖI CÚ PHÁP LEAFLET
-                                    iconAnchor: [3, 4], // Cắm chân chuẩn xác
+                                    iconSize: [2, 3], 
+                                    iconAnchor: [3, 4],
                                     popupAnchor: [0, -40] 
                                 });
 
@@ -593,7 +598,6 @@
         const rCalo = document.getElementById('recap-calo');
         const rModal = document.getElementById('recap-modal');
 
-        // ĐÃ SỬA ID CHUẨN KHỚP 100% VỚI THẺ HTML Ở TRÊN: dist-display và cal-display
         if(rTime && document.getElementById('time-display')) rTime.innerText = document.getElementById('time-display').innerText;
         if(rDist && document.getElementById('dist-display')) rDist.innerText = document.getElementById('dist-display').innerText;
         if(rStep && document.getElementById('step-display')) rStep.innerText = document.getElementById('step-display').innerText;
@@ -604,24 +608,26 @@
     };
 
     window.luuTienTrinh = function() {
+        // 1. Tắt bảng Popup Recap đi ngay lập tức
         const rModal = document.getElementById('recap-modal');
         if (rModal) rModal.style.display = 'none';
 
-        // 1. Dọn dẹp sạch sẽ dữ liệu định vị
+        // 2. Dọn dẹp sạch sẽ dữ liệu định vị và đường vẽ cũ
         isTracking = false;
         isPaused = false;
         totalDistanceMeter = 0;
         elapsedSeconds = 0;
-        latestLatLng = null; // Tránh văng GPS ở lần chạy sau
+        latestLatLng = null; 
+        pathLatLngs = []; // DÒNG CHÚT CHỐT: Bắt buộc phải có để xóa sạch đường đi cũ trong bộ nhớ
         if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
 
-        // 2. Trả số liệu hiển thị về 0 (ĐÃ SỬA ID CHUẨN)
+        // 3. Trả số liệu hiển thị về 0 (ĐÃ SỬA ID CHUẨN)
         if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
         if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
         if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
         if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
 
-        // 3. Khôi phục trạng thái nút BẤT ĐẦU như lúc mới mở web
+        // 4. Khôi phục trạng thái nút BẤT ĐẦU như lúc mới mở web
         const btnStart = document.getElementById('start-btn');
         const btnPause = document.getElementById('pause-btn');
         const btnEnd = document.getElementById('end-btn');

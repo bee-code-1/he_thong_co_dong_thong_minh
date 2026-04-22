@@ -421,28 +421,32 @@
                 isFirstLocation = false;
             }
 
-        //  TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN 
-        let myAvatar = `https://ui-avatars.com/api/?name=${username}&background=random`;
+        // TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN
+        // Lấy ảnh thật từ bộ nhớ máy (nếu có)
+        let myRealAvatar = localStorage.getItem("avatar_" + username);
+        let myAvatar = myRealAvatar ? myRealAvatar : `https://ui-avatars.com/api/?name=${username}&background=random`;
+
         const myGPSHtml = `
-            <div style="position: relative; width: 40px; height: 50px;">
-                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z"
-                          fill="#dc3545" stroke="black" stroke-width="2"/>
-                </svg>
-                <img src="${myAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
-                
-                <!-- BẢNG TÊN CỐ ĐỊNH -->
-                <div style="position: absolute; top: 45px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    ${username}
-                </div>
+        <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
+            <!-- Vỏ ngoài hình giọt nước -->
+            <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
+            </svg>
+            <!-- Ảnh đại diện lấp đầy phần tâm -->
+            <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+            <!-- BẢNG TÊN CỐ ĐỊNH -->
+            <div style="position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                ${username}
             </div>
+        </div>
         `;
-        
+
         const myIcon = L.divIcon({
             className: 'user-icon',
             html: myGPSHtml,
-            iconSize: [2, 3],
-            iconAnchor: [3, 4]
+            // Dùng L.point thay cho ngoặc vuông để chống lỗi chat
+            iconSize: L.point(44, 55),
+            iconAnchor: L.point(22, 55)
         });
 
         if (!userMarker) {
@@ -452,20 +456,22 @@
             userMarker.setIcon(myIcon);
         }
 
-            if (pathLatLngs.length > 0 && isTracking && !isPaused) {
-                const lastPoint = pathLatLngs[pathLatLngs.length - 1];
-                const dist = map.distance(lastPoint, currentLatLng);
-                
-                if (dist > 5) {
-                    //  BỘ LỌC LỊCH SỬ DI CHUYỂN 
-                    let savedUser = localStorage.getItem('currentUser');
-                    if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
-                        db.ref('lich_su_di_chuyen/' + savedUser).push({
+        if (pathLatLngs.length > 0 && isTracking && !isPaused) {
+            const lastPoint = pathLatLngs[pathLatLngs.length - 1];
+            const dist = map.distance(lastPoint, currentLatLng);
+            
+            if (dist > 5) {
+                //  BỘ LỌC LỊCH SỬ DI CHUYỂN 
+                let savedUser = localStorage.getItem('currentUser');
+                if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
+                    if (typeof window.db !== 'undefined') {
+                        window.db.ref('lich_su_di_chuyen/' + savedUser).push({
                             lat: lat,
                             lng: lng,
                             thoi_gian: Date.now()
                         });
                     }
+                }
 
 fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
 .then(res => res.json())
@@ -580,34 +586,51 @@ window.toggleRadar = function() {
         btn.innerHTML = "📡 Đang quét... (ON)";
         btn.style.backgroundColor = "#4CAF50";
         btn.style.animation = "radar-pulse 1.5s infinite";
+
         let currentUser = localStorage.getItem('currentUser') || "Khach";
 
-        if (window.db) {
+        if (typeof window.db !== 'undefined') {
             window.db.ref('nguoi_dung').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
                 const danhSachBanBe = ["Hiep", "Long", "Minh"];
+
                 for (const user in data) {
                     if (user === currentUser) continue;
+                    
                     const lat = data[user].toa_do_lat;
                     const lng = data[user].toa_do_lng;
                     const thoiGian = data[user].thoi_gian_cap_nhat;
+                    // Lấy ảnh thật từ Firebase Đám mây
+                    const realAvatar = data[user].avatar;
 
                     if (lat && lng && (Date.now() - thoiGian < 600000)) {
                         if (friendMarkers[user]) {
                             friendMarkers[user].setLatLng([lat, lng]);
                         } else {
                             const isFriend = danhSachBanBe.includes(user);
-                            const pinColor = isFriend ? "#2196F3" : "#9E9E9E";
-                            const userAvatar = `https://ui-avatars.com/api/?name=${user}&background=random`;
+                            // Màu xanh đậm chuẩn giống file gps_icon.png
+                            const pinColor = isFriend ? "#004BAd" : "#9E9E9E";
+                            // Nếu có ảnh đám mây thì dùng, không thì tạo chữ mặc định
+                            const userAvatar = realAvatar ? realAvatar : `https://ui-avatars.com/api/?name=${user}&background=random`;
+
                             const customGPSHtml = `
-                            <div style="position: relative; width: 40px; height: 50px;">
+                            <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
                                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" stroke="black" stroke-width="2"/>
+                                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
                                 </svg>
-                                <img src="${userAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #000; background-color: white;" />
+                                <img src="${userAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
                             </div>`;
-                            const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: [12, 13], iconAnchor: [13, 14], popupAnchor: [0, -40] });
+
+                            const friendIcon = L.divIcon({
+                                className: 'custom-gps-icon',
+                                html: customGPSHtml,
+                                // Dùng L.point chống sập mảng
+                                iconSize: L.point(44, 55),
+                                iconAnchor: L.point(22, 55),
+                                popupAnchor: L.point(0, -50)
+                            });
+
                             const newMarker = L.marker([lat, lng], {icon: friendIcon});
                             newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
                             if (banDoHienTai) newMarker.addTo(banDoHienTai);
@@ -621,13 +644,14 @@ window.toggleRadar = function() {
         btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
         btn.style.backgroundColor = "#ff9800";
         btn.style.animation = "none";
-        if (window.db) window.db.ref('nguoi_dung').off();
+        if (typeof window.db !== 'undefined') window.db.ref('nguoi_dung').off();
         for (const user in friendMarkers) {
             if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
         }
         friendMarkers = {};
     }
 };
+    
 const radarBtnObj = document.getElementById('btn-cong-dong');
 if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
 

@@ -783,9 +783,9 @@ window.moHoSo = function() {
 };
 
 window.thayDoiAnh = function(event) {
-    const file = event.target.files;
-    // Đã thêm  vào file để giải quyết lỗi đổi ảnh
-    if (file && file) {
+    // Đã thêm  để hệ thống nhặt đúng bức ảnh bạn vừa chọn
+    const file = event.target.files; 
+    if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;

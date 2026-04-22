@@ -392,56 +392,54 @@
         btn.style.color = isPaused ? 'white' : '#333';
     }
 
-    // --- GPS LÕI ---
-    function initGPS() {
-        const fog = document.getElementById('fog-layer');
-        polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
+// --- GPS LÕI ---
+function initGPS() {
+    const fog = document.getElementById('fog-layer');
+    polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
 
-        gpsWatcherId = navigator.geolocation.watchPosition(position => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const doChinhXac = position.coords.accuracy; // LẤY CHỈ SỐ SAI SỐ GPS CỦA ĐIỆN THOẠI
+    gpsWatcherId = navigator.geolocation.watchPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const doChinhXac = position.coords.accuracy;
 
-            // Nếu sai số vị trí lớn hơn 20 mét thì tự động vứt bỏ điểm này
-            if (doChinhXac > 20) {
-                console.log("Tín hiệu GPS nhiễu, sai số: " + doChinhXac + "m. Đã tự động bỏ qua!");
-                return;
+        // 🛑 BỘ LỌC CHỐNG NHIỄU (GPS DRIFT) - Vứt bỏ điểm sai số > 20m
+        if (doChinhXac > 20) {
+            console.log("Tín hiệu GPS nhiễu, sai số: " + doChinhXac + "m. Đã tự động bỏ qua!");
+            return;
+        }
+
+        // BẮN TỌA ĐỘ LÊN ĐÁM MÂY
+        let username = localStorage.getItem('currentUser');
+        if (username && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
+            if (typeof window.banToaDoLenMay === 'function') {
+                window.banToaDoLenMay(username, lat, lng);
             }
+        }
 
-            // BẮN TỌA ĐỘ LÊN ĐÁM MÂY
-            let username = localStorage.getItem('currentUser');
-            //  Nếu không có tài khoản hoặc chưa share thì ko gửi tọa độ lên mạng
-            if (username && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
-                banToaDoLenMay(username, lat, lng);
-            }
+        const currentLatLng = L.latLng(lat, lng);
+        latestLatLng = currentLatLng;
 
-            const currentLatLng = L.latLng(lat, lng);
-            const heading = position.coords.heading || 0;
-            latestLatLng = currentLatLng;
-            if (document.getElementById('start-btn').innerText === "ĐANG KẾT NỐI GPS...") {
-                startTrackingAction();
-            }
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn && startBtn.innerText === "ĐANG KẾT NỐI GPS...") {
+            if (typeof window.startTrackingAction === 'function') window.startTrackingAction();
+        }
 
-            // Chỉ căn giữa bản đồ đúng lần đầu tiên
-            if (isFirstLocation) {
-                map.setView([lat, lng], 18); 
-                isFirstLocation = false;
-            }
+        // Chỉ căn giữa bản đồ đúng lần đầu tiên
+        if (typeof isFirstLocation !== 'undefined' && isFirstLocation) {
+            map.setView([lat, lng], 18);
+            isFirstLocation = false;
+        }
 
         // TẠO ICON ĐỊNH VỊ GIỌT NƯỚC MÀU ĐỎ CHO BẢN THÂN
-        // Lấy ảnh thật từ bộ nhớ máy (nếu có)
         let myRealAvatar = localStorage.getItem("avatar_" + username);
         let myAvatar = myRealAvatar ? myRealAvatar : `https://ui-avatars.com/api/?name=${username}&background=random`;
 
         const myGPSHtml = `
         <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
-            <!-- Vỏ ngoài hình giọt nước -->
             <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;">
                 <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
             </svg>
-            <!-- Ảnh đại diện lấp đầy phần tâm -->
             <img src="${myAvatar}" style="position: absolute; top: 3px; left: 3px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; z-index: 2;" />
-            <!-- BẢNG TÊN CỐ ĐỊNH -->
             <div style="position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 3;">
                 ${username}
             </div>
@@ -451,7 +449,6 @@
         const myIcon = L.divIcon({
             className: 'user-icon',
             html: myGPSHtml,
-            // Dùng L.point thay cho ngoặc vuông để chống lỗi chat
             iconSize: L.point(44, 55),
             iconAnchor: L.point(22, 55)
         });
@@ -463,15 +460,16 @@
             userMarker.setIcon(myIcon);
         }
 
+        // VẼ ĐƯỜNG ĐI VÀ LƯU LỊCH SỬ (VỚI BỘ LỌC ĐỘNG)
         if (pathLatLngs.length > 0 && isTracking && !isPaused) {
             const lastPoint = pathLatLngs[pathLatLngs.length - 1];
             const dist = map.distance(lastPoint, currentLatLng);
-        if (dist > 15 && dist > (typeof doChinhXac !== 'undefined' ? doChinhXac : 15)) {
-            
-            if (dist > 5) {
-                //  BỘ LỌC LỊCH SỬ DI CHUYỂN 
+
+            // 🛡️ BỘ LỌC KÉP CHỐNG NHIỄU (DYNAMIC FILTER)
+            if (dist > 15 && dist > (typeof doChinhXac !== 'undefined' ? doChinhXac : 15)) {
+
                 let savedUser = localStorage.getItem('currentUser');
-                if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
+                if (savedUser && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
                     if (typeof window.db !== 'undefined') {
                         window.db.ref('lich_su_di_chuyen/' + savedUser).push({
                             lat: lat,
@@ -481,74 +479,51 @@
                     }
                 }
 
-fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
-.then(res => res.json())
-.then(data => {
-    if(data.routes && data.routes.length > 0) {
-        // Dùng cấu trúc Destructuring để né hoàn toàn lỗi ngoặc vuông
-        const [tuyenDuong] = data.routes;
-        
-        let khoangCachMoi = parseFloat(tuyenDuong.distance);
-        if (isNaN(khoangCachMoi)) khoangCachMoi = 0;
-        
-        if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
-        totalDistanceMeter += khoangCachMoi;
+                fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.routes && data.routes.length > 0) {
+                        const [tuyenDuong] = data.routes;
 
-        let canNang = parseFloat(userWeight);
-        if (isNaN(canNang) || canNang <= 0) canNang = 65; 
-        
-        let buoc = parseFloat(stepsPerMeter);
-        if (isNaN(buoc) || buoc <= 0) buoc = 1.42; 
+                        let khoangCachMoi = parseFloat(tuyenDuong.distance);
+                        if (isNaN(khoangCachMoi)) khoangCachMoi = 0;
+                        if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
+                        totalDistanceMeter += khoangCachMoi;
 
-        let distDisp = document.getElementById('dist-display');
-        let stepDisp = document.getElementById('step-display');
-        let calDisp = document.getElementById('cal-display');
-        
-        if(distDisp) distDisp.innerText = (totalDistanceMeter / 1000).toFixed(2);
-        if(stepDisp) stepDisp.innerText = Math.floor(totalDistanceMeter * buoc);
-        if(calDisp) calDisp.innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+                        let canNang = parseFloat(userWeight);
+                        if (isNaN(canNang) || canNang <= 0) canNang = 65;
 
-        if (tuyenDuong.geometry && tuyenDuong.geometry.coordinates) {
-            tuyenDuong.geometry.coordinates.forEach(coord => {
-                // Tách Kinh độ và Vĩ độ an toàn tuyệt đối
-                const [kinhDo, viDo] = coord;
-                pathLatLngs.push(L.latLng(viDo, kinhDo));
-            });
-            if(polyline) polyline.setLatLngs(pathLatLngs);
-        }
-    }
-}).catch(err => console.error("Lỗi mạng:", err));
+                        let buoc = parseFloat(stepsPerMeter);
+                        if (isNaN(buoc) || buoc <= 0) buoc = 1.42;
+
+                        let distDisp = document.getElementById('dist-display');
+                        let stepDisp = document.getElementById('step-display');
+                        let calDisp = document.getElementById('cal-display');
+
+                        if(distDisp) distDisp.innerText = (totalDistanceMeter / 1000).toFixed(2);
+                        if(stepDisp) stepDisp.innerText = Math.floor(totalDistanceMeter * buoc);
+                        if(calDisp) calDisp.innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+
+                        if (tuyenDuong.geometry && tuyenDuong.geometry.coordinates) {
+                            tuyenDuong.geometry.coordinates.forEach(coord => {
+                                const [kinhDo, viDo] = coord;
+                                pathLatLngs.push(L.latLng(viDo, kinhDo));
+                            });
+                            if(polyline) polyline.setLatLngs(pathLatLngs);
+                        }
+                    }
+                }).catch(err => console.error("Lỗi mạng:", err));
             }
         } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
             pathLatLngs.push(currentLatLng);
         }
 
-            /* TẠM TẮT TÍNH NĂNG TÍNH TOÁN SƯƠNG MÙ
-            function updateFog() {
-                if (!latestLatLng || isDrawingFog) return;
-                isDrawingFog = true;
-                requestAnimationFrame(() => {
-                    const point = map.latLngToContainerPoint(latestLatLng);
-                    const zoom = map.getZoom();
-                    const metersPerPixel = 40075016.686 * Math.abs(Math.cos(lat * Math.PI/180)) / Math.pow(2, zoom + 8);
-                    const radius = 10 / metersPerPixel; 
-                    const eraserStyle = `radial-gradient(circle at ${point.x}px ${point.y}px, transparent ${radius}px, black ${radius + 20}px)`;
-                    fog.style.webkitMaskImage = eraserStyle;
-                    fog.style.maskImage = eraserStyle;
-                    isDrawingFog = false;
-                });
-            }
-            */
-            
-            map.off('move', updateFog); map.off('zoom', updateFog);
-            map.on('move', updateFog); map.on('zoom', updateFog);
-            updateFog();
-
-        }, err => {
-            alert("Lỗi GPS: " + err.message + ". Vui lòng bật Vị trí trên điện thoại.");
-            document.getElementById('start-btn').innerText = "▶ BẮT ĐẦU";
-        }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
-    }
+    }, err => {
+        alert("Lỗi GPS: " + err.message + ". Vui lòng bật Vị trí trên điện thoại.");
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.innerText = "▶ BẮT ĐẦU";
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+}
 </script>
 
 !-- Cấu hình kết nối vào Đám mây  -->

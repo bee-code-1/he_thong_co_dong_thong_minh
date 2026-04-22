@@ -784,8 +784,9 @@ window.moHoSo = function() {
     } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
 };
 
+// ĐỔI ẢNH ĐẠI DIỆN
 window.thayDoiAnh = function(event) {
-    const file = event.target.files;
+    const file = event.target.files; 
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -794,13 +795,14 @@ window.thayDoiAnh = function(event) {
             const btnImg = document.getElementById('avatar-btn-img');
             if(preview) preview.src = base64Image;
             if(btnImg) btnImg.src = base64Image;
-
+            
+            // Lưu ảnh tạm vào bộ nhớ thiết bị
             const user = localStorage.getItem('currentUser');
             if (user) localStorage.setItem("avatar_" + user, base64Image);
         };
         reader.readAsDataURL(file);
     }
-};
+};};
 
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');

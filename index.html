@@ -465,7 +465,7 @@
 
         if (pathLatLngs.length > 0 && isTracking && !isPaused) {
             const lastPoint = pathLatLngs[pathLatLngs.length - 1];
-            const dist = map.distance(lastPoint, currentLatLng);
+        if (dist > 15 && dist > (typeof doChinhXac !== 'undefined' ? doChinhXac : 15)) {
             
             if (dist > 5) {
                 //  BỘ LỌC LỊCH SỬ DI CHUYỂN 

@@ -782,25 +782,43 @@ window.moHoSo = function() {
     } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
 };
 
+// === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
 window.thayDoiAnh = function(event) {
-    // Đã thêm  để hệ thống nhặt đúng bức ảnh bạn vừa chọn
-    const file = event.target.files; 
+    const file = event.target.files;
     if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Ảnh hơi nặng! Vui lòng chọn ảnh dung lượng dưới 2MB để đồng bộ nhanh nhất nhé.");
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;
             const preview = document.getElementById('hs-avatar-preview');
             const btnImg = document.getElementById('avatar-btn-img');
+            
             if(preview) preview.src = base64Image;
             if(btnImg) btnImg.src = base64Image;
 
             const user = localStorage.getItem('currentUser');
-            if (user) localStorage.setItem("avatar_" + user, base64Image);
+            if (user) {
+                localStorage.setItem("avatar_" + user, base64Image);
+                if (typeof window.db !== 'undefined') {
+                    window.db.ref('nguoi_dung/' + user).update({ 
+                        avatar: base64Image 
+                    }).then(() => {
+                        console.log("Đã đồng bộ Avatar lên Đám mây thành công!");
+                    }).catch((err) => {
+                        console.error("Lỗi đồng bộ ảnh:", err);
+                    });
+                }
+            }
         };
         reader.readAsDataURL(file);
     }
 };
 
+// === LƯU LẠI CÁC CHỈ SỐ CƠ THỂ ===
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');
     if (!user) return;
@@ -822,6 +840,7 @@ window.luuHoSo = function() {
     if (modal) modal.style.display = 'none';
 };
 
+// === ĐĂNG XUẤT TÀI KHOẢN ===
 window.dangXuat = function() {
     if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
         localStorage.removeItem('currentUser');
@@ -845,15 +864,27 @@ window.dangXuat = function() {
     }
 };
 
+// === TỰ ĐỘNG KÉO ẢNH TỪ ĐÁM MÂY VỀ KHI VỪA MỞ TRANG ===
 window.addEventListener('load', function() {
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
-            let avatarUrl = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
-            let avtImg = document.getElementById('avatar-btn-img');
-            if(avtImg) avtImg.src = avatarUrl;
+            if (typeof window.db !== 'undefined') {
+                window.db.ref('nguoi_dung/' + savedUser + '/avatar').once('value').then((snapshot) => {
+                    let cloudAvatar = snapshot.val();
+                    let avtImg = document.getElementById('avatar-btn-img');
+                    
+                    if (cloudAvatar) {
+                        localStorage.setItem("avatar_" + savedUser, cloudAvatar);
+                        if(avtImg) avtImg.src = cloudAvatar;
+                    } else {
+                        let localAvt = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
+                        if(avtImg) avtImg.src = localAvt;
+                    }
+                });
+            }
         }
-    }, 500);
+    }, 1000); 
 });
 </script>
 </body>

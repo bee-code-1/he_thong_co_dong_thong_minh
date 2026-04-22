@@ -413,8 +413,8 @@
                 const lastPoint = pathLatLngs[pathLatLngs.length - 1];
                 const dist = map.distance(lastPoint, currentLatLng);
                 
-                if (dist > 10) {
-                    // === BỘ LỌC LỊCH SỬ DI CHUYỂN ===
+                if (dist > 5) {
+                    //  BỘ LỌC LỊCH SỬ DI CHUYỂN 
                     let savedUser = localStorage.getItem('currentUser');
                     if (savedUser && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
                         db.ref('lich_su_di_chuyen/' + savedUser).push({
@@ -424,40 +424,38 @@
                         });
                     }
 
-                fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.routes && data.routes.length > 0) {
-                        // 1. ÉP KIỂU VÀ BẢO VỆ DỮ LIỆU KHOẢNG CÁCH
-                        let khoangCachMoi = parseFloat(data.routes.distance);
-                        if (isNaN(khoangCachMoi)) khoangCachMoi = 0; // Chống lỗi từ OSRM
-                        
-                        // Nếu tổng quãng đường bị "nhiễm độc" NaN từ trước, lập tức reset về 0
-                        if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
-                        totalDistanceMeter += khoangCachMoi;
+fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
+.then(res => res.json())
+.then(data => {
+    if(data.routes && data.routes.length > 0) {
 
-                        // 2. ÉP KIỂU AN TOÀN CHO CHỈ SỐ CƠ THỂ
-                        let canNang = parseFloat(userWeight);
-                        if (isNaN(canNang) || canNang <= 0) canNang = 65; // Mặc định 65kg nếu lỗi
-                        
-                        let buoc = parseFloat(stepsPerMeter);
-                        if (isNaN(buoc) || buoc <= 0) buoc = 1.42; // Mặc định ~1.42 bước/mét nếu lỗi
+        let khoangCachMoi = parseFloat(data.routes.distance);
+        if (isNaN(khoangCachMoi)) khoangCachMoi = 0; 
+        
+        if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
+        totalDistanceMeter += khoangCachMoi;
 
-                        // 3. IN RA MÀN HÌNH (Chắc chắn 100% ra số cụ thể)
-                        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-                        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-                        document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+        let canNang = parseFloat(userWeight);
+        if (isNaN(canNang) || canNang <= 0) canNang = 65; 
+        
+        let buoc = parseFloat(stepsPerMeter);
+        if (isNaN(buoc) || buoc <= 0) buoc = 1.42; 
 
-                        // 4. VẼ ĐƯỜNG ĐI CHUẨN XÁC
-                        if (data.routes.geometry && data.routes.geometry.coordinates) {
-                            data.routes.geometry.coordinates.forEach(coord => {
-                                // coord[5] là Vĩ độ (lat), coord là Kinh độ (lng)
-                                pathLatLngs.push(L.latLng(coord[8], coord));
-                            });
-                            polyline.setLatLngs(pathLatLngs);
-                        }
-                    }
-                }).catch(err => console.error("Lỗi mạng:", err));
+        // IN RA MÀN HÌNH
+        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
+        document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+
+        //  VẼ ĐƯỜNG ĐI
+        if (data.routes.geometry && data.routes.geometry.coordinates) {
+            data.routes.geometry.coordinates.forEach(coord => {
+                // : coord[1] là Vĩ độ (lat), coord là Kinh độ (lng)
+                pathLatLngs.push(L.latLng(coord[1], coord));
+            });
+            polyline.setLatLngs(pathLatLngs);
+        }
+    }
+}).catch(err => console.error("Lỗi mạng:", err));
             }
         } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
             pathLatLngs.push(currentLatLng);

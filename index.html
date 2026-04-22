@@ -469,10 +469,12 @@
 fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
 .then(res => res.json())
 .then(data => {
+    // SỬA LỖI MẢNG: Bắt buộc phải có  vì routes là một danh sách
     if(data.routes && data.routes.length > 0) {
+        let tuyenDuong = data.routes; 
 
-        let khoangCachMoi = parseFloat(data.routes.distance);
-        if (isNaN(khoangCachMoi)) khoangCachMoi = 0; 
+        let khoangCachMoi = parseFloat(tuyenDuong.distance);
+        if (isNaN(khoangCachMoi)) khoangCachMoi = 0;
         
         if (isNaN(totalDistanceMeter)) totalDistanceMeter = 0;
         totalDistanceMeter += khoangCachMoi;
@@ -483,21 +485,23 @@ fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoin
         let buoc = parseFloat(stepsPerMeter);
         if (isNaN(buoc) || buoc <= 0) buoc = 1.42; 
 
-        // IN RA MÀN HÌNH
-        document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-        document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-        document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+        let distDisp = document.getElementById('dist-display');
+        let stepDisp = document.getElementById('step-display');
+        let calDisp = document.getElementById('cal-display');
+        if(distDisp) distDisp.innerText = (totalDistanceMeter / 1000).toFixed(2);
+        if(stepDisp) stepDisp.innerText = Math.floor(totalDistanceMeter * buoc);
+        if(calDisp) calDisp.innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
 
-        //  VẼ ĐƯỜNG ĐI
-        if (data.routes.geometry && data.routes.geometry.coordinates) {
-            data.routes.geometry.coordinates.forEach(coord => {
-                // SỬA LỖI TỌA ĐỘ: coord[2] là Vĩ độ (lat), coord là Kinh độ (lng)
-                pathLatLngs.push(L.latLng(coord[2], coord));
+        // VẼ ĐƯỜNG ĐI: Lấy geometry của tuyến đường đầu tiên
+        if (tuyenDuong.geometry && tuyenDuong.geometry.coordinates) {
+            tuyenDuong.geometry.coordinates.forEach(coord => {
+                // Sửa lỗi tọa độ: OSRM là [Kinh độ, Vĩ độ], Leaflet cần [Vĩ độ, Kinh độ]
+                pathLatLngs.push(L.latLng(coord[1], coord));
             });
-            polyline.setLatLngs(pathLatLngs);
+            if(polyline) polyline.setLatLngs(pathLatLngs);
         }
     }
-}).catch(err => console.error("Lỗi mạng:", err));
+}).catch(err => console.error("Lỗi mạng OSRM:", err));
             }
         } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
             pathLatLngs.push(currentLatLng);
@@ -533,365 +537,263 @@ fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoin
 
 <!-- Cấu hình kết nối vào Đám mây  -->
 <script>
-    // 1. CẤU HÌNH KẾT NỐI ĐÁM MÂY FIREBASE  (CHỈ KHAI BÁO 1 LẦN)
-    const firebaseConfig = {
-        databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/" 
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-       // 2. TÍNH NĂNG BẮN TỌA ĐỘ VÀ QUÉT TÌM BẠN BÈ
-    function banToaDoLenMay(username, lat, lng) {
-        // Lấy các chỉ số sức khỏe đã lưu ở LocalStorage (nếu có)
-        let userHeight = localStorage.getItem('appUser_height') || "Chưa nhập";
-        let userWeight = localStorage.getItem('appUser_weight') || "Chưa nhập";
+// === 1. FIREBASE CONFIG ===
+const firebaseConfig = {
+    databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/"
+};
+try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    window.db = firebase.database();
+} catch(e) { console.error("Lỗi Firebase:", e); }
 
-        // Cập nhật toàn bộ trạng thái lên Firebase
-        db.ref('nguoi_dung/' + username).update({
-            // 1. Tọa độ & Trạng thái (Phục vụ Mạng xã hội bản đồ)
+// === 2. BẮN TỌA ĐỘ VÀ RADAR CỘNG ĐỒNG ===
+function banToaDoLenMay(username, lat, lng) {
+    let userHeight = localStorage.getItem('appUser_height') || "Chưa nhập";
+    let userWeight = localStorage.getItem('appUser_weight') || "Chưa nhập";
+    if(window.db) {
+        window.db.ref('nguoi_dung/' + username).update({
             toa_do_lat: lat,
             toa_do_lng: lng,
             trang_thai: "Đang online",
             thoi_gian_cap_nhat: Date.now(),
-
-            // 2. Chỉ số cá nhân
             chieu_cao: userHeight,
             can_nang: userWeight,
-
-            // 3. Tiến trình thể thao (recap)
             tong_quang_duong_m: typeof totalDistanceMeter !== 'undefined' ? totalDistanceMeter : 0,
             tong_so_buoc: typeof totalSteps !== 'undefined' ? totalSteps : 0,
             calo_tieu_thu: typeof totalCalories !== 'undefined' ? totalCalories : 0,
             thoi_gian_tap_giay: typeof elapsedSeconds !== 'undefined' ? elapsedSeconds : 0
         });
     }
-    
-    //  TÍNH NĂNG RADAR CỘNG ĐỒNG
-    let isRadarOn = false;
-    let friendMarkers = {}; 
+}
 
-    window.toggleRadar = function() {
-        const btn = document.getElementById('btn-cong-dong');
-        if (!btn) return;
-        
-        isRadarOn = !isRadarOn; 
-        let banDoHienTai = typeof map !== 'undefined' ? map : null;
+let isRadarOn = false;
+let friendMarkers = {};
+window.toggleRadar = function() {
+    const btn = document.getElementById('btn-cong-dong');
+    if (!btn) return;
+    isRadarOn = !isRadarOn;
+    let banDoHienTai = typeof map !== 'undefined' ? map : null;
 
-        if (isRadarOn) {
-            btn.innerHTML = "📡 Đang quét... (ON)";
-            btn.style.backgroundColor = "#4CAF50"; 
-            btn.style.animation = "radar-pulse 1.5s infinite";
-            
-            let currentUser = localStorage.getItem('appUser_current') || localStorage.getItem('currentUser') || "Khach";
+    if (isRadarOn) {
+        btn.innerHTML = "📡 Đang quét... (ON)";
+        btn.style.backgroundColor = "#4CAF50";
+        btn.style.animation = "radar-pulse 1.5s infinite";
+        let currentUser = localStorage.getItem('currentUser') || "Khach";
 
-            if (typeof db !== 'undefined') {
-                db.ref('nguoi_dung').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (!data) return;
+        if (window.db) {
+            window.db.ref('nguoi_dung').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                const danhSachBanBe = ["Hiep", "Long", "Minh"];
+                for (const user in data) {
+                    if (user === currentUser) continue;
+                    const lat = data[user].toa_do_lat;
+                    const lng = data[user].toa_do_lng;
+                    const thoiGian = data[user].thoi_gian_cap_nhat;
 
-                    const danhSachBanBe = ["Hiep", "Long", "Minh"]; // Khai báo bạn bè
-
-                    for (const user in data) {
-                        if (user === currentUser) continue; 
-                        const lat = data[user].toa_do_lat;
-                        const lng = data[user].toa_do_lng;
-                        const thoiGian = data[user].thoi_gian_cap_nhat;
-
-                        if (lat && lng && (Date.now() - thoiGian < 600000)) {
-                            if (friendMarkers[user]) {
-                                friendMarkers[user].setLatLng([lat, lng]);
-                            } else {
-                                // TẠO ICON GIỌT NƯỚC (Xanh dương cho Bạn, Xám cho Lạ)
-                                const isFriend = danhSachBanBe.includes(user);
-                                const pinColor = isFriend ? "#2196F3" : "#9E9E9E"; 
-                                const userAvatar = `https://ui-avatars.com/api/?name=${user}&background=random`;
-
-                                const customGPSHtml = `
-                                    <div style="position: relative; width: 40px; height: 50px;">
-                                        <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                                            <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" 
-                                                  fill="${pinColor}" stroke="black" stroke-width="2"/>
-                                        </svg>
-                                        <img src="${userAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #000; background-color: white;" />
-                                    </div>
-                                `;
-
-                                const friendIcon = L.divIcon({
-                                    className: 'custom-gps-icon',
-                                    html: customGPSHtml,
-                                    iconSize: [2, 3], 
-                                    iconAnchor: [3, 4],
-                                    popupAnchor: [0, -40] 
-                                });
-
-                                const newMarker = L.marker([lat, lng], {icon: friendIcon});
-                                newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
-                                if (banDoHienTai) newMarker.addTo(banDoHienTai);
-                                friendMarkers[user] = newMarker;
-                            }
+                    if (lat && lng && (Date.now() - thoiGian < 600000)) {
+                        if (friendMarkers[user]) {
+                            friendMarkers[user].setLatLng([lat, lng]);
+                        } else {
+                            const isFriend = danhSachBanBe.includes(user);
+                            const pinColor = isFriend ? "#2196F3" : "#9E9E9E";
+                            const userAvatar = `https://ui-avatars.com/api/?name=${user}&background=random`;
+                            const customGPSHtml = `
+                            <div style="position: relative; width: 40px; height: 50px;">
+                                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" stroke="black" stroke-width="2"/>
+                                </svg>
+                                <img src="${userAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #000; background-color: white;" />
+                            </div>`;
+                            const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: [2, 3], iconAnchor: [3, 4], popupAnchor: [0, -40] });
+                            const newMarker = L.marker([lat, lng], {icon: friendIcon});
+                            newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
+                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
+                            friendMarkers[user] = newMarker;
                         }
                     }
-                });
-            }
-        } else {
-            btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
-            btn.style.backgroundColor = "#ff9800";
-            btn.style.animation = "none";
-            if (typeof db !== 'undefined') db.ref('nguoi_dung').off();
-            for (const user in friendMarkers) {
-                if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
-            }
-            friendMarkers = {}; 
-        }
-    };
-
-    // Ép sự kiện click (Trị dứt điểm liệt nút Radar)
-    const radarBtnObj = document.getElementById('btn-cong-dong');
-    if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
-
-
-    // === 2. XỬ LÝ NÚT KẾT THÚC (BẤM 2 LẦN) ===
-    let confirmTimeout;
-    let countdownInterval;
-    let isConfirming = false;
-
-    window.handleEndClick = function(e) {
-        if (!isTracking) return; 
-        if (e) e.preventDefault(); 
-        const endBtnObj = document.getElementById('end-btn');
-
-        if (!isConfirming) {
-            isConfirming = true;
-            let timeLeft = 3;
-            endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
-            endBtnObj.style.backgroundColor = "#ff5722"; 
-
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
                 }
-            }, 1000);
-
-            confirmTimeout = setTimeout(() => {
-                clearInterval(countdownInterval);
-                isConfirming = false;
-                endBtnObj.innerText = "⏹ KẾT THÚC";
-                endBtnObj.style.backgroundColor = ""; 
-            }, 3000);
-
-        } else {
-            clearInterval(countdownInterval);
-            clearTimeout(confirmTimeout);
-            isConfirming = false;
-            
-            endBtnObj.innerText = "⏹ KẾT THÚC"; 
-            endBtnObj.style.backgroundColor = ""; 
-            
-            window.hienThiRecap(); 
-        }
-    };
-
-    const endBtnObj2 = document.getElementById('end-btn');
-    if (endBtnObj2) endBtnObj2.onclick = window.handleEndClick;
-
-
-    // === 3. HIỂN THỊ RECAP VÀ RESET TRẠNG THÁI (ĐÃ FIX LỖI ID) ===
-    window.hienThiRecap = function() {
-        isPaused = true; 
-        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); // Chặn đứng đồng hồ
-        
-        const pauseBtnObj = document.getElementById('pause-btn');
-        if(pauseBtnObj) {
-            pauseBtnObj.innerText = "▶ TIẾP TỤC";
-            pauseBtnObj.style.backgroundColor = "#4CAF50";
-        }
-        
-        // Cập nhật số liệu
-        const rTime = document.getElementById('recap-time');
-        const rDist = document.getElementById('recap-distance');
-        const rStep = document.getElementById('recap-steps');
-        const rCalo = document.getElementById('recap-calo');
-        const rModal = document.getElementById('recap-modal');
-
-        if(rTime && document.getElementById('time-display')) rTime.innerText = document.getElementById('time-display').innerText;
-        if(rDist && document.getElementById('dist-display')) rDist.innerText = document.getElementById('dist-display').innerText;
-        if(rStep && document.getElementById('step-display')) rStep.innerText = document.getElementById('step-display').innerText;
-        if(rCalo && document.getElementById('cal-display')) rCalo.innerText = document.getElementById('cal-display').innerText;
-        
-        // Bật cửa sổ Popup chúc mừng
-        if(rModal) rModal.style.display = 'flex';
-    };
-
-    window.luuTienTrinh = function() {
-        // 1. Tắt bảng Popup Recap đi ngay lập tức
-        const rModal = document.getElementById('recap-modal');
-        if (rModal) rModal.style.display = 'none';
-
-        // 2. Dọn dẹp sạch sẽ dữ liệu định vị và đường vẽ cũ
-        isTracking = false;
-        isPaused = false;
-        totalDistanceMeter = 0;
-        elapsedSeconds = 0;
-        latestLatLng = null; 
-        pathLatLngs = []; // DÒNG CHÚT CHỐT: Bắt buộc phải có để xóa sạch đường đi cũ trong bộ nhớ
-        if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
-
-        // 3. Trả số liệu hiển thị về 0 (ĐÃ SỬA ID CHUẨN)
-        if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
-        if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
-        if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
-        if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
-
-        // 4. Khôi phục trạng thái nút BẤT ĐẦU như lúc mới mở web
-        const btnStart = document.getElementById('start-btn');
-        const btnPause = document.getElementById('pause-btn');
-        const btnEnd = document.getElementById('end-btn');
-
-        if(btnStart) {
-            btnStart.style.display = 'inline-block';
-            btnStart.innerText = "▶ BẮT ĐẦU";
-        }
-        if(btnPause) btnPause.style.display = 'none';
-        if(btnEnd) {
-            btnEnd.style.display = 'none';
-            btnEnd.innerText = "⏹ KẾT THÚC";
-            btnEnd.style.backgroundColor = "";
-        }
-    };
-      // 5. CHỨC NĂNG BẬT/TẮT CHIA SẺ VỊ TRÍ
-    window.isSharingLocation = false; // Mặc định luôn ẩn vị trí khi mới vào app
-
-    window.toggleChiaSe = function() {
-        window.isSharingLocation = !window.isSharingLocation;
-        const btnChiaSe = document.getElementById('btn-chia-se');
-        
-        if (window.isSharingLocation) {
-            btnChiaSe.innerHTML = "🌍 Đang chia sẻ vị trí (Public)";
-            btnChiaSe.style.backgroundColor = "#2196F3"; // Chuyển màu Xanh dương
-        } else {
-            btnChiaSe.innerHTML = "🔕 Đang ẩn vị trí (Private)";
-            btnChiaSe.style.backgroundColor = "#6c757d"; // Về lại màu Xám
-            
-           // Xóa luôn dữ liệu trên Firebase khi bấm ẩn để người khác không nhìn thấy mình nữa
-            let currentUser = localStorage.getItem('currentUser');
-            if (currentUser && typeof db !== 'undefined') {
-                db.ref('nguoi_dung/' + currentUser + '/toa_do_lat').remove();
-                db.ref('nguoi_dung/' + currentUser + '/toa_do_lng').remove();
-            }
-        }
-    };
-// === HÀM BẬT / TẮT BỤI MỊN (TRẢ LẠI BIỂN BÁO SỐ LIỆU WAQI CHUẨN) ===
-let lopBanDoBui = null; 
-
-window.toggleBuiMin = function() {
-    if (typeof isHienBui === 'undefined') window.isHienBui = false;
-    isHienBui = !isHienBui;
-    const btn = document.getElementById('btn-bui-min');
-    
-    // 1. Lệnh "Khử độc": Ép bản đồ xóa bỏ mọi hiệu ứng xám/đen bị kẹt từ trước
-    const lopNenBanDo = document.querySelector('.leaflet-tile-pane');
-    if (lopNenBanDo) {
-        lopNenBanDo.style.filter = "none";
-    }
-    
-    if (isHienBui) {
-        btn.style.backgroundColor = '#dc3545'; 
-        btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
-        
-        // 2. Kéo lại lớp các biển báo chứa con số mức độ bụi (WAQI)
-        if (!lopBanDoBui) {
-            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
-                maxZoom: 18,
-                opacity: 0.95, // Giữ độ nét cao nhất để đọc được số trên biển báo
-                attribution: 'Air Quality by WAQI'
             });
         }
-        lopBanDoBui.addTo(map);
-
     } else {
-        btn.style.backgroundColor = '#555'; 
-        btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
-        
-        // Gỡ các biển báo ra khỏi bản đồ
-        if (lopBanDoBui) map.removeLayer(lopBanDoBui);
+        btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
+        btn.style.backgroundColor = "#ff9800";
+        btn.style.animation = "none";
+        if (window.db) window.db.ref('nguoi_dung').off();
+        for (const user in friendMarkers) {
+            if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
+        }
+        friendMarkers = {};
     }
 };
-// === HÀM XỬ LÝ HỒ SƠ CÁ NHÂN VÀ ĐĂNG XUẤT ===
 
-// Mở bảng Hồ sơ và điền sẵn thông số cũ
+const radarBtnObj = document.getElementById('btn-cong-dong');
+if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
+
+// === 3. XỬ LÝ NÚT KẾT THÚC VÀ LƯU TIẾN TRÌNH ===
+let confirmTimeout;
+let countdownInterval;
+let isConfirming = false;
+window.handleEndClick = function(e) {
+    if (typeof isTracking !== 'undefined' && !isTracking) return;
+    if (e) e.preventDefault();
+    const endBtnObj = document.getElementById('end-btn');
+    if (!endBtnObj) return;
+
+    if (!isConfirming) {
+        isConfirming = true;
+        let timeLeft = 3;
+        endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
+        endBtnObj.style.backgroundColor = "#ff5722";
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) endBtnObj.innerText = `⏳ BẤM LẦN NỮA (${timeLeft}s)`;
+        }, 1000);
+        confirmTimeout = setTimeout(() => {
+            clearInterval(countdownInterval);
+            isConfirming = false;
+            endBtnObj.innerText = "⏹ KẾT THÚC";
+            endBtnObj.style.backgroundColor = "";
+        }, 3000);
+    } else {
+        clearInterval(countdownInterval);
+        clearTimeout(confirmTimeout);
+        isConfirming = false;
+        endBtnObj.innerText = "⏹ KẾT THÚC";
+        endBtnObj.style.backgroundColor = "";
+        if (typeof window.hienThiRecap === 'function') window.hienThiRecap();
+    }
+};
+
+const endBtnObj2 = document.getElementById('end-btn');
+if (endBtnObj2) endBtnObj2.onclick = window.handleEndClick;
+
+window.hienThiRecap = function() {
+    if (typeof isPaused !== 'undefined') isPaused = true;
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    const pauseBtnObj = document.getElementById('pause-btn');
+    if(pauseBtnObj) {
+        pauseBtnObj.innerText = "▶ TIẾP TỤC";
+        pauseBtnObj.style.backgroundColor = "#4CAF50";
+    }
+    const rTime = document.getElementById('recap-time');
+    const rDist = document.getElementById('recap-distance');
+    const rStep = document.getElementById('recap-steps');
+    const rCalo = document.getElementById('recap-calo');
+    const rModal = document.getElementById('recap-modal');
+
+    if(rTime && document.getElementById('time-display')) rTime.innerText = document.getElementById('time-display').innerText;
+    if(rDist && document.getElementById('dist-display')) rDist.innerText = document.getElementById('dist-display').innerText;
+    if(rStep && document.getElementById('step-display')) rStep.innerText = document.getElementById('step-display').innerText;
+    if(rCalo && document.getElementById('cal-display')) rCalo.innerText = document.getElementById('cal-display').innerText;
+    if(rModal) rModal.style.display = 'flex';
+};
+
+window.luuTienTrinh = function() {
+    const rModal = document.getElementById('recap-modal');
+    if (rModal) rModal.style.display = 'none';
+
+    if (typeof isTracking !== 'undefined') isTracking = false;
+    if (typeof isPaused !== 'undefined') isPaused = false;
+    if (typeof totalDistanceMeter !== 'undefined') totalDistanceMeter = 0;
+    if (typeof elapsedSeconds !== 'undefined') elapsedSeconds = 0;
+    if (typeof latestLatLng !== 'undefined') latestLatLng = null;
+    if (typeof pathLatLngs !== 'undefined') pathLatLngs = [];
+    if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
+
+    if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
+    if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
+    if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
+    if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
+
+    const btnStart = document.getElementById('start-btn');
+    const btnPause = document.getElementById('pause-btn');
+    const btnEnd = document.getElementById('end-btn');
+    if(btnStart) { btnStart.style.display = 'inline-block'; btnStart.innerText = "▶ BẮT ĐẦU"; }
+    if(btnPause) btnPause.style.display = 'none';
+    if(btnEnd) { btnEnd.style.display = 'none'; btnEnd.innerText = "⏹ KẾT THÚC"; btnEnd.style.backgroundColor = ""; }
+};
+
+// === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
+window.isSharingLocation = false;
+window.toggleChiaSe = function() {
+    window.isSharingLocation = !window.isSharingLocation;
+    const btnChiaSe = document.getElementById('btn-chia-se');
+    if (!btnChiaSe) return;
+    if (window.isSharingLocation) {
+        btnChiaSe.innerHTML = "🌍 Đang chia sẻ vị trí (Public)";
+        btnChiaSe.style.backgroundColor = "#2196F3";
+    } else {
+        btnChiaSe.innerHTML = "🔕 Đang ẩn vị trí (Private)";
+        btnChiaSe.style.backgroundColor = "#6c757d";
+        let currentUser = localStorage.getItem('currentUser');
+        if (currentUser && window.db) {
+            window.db.ref('nguoi_dung/' + currentUser + '/toa_do_lat').remove();
+            window.db.ref('nguoi_dung/' + currentUser + '/toa_do_lng').remove();
+        }
+    }
+};
+
+let lopBanDoBui = null;
+window.toggleBuiMin = function() {
+    if (typeof window.isHienBui === 'undefined') window.isHienBui = false;
+    window.isHienBui = !window.isHienBui;
+    const btn = document.getElementById('btn-bui-min');
+    if (!btn) return;
+    if (window.isHienBui) {
+        btn.style.backgroundColor = '#dc3545';
+        btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
+        if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
+            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
+                maxZoom: 18, opacity: 0.9, attribution: 'Air Quality by WAQI'
+            });
+        }
+        if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
+    } else {
+        btn.style.backgroundColor = '#555';
+        btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
+        if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
+    }
+};
+
+// === 5. HỒ SƠ CÁ NHÂN VÀ ĐĂNG XUẤT ===
 window.moHoSo = function() {
     try {
         const user = localStorage.getItem('currentUser') || "Khach";
         let userData = {};
-        try { 
-            let parsedData = JSON.parse(localStorage.getItem("appUser_" + user)); 
+        try {
+            let parsedData = JSON.parse(localStorage.getItem("appUser_" + user));
             if (parsedData) userData = parsedData;
         } catch (e) {}
 
-        // Lấy ảnh đã tải lên
         let avatarUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
         let previewImg = document.getElementById('hs-avatar-preview');
         if (previewImg) previewImg.src = avatarUrl;
-        
-        // Trích xuất chỉ số an toàn tuyệt đối (Chống sập do lỗi chữ/số)
-        let w = parseFloat(userData.weight);
-        if (isNaN(w)) w = 65;
-        
-        let s = parseFloat(userData.strideLength);
-        if (isNaN(s)) s = 0.7;
-        
+
+        let w = parseFloat(userData.weight); if (isNaN(w)) w = 65;
+        let s = parseFloat(userData.strideLength); if (isNaN(s)) s = 0.7;
         let h = Math.round(s / 0.415 * 100);
 
-        // Nạp số liệu vào bảng
-        let weightInput = document.getElementById('hs-edit-weight');
-        if (weightInput) weightInput.value = w;
+        let weightInput = document.getElementById('hs-edit-weight'); if (weightInput) weightInput.value = w;
+        let strideInput = document.getElementById('hs-edit-stride'); if (strideInput) strideInput.value = s.toFixed(2);
+        let heightInput = document.getElementById('hs-edit-height'); if (heightInput) heightInput.value = h;
 
-        let strideInput = document.getElementById('hs-edit-stride');
-        if (strideInput) strideInput.value = s.toFixed(2);
-
-        let heightInput = document.getElementById('hs-edit-height');
-        if (heightInput) heightInput.value = h;
-        
-        // Hiển thị bảng
         let modal = document.getElementById('hoso-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-        } else {
-            alert("Lỗi: Không tìm thấy giao diện hồ sơ!");
-        }
-    } catch (err) {
-        alert("Có lỗi ngầm khi mở hồ sơ: " + err.message);
-    }
+        if (modal) modal.style.display = 'flex';
+    } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
 };
 
-    // Lấy ảnh đã tải lên (nếu có) hoặc dùng ảnh mặc định
-    let avatarUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
-    document.getElementById('hs-avatar-preview').src = avatarUrl;
-    
-    if (userData) {
-        document.getElementById('hs-edit-weight').value = userData.weight || 65;
-        let stride = userData.strideLength || 0.7;
-        document.getElementById('hs-edit-stride').value = stride.toFixed(2);
-        // Tự tính ngược ra chiều cao
-        let h = Math.round(stride / 0.415 * 100);
-        document.getElementById('hs-edit-height').value = h;
-    }
-    
-    document.getElementById('hoso-modal').style.display = 'flex';
-};
-
-// Đọc file ảnh và đổi hình tròn ngay lập tức
 window.thayDoiAnh = function(event) {
     const file = event.target.files;
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;
-            document.getElementById('hs-avatar-preview').src = base64Image;
-            document.getElementById('avatar-btn-img').src = base64Image;
-            
-            // Lưu ảnh tạm vào bộ nhớ thiết bị
+            const preview = document.getElementById('hs-avatar-preview');
+            const btnImg = document.getElementById('avatar-btn-img');
+            if(preview) preview.src = base64Image;
+            if(btnImg) btnImg.src = base64Image;
+
             const user = localStorage.getItem('currentUser');
             if (user) localStorage.setItem("avatar_" + user, base64Image);
         };
@@ -899,55 +801,50 @@ window.thayDoiAnh = function(event) {
     }
 };
 
-// Lưu lại các chỉ số sau khi người dùng sửa
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');
     if (!user) return;
+    const weightInput = document.getElementById('hs-edit-weight');
+    const strideInput = document.getElementById('hs-edit-stride');
+    const w = weightInput ? parseFloat(weightInput.value) || 65 : 65;
+    let s = strideInput ? parseFloat(strideInput.value) || 0.7 : 0.7;
 
-    const w = parseFloat(document.getElementById('hs-edit-weight').value) || 65;
-    let s = parseFloat(document.getElementById('hs-edit-stride').value) || 0.7;
+    if (typeof window.userWeight !== 'undefined') window.userWeight = w;
+    if (typeof window.stepsPerMeter !== 'undefined') window.stepsPerMeter = 1 / s;
 
-    // Cập nhật vào hệ thống chạy nền
-    window.userWeight = w;
-    window.stepsPerMeter = 1 / s;
-
-    // Ghi đè vào cơ sở dữ liệu lưu trữ
     let userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
     userData.weight = w;
     userData.strideLength = s;
     localStorage.setItem("appUser_" + user, JSON.stringify(userData));
 
     alert("Đã lưu thay đổi hồ sơ thành công!");
-    document.getElementById('hoso-modal').style.display = 'none';
+    const modal = document.getElementById('hoso-modal');
+    if (modal) modal.style.display = 'none';
 };
 
-// Đăng xuất và đẩy người dùng ra màn hình ngoài
 window.dangXuat = function() {
     if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-        // Gỡ thẻ đăng nhập
         localStorage.removeItem('currentUser');
-        
-        // Ẩn bảng hồ sơ và màn hình bản đồ
-        document.getElementById('hoso-modal').style.display = 'none';
-        document.getElementById('app-container').style.display = 'none';
-        
-        // Trả lại form Đăng Nhập trống trơn
-        document.getElementById('login-user').value = '';
-        document.getElementById('login-pass').value = '';
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('register-form').style.display = 'none';
-        
-        // Bật màn hình tối yêu cầu đăng nhập lên
-        document.getElementById('auth-modal').style.display = 'flex';
-        
-        // (Tùy chọn) Tắt GPS nếu đang chạy
-        if (typeof isTracking !== 'undefined' && isTracking) {
-            if (typeof handleEndClick === 'function') handleEndClick();
-        }
+        const hsModal = document.getElementById('hoso-modal');
+        const appCont = document.getElementById('app-container');
+        const authModal = document.getElementById('auth-modal');
+        const loginForm = document.getElementById('login-form');
+        const regForm = document.getElementById('register-form');
+
+        if(hsModal) hsModal.style.display = 'none';
+        if(appCont) appCont.style.display = 'none';
+
+        if(document.getElementById('login-user')) document.getElementById('login-user').value = '';
+        if(document.getElementById('login-pass')) document.getElementById('login-pass').value = '';
+
+        if(loginForm) loginForm.style.display = 'block';
+        if(regForm) regForm.style.display = 'none';
+        if(authModal) authModal.style.display = 'flex';
+
+        if (typeof window.handleEndClick === 'function') window.handleEndClick();
     }
 };
 
-// Cập nhật Avatar nhỏ ngoài bản đồ khi load trang
 window.addEventListener('load', function() {
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');

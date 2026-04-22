@@ -536,7 +536,7 @@ fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoin
     }
 </script>
 
-<!-- Cấu hình kết nối vào Đám mây  -->
+!-- Cấu hình kết nối vào Đám mây  -->
 <script>
 // === 1. FIREBASE CONFIG ===
 const firebaseConfig = {
@@ -606,7 +606,7 @@ window.toggleRadar = function() {
                                 </svg>
                                 <img src="${userAvatar}" style="position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #000; background-color: white;" />
                             </div>`;
-                            const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: [2, 3], iconAnchor: [3, 4], popupAnchor: [0, -40] });
+                            const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: [12, 13], iconAnchor: [13, 14], popupAnchor: [0, -40] });
                             const newMarker = L.marker([lat, lng], {icon: friendIcon});
                             newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
                             if (banDoHienTai) newMarker.addTo(banDoHienTai);
@@ -627,7 +627,6 @@ window.toggleRadar = function() {
         friendMarkers = {};
     }
 };
-
 const radarBtnObj = document.getElementById('btn-cong-dong');
 if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
 
@@ -665,7 +664,6 @@ window.handleEndClick = function(e) {
         if (typeof window.hienThiRecap === 'function') window.hienThiRecap();
     }
 };
-
 const endBtnObj2 = document.getElementById('end-btn');
 if (endBtnObj2) endBtnObj2.onclick = window.handleEndClick;
 
@@ -784,10 +782,10 @@ window.moHoSo = function() {
     } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
 };
 
-// ĐỔI ẢNH ĐẠI DIỆN
 window.thayDoiAnh = function(event) {
-    const file = event.target.files; 
-    if (file) {
+    const file = event.target.files;
+    // Đã thêm  vào file để giải quyết lỗi đổi ảnh
+    if (file && file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;
@@ -795,14 +793,13 @@ window.thayDoiAnh = function(event) {
             const btnImg = document.getElementById('avatar-btn-img');
             if(preview) preview.src = base64Image;
             if(btnImg) btnImg.src = base64Image;
-            
-            // Lưu ảnh tạm vào bộ nhớ thiết bị
+
             const user = localStorage.getItem('currentUser');
             if (user) localStorage.setItem("avatar_" + user, base64Image);
         };
         reader.readAsDataURL(file);
     }
-};};
+};
 
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');

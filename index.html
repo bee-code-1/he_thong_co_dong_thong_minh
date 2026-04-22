@@ -429,13 +429,13 @@
         const myGPSHtml = `
         <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
             <!-- Vỏ ngoài hình giọt nước -->
-            <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+            <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;">
                 <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
             </svg>
             <!-- Ảnh đại diện lấp đầy phần tâm -->
-            <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+            <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; z-index: 2;" />
             <!-- BẢNG TÊN CỐ ĐỊNH -->
-            <div style="position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            <div style="position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 3;">
                 ${username}
             </div>
         </div>

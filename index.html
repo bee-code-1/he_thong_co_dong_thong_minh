@@ -470,10 +470,10 @@
 fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${lng},${lat}?geometries=geojson`)
 .then(res => res.json())
 .then(data => {
-    // SỬA LỖI MẢNG: Bắt buộc phải có  vì routes là một danh sách
     if(data.routes && data.routes.length > 0) {
-        let tuyenDuong = data.routes; 
-
+        // Dùng cấu trúc Destructuring để né hoàn toàn lỗi ngoặc vuông
+        const [tuyenDuong] = data.routes;
+        
         let khoangCachMoi = parseFloat(tuyenDuong.distance);
         if (isNaN(khoangCachMoi)) khoangCachMoi = 0;
         
@@ -489,20 +489,21 @@ fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoin
         let distDisp = document.getElementById('dist-display');
         let stepDisp = document.getElementById('step-display');
         let calDisp = document.getElementById('cal-display');
+        
         if(distDisp) distDisp.innerText = (totalDistanceMeter / 1000).toFixed(2);
         if(stepDisp) stepDisp.innerText = Math.floor(totalDistanceMeter * buoc);
         if(calDisp) calDisp.innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
 
-        // VẼ ĐƯỜNG ĐI: Lấy geometry của tuyến đường đầu tiên
         if (tuyenDuong.geometry && tuyenDuong.geometry.coordinates) {
             tuyenDuong.geometry.coordinates.forEach(coord => {
-                // Sửa lỗi tọa độ: OSRM là [Kinh độ, Vĩ độ], Leaflet cần [Vĩ độ, Kinh độ]
-                pathLatLngs.push(L.latLng(coord[1], coord));
+                // Tách Kinh độ và Vĩ độ an toàn tuyệt đối
+                const [kinhDo, viDo] = coord;
+                pathLatLngs.push(L.latLng(viDo, kinhDo));
             });
             if(polyline) polyline.setLatLngs(pathLatLngs);
         }
     }
-}).catch(err => console.error("Lỗi mạng OSRM:", err));
+}).catch(err => console.error("Lỗi mạng:", err));
             }
         } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
             pathLatLngs.push(currentLatLng);

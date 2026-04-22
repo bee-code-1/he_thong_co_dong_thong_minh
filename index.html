@@ -142,6 +142,43 @@
                 </button>
             </div>
         </div>
+<!-- hồ sơ cá nhân -->
+<div id="hoso-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
+    <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
+        <!-- Nút X Tắt -->
+        <span onclick="document.getElementById('hoso-modal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+        
+        <h2 style="color: #007bff; margin-top: 0; margin-bottom: 15px;">HỒ SƠ CỦA TÔI</h2>
+        
+        <!-- Khu vực Avatar (Bấm vào hình để đổi) -->
+        <div style="margin-bottom: 20px; position: relative; display: inline-block;">
+            <img id="hs-avatar-preview" src="https://ui-avatars.com/api/?name=User" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #007bff; object-fit: cover; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" onclick="document.getElementById('upload-avatar').click();" title="Bấm để đổi ảnh đại diện">
+            <!-- Thẻ input chọn file bị ẩn đi -->
+            <input type="file" id="upload-avatar" accept="image/*" style="display: none;" onchange="window.thayDoiAnh(event)">
+            <div style="font-size: 12px; color: #888; margin-top: 8px;">👆 Bấm vào ảnh để thay đổi</div>
+        </div>
+
+        <!-- Các chỉ số tùy chỉnh -->
+        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+            <label style="font-weight: bold; font-size: 14px; color: #333;">📏 Chiều cao (cm):</label>
+            <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+
+            <label style="font-weight: bold; font-size: 14px; color: #333;">⚖️ Cân nặng (kg):</label>
+            <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+
+            <label style="font-weight: bold; font-size: 14px; color: #333;">👟 Sải chân (m/bước):</label>
+            <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
+        </div>
+        
+        <!-- Nút LƯU và ĐĂNG XUẤT -->
+        <button onclick="window.luuHoSo()" style="background-color: #28a745; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            LƯU THAY ĐỔI
+        </button>
+        <button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            ĐĂNG XUẤT
+        </button>
+    </div>
+</div>
         <div id="action-btns-container">
             <button id="locate-me-btn" class="action-btn" onclick="flyToMyLocation()" style="background-color: #2196F3;"> < 📍 > </button>
             <button id="start-btn" class="action-btn" onclick="startTrackingAction()">▶ BẮT ĐẦU</button>
@@ -780,6 +817,107 @@ window.toggleBuiMin = function() {
         if (lopBanDoBui) map.removeLayer(lopBanDoBui);
     }
 };
+// === HÀM XỬ LÝ HỒ SƠ CÁ NHÂN VÀ ĐĂNG XUẤT ===
+
+// Mở bảng Hồ sơ và điền sẵn thông số cũ
+window.moHoSo = function() {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let userData = null;
+    try { userData = JSON.parse(localStorage.getItem("appUser_" + user)); } catch (e) {}
+
+    // Lấy ảnh đã tải lên (nếu có) hoặc dùng ảnh mặc định
+    let avatarUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
+    document.getElementById('hs-avatar-preview').src = avatarUrl;
+    
+    if (userData) {
+        document.getElementById('hs-edit-weight').value = userData.weight || 65;
+        let stride = userData.strideLength || 0.7;
+        document.getElementById('hs-edit-stride').value = stride.toFixed(2);
+        // Tự tính ngược ra chiều cao
+        let h = Math.round(stride / 0.415 * 100);
+        document.getElementById('hs-edit-height').value = h;
+    }
+    
+    document.getElementById('hoso-modal').style.display = 'flex';
+};
+
+// Đọc file ảnh và đổi hình tròn ngay lập tức
+window.thayDoiAnh = function(event) {
+    const file = event.target.files;
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Image = e.target.result;
+            document.getElementById('hs-avatar-preview').src = base64Image;
+            document.getElementById('avatar-btn-img').src = base64Image;
+            
+            // Lưu ảnh tạm vào bộ nhớ thiết bị
+            const user = localStorage.getItem('currentUser');
+            if (user) localStorage.setItem("avatar_" + user, base64Image);
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+// Lưu lại các chỉ số sau khi người dùng sửa
+window.luuHoSo = function() {
+    const user = localStorage.getItem('currentUser');
+    if (!user) return;
+
+    const w = parseFloat(document.getElementById('hs-edit-weight').value) || 65;
+    let s = parseFloat(document.getElementById('hs-edit-stride').value) || 0.7;
+
+    // Cập nhật vào hệ thống chạy nền
+    window.userWeight = w;
+    window.stepsPerMeter = 1 / s;
+
+    // Ghi đè vào cơ sở dữ liệu lưu trữ
+    let userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
+    userData.weight = w;
+    userData.strideLength = s;
+    localStorage.setItem("appUser_" + user, JSON.stringify(userData));
+
+    alert("Đã lưu thay đổi hồ sơ thành công!");
+    document.getElementById('hoso-modal').style.display = 'none';
+};
+
+// Đăng xuất và đẩy người dùng ra màn hình ngoài
+window.dangXuat = function() {
+    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+        // Gỡ thẻ đăng nhập
+        localStorage.removeItem('currentUser');
+        
+        // Ẩn bảng hồ sơ và màn hình bản đồ
+        document.getElementById('hoso-modal').style.display = 'none';
+        document.getElementById('app-container').style.display = 'none';
+        
+        // Trả lại form Đăng Nhập trống trơn
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('register-form').style.display = 'none';
+        
+        // Bật màn hình tối yêu cầu đăng nhập lên
+        document.getElementById('auth-modal').style.display = 'flex';
+        
+        // (Tùy chọn) Tắt GPS nếu đang chạy
+        if (typeof isTracking !== 'undefined' && isTracking) {
+            if (typeof handleEndClick === 'function') handleEndClick();
+        }
+    }
+};
+
+// Cập nhật Avatar nhỏ ngoài bản đồ khi load trang
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        let savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            let avatarUrl = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
+            let avtImg = document.getElementById('avatar-btn-img');
+            if(avtImg) avtImg.src = avatarUrl;
+        }
+    }, 500);
+});
 </script>
 </body>
 </html>

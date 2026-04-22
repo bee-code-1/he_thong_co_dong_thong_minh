@@ -397,20 +397,27 @@
         const fog = document.getElementById('fog-layer');
         polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
 
- gpsWatcherId = navigator.geolocation.watchPosition(position => {
-            const lat = position.coords.latitude, lng = position.coords.longitude;
-            
-        // BẮN TỌA ĐỘ LÊN ĐÁM MÂY 
-        let username = localStorage.getItem('currentUser');
-        
-        //  Nếu không có tài khoản hoặc chưa share thì ko gửi tọa độ lên mạng
-        if (username && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
-            banToaDoLenMay(username, lat, lng);
-        }
+        gpsWatcherId = navigator.geolocation.watchPosition(position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const doChinhXac = position.coords.accuracy; // LẤY CHỈ SỐ SAI SỐ GPS CỦA ĐIỆN THOẠI
+
+            // Nếu sai số vị trí lớn hơn 20 mét thì tự động vứt bỏ điểm này
+            if (doChinhXac > 20) {
+                console.log("Tín hiệu GPS nhiễu, sai số: " + doChinhXac + "m. Đã tự động bỏ qua!");
+                return;
+            }
+
+            // BẮN TỌA ĐỘ LÊN ĐÁM MÂY
+            let username = localStorage.getItem('currentUser');
+            //  Nếu không có tài khoản hoặc chưa share thì ko gửi tọa độ lên mạng
+            if (username && typeof isSharingLocation !== 'undefined' && isSharingLocation === true) {
+                banToaDoLenMay(username, lat, lng);
+            }
+
             const currentLatLng = L.latLng(lat, lng);
             const heading = position.coords.heading || 0;
             latestLatLng = currentLatLng;
-
             if (document.getElementById('start-btn').innerText === "ĐANG KẾT NỐI GPS...") {
                 startTrackingAction();
             }

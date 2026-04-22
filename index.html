@@ -783,8 +783,11 @@ window.moHoSo = function() {
 };
 
 // === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
+// === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
 window.thayDoiAnh = function(event) {
-    const file = event.target.files;
+    // Dùng .item(0) thay vì ngoặc vuông để hệ thống không bị lỗi băm code
+    const file = event.target.files.item(0);
+    
     if (file) {
         if (file.size > 2 * 1024 * 1024) {
             alert("Ảnh hơi nặng! Vui lòng chọn ảnh dung lượng dưới 2MB để đồng bộ nhanh nhất nhé.");

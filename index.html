@@ -10,6 +10,21 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
+        // HÀM CHUYỂN ĐỔI LAYER TAB
+window.switchTab = function(tabIndex) {
+    // 1. Tước quyền ưu tiên của tất cả các Layer (Ẩn đi)
+    document.querySelectorAll('.tab-screen').forEach(tab => {
+        tab.classList.remove('active-tab');
+    });
+    
+    // 2. Tắt viền sáng của tất cả các icon dưới đáy
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    // 3. Đưa Layer vừa bấm LÊN TRÊN CÙNG và làm sáng icon tương ứng
+    document.getElementById('tab-' + tabIndex).classList.add('active-tab');
+    navItems[tabIndex - 1].classList.add('active');
+};
         /* UI MOBILE APP - GIAO DIỆN NỔI TRÊN BẢN ĐỒ */        
         /*  THANH ĐIỀU HƯỚNG DƯỚI  */
         .bottom-nav {
@@ -146,16 +161,12 @@
 <body>
 
     <div id="map"></div>
-<!-- LỚP GIAO DIỆN CHÍNH (NỔI TRÊN BẢN ĐỒ) -->
-<!-- ========================================== -->
-<div id="ui-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000;">
+<!-- LỚP GIAO DIỆN CHÍNH (QUẢN LÝ CÁC LAYER TAB) -->
+<div id="ui-layer">
     
-    <!-- TAB 1: CHẠY BỘ (Hiển thị mặc định, tương ứng ảnh chay_1 và chay_2) -->
-    <div id="tab-chay-bo" class="tab-screen" style="display: block; pointer-events: auto;">
-        <!-- Nút Bụi mịn (Góc trên trái) -->
-        <button id="btn-bui-min" class="top-left-btn">Bụi mịn<br>on/off</button>
-        
-        <!-- Bảng thông số Tiến trình (Góc trên phải) -->
+    <!-- LAYER TAB 1: CHẠY BỘ (Nền trong suốt nhìn xuyên xuống bản đồ) -->
+    <div id="tab-1" class="tab-screen active-tab">
+        <button id="btn-bui-min" class="top-left-btn" onclick="window.toggleBuiMin()">Bụi mịn<br>on/off</button>
         <div id="info-panel">
             <div id="timer-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00h 00m 00s</div>
             <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
@@ -164,34 +175,46 @@
                 <li>Tiêu thụ: <span id="cal-display">00</span> calo</li>
             </ul>
         </div>
-
-        <!-- Nút Bắt đầu (Ở giữa, dưới cùng) -->
         <button id="btn-bat-dau" class="action-btn start-btn" onclick="startRunning()">Bắt đầu</button>
-        
-        <!-- Cụm nút Tạm dừng / Kết thúc (Sẽ hiện ra khi bấm Bắt đầu) -->
         <div id="running-controls" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); gap: 10px;">
-            <button id="btn-tam-dung" class="action-btn pause-btn">Tạm dừng</button>
+            <button id="btn-tam-dung" class="action-btn pause-btn" onclick="pauseTrackingAction()">Tạm dừng</button>
             <button id="btn-ket-thuc" class="action-btn end-btn" onclick="endRunning()">Kết thúc</button>
         </div>
     </div>
 
-    <!-- TAB 4: CỘNG ĐỒNG  -->
-    <div id="tab-cong-dong" class="tab-screen" style="display: none; pointer-events: auto;">
-        <!-- Nút Bản đồ cộng đồng (Góc trên trái) -->
-        <button id="btn-ban-do-cd" class="top-left-btn" style="background: #4CAF50; color: white;">Bản đồ<br>cộng đồng</button>
-        
-        <!-- Nút bật/tắt vị trí hình Giọt nước (Góc dưới trái) -->
-        <div id="location-toggle-box" style="position: absolute; bottom: 80px; left: 15px; background: #ccc; padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-            <span style="font-size: 20px; margin-right: 10px;">📍</span>
-            <input type="checkbox" id="toggle-location" style="transform: scale(1.5);">
+    <!-- LAYER TAB 2: TIẾN TRÌNH (Che khuất hoàn toàn bản đồ) -->
+    <div id="tab-2" class="tab-screen solid-bg">
+        <div class="tab-content">
+            <h2>📊 Tiến Trình</h2>
+            <p>Mọi tính năng thông số sức khoẻ sẽ nằm trên nền trắng này, bản đồ đã bị đẩy xuống dưới.</p>
         </div>
     </div>
 
-    <!-- TAB TRỐNG (Cho các Tab đang phát triển: 2, 3, 5) -->
-    <div id="tab-placeholder" class="tab-screen" style="display: none; pointer-events: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-        <h3 style="margin: 0; color: #333;"> ra cienco5 đợi đi </h3>
-        <p style="margin: 5px 0 0 0; color: #666;"> tbm đang phát triển tính năng này</p>
+    <!-- LAYER TAB 3: TRANG CHỦ (Che khuất hoàn toàn bản đồ) -->
+    <div id="tab-3" class="tab-screen solid-bg">
+        <div class="tab-content">
+            <h2>🏠 Trang Chủ</h2>
+            <p>Up ảnh, xem ảnh bạn bè sẽ ở đây.</p>
+        </div>
     </div>
+
+    <!-- LAYER TAB 4: CỘNG ĐỒNG (Nền trong suốt nhìn xuyên xuống bản đồ) -->
+    <div id="tab-4" class="tab-screen">
+        <button id="btn-ban-do-cd" class="top-left-btn" style="background: #4CAF50; color: white;" onclick="window.toggleRadar()">Bản đồ<br>cộng đồng</button>
+        <div id="location-toggle-box" style="position: absolute; bottom: 80px; left: 15px; background: #ccc; padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <span style="font-size: 20px; margin-right: 10px;">📍</span>
+            <input type="checkbox" id="toggle-location" style="transform: scale(1.5);" onclick="window.toggleChiaSe()">
+        </div>
+    </div>
+
+    <!-- LAYER TAB 5: CÀI ĐẶT (Che khuất hoàn toàn bản đồ) -->
+    <div id="tab-5" class="tab-screen solid-bg">
+        <div class="tab-content">
+            <h2>⚙️ Cài Đặt</h2>
+            <p>Hồ sơ cá nhân, đổi mật khẩu.</p>
+        </div>
+    </div>
+
 </div>
 
 <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
@@ -233,34 +256,12 @@
 <!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
 <div id="app-container">
     
-    <div id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; right: 15px; top: 120px; width: 60px; height: 60px; background-color: #555; color: white; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 11px; font-weight: bold; border-radius: 10px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; pointer-events: auto; transition: 0.3s;">
-        BỤI MỊN<br>🔴 OFF
-    </div>
-
     <div id="fog-layer"></div>
+
 <!-- NÚT TÀI KHOẢN CÁ NHÂN -->
 <div id="btn-ho-so" onclick="window.moHoSo()" style="position: absolute; right: 15px; top: 20px; width: 50px; height: 50px; background-color: white; border-radius: 50%; border: 3px solid #007bff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1005; pointer-events: auto; overflow: hidden; display: flex; justify-content: center; align-items: center;">
     <img id="avatar-btn-img" src="https://ui-avatars.com/api/?name=User" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" />
 </div>
-<div id="stats-window">
-    <h3>📊 Tiến độ hôm nay</h3>
-    <p>⏱ Thời gian: <span id="time-display" class="stat-val text-red">00:00</span></p>
-    <p>🚶 Bước chân: <span id="step-display" class="stat-val text-green">0</span></p>
-    <p>📍 Đã đi: <span id="dist-display" class="stat-val text-blue">0.00</span> km</p>
-    <p>🔥 Tiêu thụ: <span id="cal-display" class="stat-val text-orange">0.0</span> calo</p>
-</div>
-<!-- NÚT HIỂN THỊ CỘNG ĐỒNG VÀ CHIA SẺ VỊ TRÍ -->
-<div style="text-align: center; margin-top: 10px; margin-bottom: 15px; z-index: 1000; position: relative; pointer-events: auto;">
-    <button id="btn-cong-dong" style="background-color: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer;">
-        👥 Bản đồ Cộng Đồng
-    </button>
-    <br>
-    <!-- NÚT CHIA SẺ VỊ TRÍ MỚI -->
-    <button id="btn-chia-se" onclick="window.toggleChiaSe()" style="margin-top: 8px; background-color: #6c757d; color: white; padding: 5px 12px; border: none; border-radius: 15px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-        🔕 Đang ẩn vị trí
-    </button>
-</div>
-
         <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
         <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
             <!-- Đã thêm position: relative; vào thẻ div dưới đây để làm gốc tọa độ cho nút X -->
@@ -323,14 +324,7 @@
         </button>
     </div>
 </div>
-        <div id="action-btns-container">
-            <button id="locate-me-btn" class="action-btn" onclick="flyToMyLocation()" style="background-color: #2196F3;"> < 📍 > </button>
-            <button id="start-btn" class="action-btn" onclick="startTrackingAction()">▶ BẮT ĐẦU</button>
-            <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()">⏸ TẠM DỪNG</button>
-            <!-- LƯU Ý: Đã xóa onclick="executeEndTracking()" ở nút dưới để chuẩn bị làm tính năng giữ 3 giây -->
-            <button id="end-btn" class="action-btn" style="user-select: none; -webkit-user-select: none;">⏹ KẾT THÚC</button>
-        </div>
-    </div>
+</div>
 
 <script>
     //  KHỞI TẠO BẢN ĐỒ 

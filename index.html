@@ -9,109 +9,29 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <style>
-        // HÀM CHUYỂN ĐỔI LAYER TAB
-window.switchTab = function(tabIndex) {
-    // 1. Tước quyền ưu tiên của tất cả các Layer (Ẩn đi)
-    document.querySelectorAll('.tab-screen').forEach(tab => {
-        tab.classList.remove('active-tab');
-    });
-    
-    // 2. Tắt viền sáng của tất cả các icon dưới đáy
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => item.classList.remove('active'));
-    
-    // 3. Đưa Layer vừa bấm LÊN TRÊN CÙNG và làm sáng icon tương ứng
-    document.getElementById('tab-' + tabIndex).classList.add('active-tab');
-    navItems[tabIndex - 1].classList.add('active');
-};
-        /* UI MOBILE APP - GIAO DIỆN NỔI TRÊN BẢN ĐỒ */        
-        /*  THANH ĐIỀU HƯỚNG DƯỚI  */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
-            z-index: 2000;
-            /* animation trượt trong 0,5s */
-            transition: transform 0.5s ease-in-out;
-        }
+     <style>
+        /* 1. QUẢN LÝ HIỂN THỊ CÁC LAYER TAB (LỚP NỀN) */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        .tab-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
+        .tab-screen.active-tab { display: block; z-index: 10; }
+        .tab-screen.active-tab * { pointer-events: auto; }
+        .solid-bg { background-color: #f5f5f5; pointer-events: auto; }
+        .tab-content { padding: 20px; padding-top: 40px; text-align: center; color: #333; }
 
-        .nav-hidden {
-            transform: translateY(100%);
-        }
+        /* 2. THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV) */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.15); z-index: 2000; transition: transform 0.5s ease-in-out; }
+        .nav-hidden { transform: translateY(100%); }
+        .nav-item { font-size: 26px; opacity: 0.4; transition: 0.3s all ease; cursor: pointer; }
+        .nav-item.active { opacity: 1; transform: scale(1.2); filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
 
-        .nav-item {
-            font-size: 26px;
-            opacity: 0.4;
-            transition: 0.3s all ease;
-            cursor: pointer;
-        }
-        
-        .nav-item.active {
-            opacity: 1;
-            transform: scale(1.2);
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
-        }
+        /* 3. CÁC NÚT BẤM VÀ BẢNG THÔNG TIN TRÊN BẢN ĐỒ */
+        .top-left-btn { position: absolute; top: 15px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; }
+        #info-panel { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 10px 15px; width: 170px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .action-btn { position: absolute; bottom: 85px; padding: 12px 30px; font-size: 18px; font-weight: 900; color: white; border: 3px solid #004BAd; border-radius: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; text-transform: uppercase; }
+        .start-btn { left: 50%; transform: translateX(-50%); background: #00C853; }
+        .pause-btn { position: relative; bottom: 0; background: #FF9800; border-color: white; }
+        .end-btn { position: relative; bottom: 0; background: #F44336; border-color: white; }
 
-        /* 2. CÁC NÚT BẤM VÀ BẢNG THÔNG TIN TRÊN BẢN ĐỒ */
-        .top-left-btn {
-            position: absolute; 
-            top: 15px; 
-            left: 15px;
-            background: rgba(255, 255, 255, 0.9); 
-            border: 2px solid #004BAd; /* Viền xanh lam đậm giống thiết kế */
-            border-radius: 15px; 
-            padding: 8px 12px; 
-            font-weight: bold;
-            font-size: 13px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-
-        #info-panel {
-            position: absolute; 
-            top: 15px; 
-            right: 15px;
-            background: rgba(255, 255, 255, 0.9); 
-            border: 2px solid #004BAd; /* Viền xanh lam đậm */
-            border-radius: 15px; 
-            padding: 10px 15px; 
-            width: 170px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-
-        .action-btn {
-            position: absolute; 
-            bottom: 85px; /* Nằm ngay phía trên thanh Nav Bar */
-            padding: 12px 30px; 
-            font-size: 18px; 
-            font-weight: 900;
-            color: white; 
-            border: 3px solid #004BAd; /* Viền xanh lam đậm cho nút bấm */
-            border-radius: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .start-btn { 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: #00C853; /* Xanh lá cây */
-        }
-        
-        /* 2 Nút Tạm dừng và Kết thúc nằm cạnh nhau */
-        .pause-btn { position: relative; bottom: 0; background: #FF9800; border-color: white;}
-        .end-btn { position: relative; bottom: 0; background: #F44336; border-color: white;}
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
@@ -1036,30 +956,21 @@ window.addEventListener('load', function() {
 });
     // UI LOGIC - CHUYỂN TAB VÀ ĐIỀU KHIỂN NÚT BẤM
 
-        // HÀM CHUYỂN TAB TRÊN THANH BOTTOM NAV
-        window.switchTab = function(tabIndex) {
-            // 1. Tắt hiển thị tất cả các tab
-            document.querySelectorAll('.tab-screen').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            
-            // 2. Bỏ viền sáng ở tất cả các icon nav
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => item.classList.remove('active'));
-            
-            // 3. Bật sáng icon được chọn
-            navItems[tabIndex - 1].classList.add('active');
-
-            // 4. Hiển thị nội dung Tab tương ứng
-            if (tabIndex === 1) {
-                document.getElementById('tab-chay-bo').style.display = 'block';
-            } else if (tabIndex === 4) {
-                document.getElementById('tab-cong-dong').style.display = 'block';
-            } else {
-                // Các tab 2, 3, 5 hiện bảng "Đang thi công"
-                document.getElementById('tab-placeholder').style.display = 'block';
-            }
-        };
+// HÀM CHUYỂN ĐỔI LAYER TAB MỚI
+window.switchTab = function(tabIndex) {
+    // 1. Tước quyền ưu tiên của tất cả các Layer (Ẩn đi)
+    document.querySelectorAll('.tab-screen').forEach(tab => {
+        tab.classList.remove('active-tab');
+    });
+    
+    // 2. Tắt viền sáng của tất cả các icon dưới đáy
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    // 3. Đưa Layer vừa bấm LÊN TRÊN CÙNG và làm sáng icon tương ứng
+    document.getElementById('tab-' + tabIndex).classList.add('active-tab');
+    navItems[tabIndex - 1].classList.add('active');
+};
 
         // HÀM BẤM NÚT BẮT ĐẦU CHẠY BỘ
         window.startRunning = function() {

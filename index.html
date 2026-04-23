@@ -767,11 +767,13 @@ window.luuTienTrinh = function() {
     };
 
     if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
-        window.db.ref('tien_trinh_tap_luyen/' + username).push(recordData)
-            .then(() => {
-                alert("Đã lưu tiến trình thành công vào hồ sơ!");
-                window.veTheTienTrinh(recordData); 
-            }).catch(err => console.error("Lỗi lưu tiến trình:", err));
+        // TẠO KEY (ID) MỚI TRÊN FIREBASE TRƯỚC KHI LƯU
+        const newRecordRef = window.db.ref('tien_trinh_tap_luyen/' + username).push();
+        newRecordRef.set(recordData).then(() => {
+            alert("Đã lưu tiến trình thành công vào hồ sơ!");
+            // Truyền luôn cái Key ID đó vào để vẽ thẻ
+            window.veTheTienTrinh(newRecordRef.key, recordData); 
+        }).catch(err => console.error("Lỗi lưu tiến trình:", err));
     }
 
     const rModal = document.getElementById('recap-modal');
@@ -799,22 +801,71 @@ window.luuTienTrinh = function() {
     if (timer) timer.style.display = 'none';
 };
 
-// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH ===
-window.veTheTienTrinh = function(data) {
+// === BIẾN TOÀN CỤC CHO TÍNH NĂNG NHẤN GIỮ ===
+let pressTimer = null;
+
+// === HÀM XÓA TIẾN TRÌNH ===
+window.xoaTienTrinh = function(recordKey, btnElement) {
+    if (!confirm("Bạn có chắc chắn muốn xóa tiến trình này không?")) return;
+
+    let username = localStorage.getItem('currentUser');
+    if (username && typeof window.db !== 'undefined') {
+        window.db.ref('tien_trinh_tap_luyen/' + username + '/' + recordKey).remove()
+            .then(() => {
+                const card = btnElement.closest('.progress-card');
+                if (card) card.remove();
+
+                const listContainer = document.getElementById('progress-list');
+                if (listContainer && listContainer.querySelectorAll('.progress-card').length === 0) {
+                    const emptyMsg = document.getElementById('empty-progress');
+                    if (emptyMsg) emptyMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi xóa tiến trình:", err);
+                alert("Không thể xóa lúc này, vui lòng thử lại sau!");
+            });
+    }
+};
+
+// === LOGIC XỬ LÝ NHẤN GIỮ (1.5 GIÂY) ===
+window.batDauXoa = function(recordKey, element) {
+    pressTimer = setTimeout(() => {
+        window.xoaTienTrinh(recordKey, element);
+    }, 1500);
+};
+
+window.huyBamGiu = function() {
+    if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+    }
+};
+
+// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
+window.veTheTienTrinh = function(recordKey, data) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
     if (emptyMsg) emptyMsg.style.display = 'none'; 
 
     const cardHTML = `
-    <div style="background: #e0e0e0; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
-        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
+    <div class="progress-card" 
+         onmousedown="window.batDauXoa('${recordKey}', this)" 
+         onmouseup="window.huyBamGiu()" 
+         onmouseleave="window.huyBamGiu()" 
+         ontouchstart="window.batDauXoa('${recordKey}', this)" 
+         ontouchend="window.huyBamGiu()" 
+         ontouchmove="window.huyBamGiu()"
+         style="background: #e0e0e0; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;">
+        
+        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333; pointer-events: none;">
             ⏱ Thời gian: ${data.thoi_gian}<br>
             ⚡ Vận tốc TB: ${data.van_toc} km/h<br>
             📏 Quãng đường: ${data.quang_duong}<br>
             👟 Bước chân: ${data.buoc_chan} bước<br>
             🔥 Calo tiêu thụ: ${data.calo} kcal
         </div>
-        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed #aaa; padding-left: 15px; min-width: 80px;">
+        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed #aaa; padding-left: 15px; min-width: 80px; pointer-events: none;">
             <div style="margin-bottom: 5px;">${data.ngay}</div>
             <div>${data.gio_bat_dau}</div>
             <div style="font-size: 10px; color: #888; margin: 2px 0;">-----</div>
@@ -833,8 +884,9 @@ window.addEventListener('load', function() {
             window.db.ref('tien_trinh_tap_luyen/' + savedUser).once('value').then((snapshot) => {
                 const dataObj = snapshot.val();
                 if (dataObj) {
-                    const records = Object.values(dataObj).sort((a, b) => a.timestamp - b.timestamp);
-                    records.forEach(record => window.veTheTienTrinh(record));
+                    const records = Object.keys(dataObj).map(key => ({ key: key, data: dataObj[key] }));
+                    records.sort((a, b) => a.data.timestamp - b.data.timestamp);
+                    records.forEach(record => window.veTheTienTrinh(record.key, record.data));
                 }
             });
         }

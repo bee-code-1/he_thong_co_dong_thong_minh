@@ -230,10 +230,15 @@
             </div>
         </div>
 <!-- hồ sơ cá nhân -->
-<div id="hoso-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
-    <div style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
+<!-- Thêm sự kiện onclick="window.dongHoSo()" vào lớp nền đen để bấm ra ngoài là tắt -->
+<div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
+    
+    <!-- Thêm onclick="event.stopPropagation()" để bấm vào vùng trắng không bị tắt -->
+    <!-- Thêm max-height: 85vh và overflow-y: auto để kích hoạt thanh trượt dọc -->
+    <div onclick="event.stopPropagation()" style="background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
+        
         <!-- Nút X Tắt -->
-        <span onclick="document.getElementById('hoso-modal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+        <span onclick="window.dongHoSo()" style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1; z-index: 10;">&times;</span>
         
         <h2 style="color: #007bff; margin-top: 0; margin-bottom: 15px;"> Cái mặt chó của tôi </h2>
         
@@ -288,6 +293,7 @@
     </div>
 </div>
 </div>
+    
 <script>
     //  KHỞI TẠO BẢN ĐỒ 
     const map = L.map('map', { zoomControl: false }).setView([21.028511, 105.804817], 15);
@@ -970,25 +976,44 @@ window.moHoSo = function() {
 
         let modal = document.getElementById('hoso-modal');
         if (modal) modal.style.display = 'flex';
+
+        // 💡 KHI MỞ HỒ SƠ -> GIẤU THANH ĐIỀU HƯỚNG ĐI
+        const nav = document.getElementById('bottom-nav');
+        if (nav) nav.classList.add('nav-hidden');
+
     } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
+};
+
+// 💡 THÊM HÀM MỚI: ĐÓNG HỒ SƠ & HIỆN LẠI THANH ĐIỀU HƯỚNG
+window.dongHoSo = function(e) {
+    const modal = document.getElementById('hoso-modal');
+    if (modal) modal.style.display = 'none';
+
+    // Xóa trắng mật khẩu cho an toàn mỗi lần đóng
+    document.getElementById('hs-old-pass').value = '';
+    document.getElementById('hs-new-pass').value = '';
+    document.getElementById('hs-confirm-pass').value = '';
+
+    // Khi tắt hồ sơ -> Hiện lại thanh điều hướng (Chỉ hiện nếu không đang chạy bộ)
+    const nav = document.getElementById('bottom-nav');
+    if (nav && typeof isTracking !== 'undefined' && !isTracking) {
+        nav.classList.remove('nav-hidden');
+    }
 };
 
 // === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
 window.thayDoiAnh = function(event) {
     const file = event.target.files.item(0);
-    
     if (file) {
         if (file.size > 2 * 1024 * 1024) {
             alert("Ảnh hơi nặng! Vui lòng chọn ảnh dung lượng dưới 2MB để đồng bộ nhanh nhất nhé.");
             return;
         }
-
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;
             const preview = document.getElementById('hs-avatar-preview');
             const btnImg = document.getElementById('avatar-btn-img');
-            
             if(preview) preview.src = base64Image;
             if(btnImg) btnImg.src = base64Image;
 
@@ -996,8 +1021,8 @@ window.thayDoiAnh = function(event) {
             if (user) {
                 localStorage.setItem("avatar_" + user, base64Image);
                 if (typeof window.db !== 'undefined') {
-                    window.db.ref('nguoi_dung/' + user).update({ 
-                        avatar: base64Image 
+                    window.db.ref('nguoi_dung/' + user).update({
+                        avatar: base64Image
                     }).then(() => {
                         console.log("Đã đồng bộ Avatar lên Đám mây thành công!");
                     }).catch((err) => {
@@ -1016,10 +1041,10 @@ window.toggleEye = function(inputId, iconId) {
     const icon = document.getElementById(iconId);
     if (input.type === "password") {
         input.type = "text";
-        icon.innerText = "🙈"; // Đổi thành mặt khỉ che mắt
+        icon.innerText = "🙈"; 
     } else {
         input.type = "password";
-        icon.innerText = "👁️"; // Đổi lại thành mắt mở
+        icon.innerText = "👁️"; 
     }
 };
 
@@ -1035,22 +1060,20 @@ window.luuHoSo = function() {
     const newPass = document.getElementById('hs-new-pass').value;
     const confirmPass = document.getElementById('hs-confirm-pass').value;
 
-    // Nếu người dùng có gõ chữ vào bất kỳ ô mật khẩu nào
     if (oldPass !== "" || newPass !== "" || confirmPass !== "") {
         if (oldPass !== userData.password) {
             alert("❌ Lỗi: Mật khẩu cũ không chính xác!");
-            return; // Dừng lại, không cho lưu
+            return; 
         }
         if (newPass !== confirmPass) {
             alert("❌ Lỗi: Mật khẩu mới và Xác nhận không giống nhau!");
-            return; 
+            return;
         }
         if (newPass.length < 3) {
             alert("❌ Lỗi: Mật khẩu mới phải có ít nhất 3 ký tự!");
             return;
         }
-        // Nếu qua hết các ải, cập nhật mật khẩu mới
-        userData.password = newPass; 
+        userData.password = newPass;
     }
 
     // 2. LƯU CHỈ SỐ CƠ THỂ NHƯ CŨ
@@ -1064,19 +1087,12 @@ window.luuHoSo = function() {
 
     userData.weight = w;
     userData.strideLength = s;
-    
-    // Đẩy toàn bộ dữ liệu (cả Pass mới và Chỉ số) vào ổ cứng
+
     localStorage.setItem("appUser_" + user, JSON.stringify(userData));
-    alert(" Đã lưu thay đổi hồ sơ thành công!");
-
-    // Xóa trắng 3 ô nhập mật khẩu để bảo mật cho lần mở sau
-    document.getElementById('hs-old-pass').value = '';
-    document.getElementById('hs-new-pass').value = '';
-    document.getElementById('hs-confirm-pass').value = '';
-
-    // Đóng bảng
-    const modal = document.getElementById('hoso-modal');
-    if (modal) modal.style.display = 'none';
+    alert("✅ Đã lưu thay đổi hồ sơ thành công!");
+    
+    // Gọi hàm đóng chuẩn để dọn dẹp và hiện lại điều hướng
+    window.dongHoSo(); 
 };
 
 // === ĐĂNG XUẤT TÀI KHOẢN ===

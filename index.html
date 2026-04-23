@@ -257,7 +257,7 @@
             <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
         </div>
 
-        <!-- KHU VỰC ĐỔI MẬT KHẨU MỚI THÊM VÀO -->
+        <!-- KHU VỰC ĐỔI MẬT KHẨU -->
         <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-top: 2px dashed #ccc;">
             <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 15px;">🔐 Đổi mật khẩu</h4>
             
@@ -287,40 +287,7 @@
         </button>
     </div>
 </div>
-        
-<!-- Khu vực Avatar (Bấm vào hình để đổi) -->
-<div style="margin-bottom: 20px; position: relative; display: inline-block;">
-    <img id="hs-avatar-preview" src="https://ui-avatars.com/api/?name=User" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #007bff; object-fit: cover; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" onclick="document.getElementById('upload-avatar').click();" title="Bấm để đổi ảnh đại diện">
-    
-    <!-- SỬA LỖI MOBILE: Làm tàng hình input thay vì display:none -->
-    <input type="file" id="upload-avatar" accept="image/*" style="opacity: 0; position: absolute; left: 0; top: 0; width: 1px; height: 1px; z-index: -1;" onchange="window.thayDoiAnh(event)">
-    
-    <div style="font-size: 12px; color: #888; margin-top: 8px;">đừng đổi ảnh nữa</div>
 </div>
-
-        <!-- Các chỉ số tùy chỉnh -->
-        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Chiều cao (cm):</label>
-            <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Cân nặng (kg):</label>
-            <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Sải chân (m/bước):</label>
-            <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-        </div>
-        
-        <!-- Nút LƯU và ĐĂNG XUẤT -->
-        <button onclick="window.luuHoSo()" style="background-color: #28a745; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            LƯU THAY ĐỔI
-        </button>
-        <button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            ĐĂNG XUẤT để cmmd
-        </button>
-    </div>
-</div>
-</div>
-
 <script>
     //  KHỞI TẠO BẢN ĐỒ 
     const map = L.map('map', { zoomControl: false }).setView([21.028511, 105.804817], 15);

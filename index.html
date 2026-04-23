@@ -10,6 +10,93 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
+        /* UI MOBILE APP - GIAO DIỆN NỔI TRÊN BẢN ĐỒ */        
+        /*  THANH ĐIỀU HƯỚNG DƯỚI  */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+            z-index: 2000;
+            /* animation trượt trong 0,5s */
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .nav-hidden {
+            transform: translateY(100%);
+        }
+
+        .nav-item {
+            font-size: 26px;
+            opacity: 0.4;
+            transition: 0.3s all ease;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            opacity: 1;
+            transform: scale(1.2);
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* 2. CÁC NÚT BẤM VÀ BẢNG THÔNG TIN TRÊN BẢN ĐỒ */
+        .top-left-btn {
+            position: absolute; 
+            top: 15px; 
+            left: 15px;
+            background: rgba(255, 255, 255, 0.9); 
+            border: 2px solid #004BAd; /* Viền xanh lam đậm giống thiết kế */
+            border-radius: 15px; 
+            padding: 8px 12px; 
+            font-weight: bold;
+            font-size: 13px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        #info-panel {
+            position: absolute; 
+            top: 15px; 
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9); 
+            border: 2px solid #004BAd; /* Viền xanh lam đậm */
+            border-radius: 15px; 
+            padding: 10px 15px; 
+            width: 170px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .action-btn {
+            position: absolute; 
+            bottom: 85px; /* Nằm ngay phía trên thanh Nav Bar */
+            padding: 12px 30px; 
+            font-size: 18px; 
+            font-weight: 900;
+            color: white; 
+            border: 3px solid #004BAd; /* Viền xanh lam đậm cho nút bấm */
+            border-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .start-btn { 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #00C853; /* Xanh lá cây */
+        }
+        
+        /* 2 Nút Tạm dừng và Kết thúc nằm cạnh nhau */
+        .pause-btn { position: relative; bottom: 0; background: #FF9800; border-color: white;}
+        .end-btn { position: relative; bottom: 0; background: #F44336; border-color: white;}
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
@@ -59,7 +146,63 @@
 <body>
 
     <div id="map"></div>
+<!-- LỚP GIAO DIỆN CHÍNH (NỔI TRÊN BẢN ĐỒ) -->
+<!-- ========================================== -->
+<div id="ui-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000;">
+    
+    <!-- TAB 1: CHẠY BỘ (Hiển thị mặc định, tương ứng ảnh chay_1 và chay_2) -->
+    <div id="tab-chay-bo" class="tab-screen" style="display: block; pointer-events: auto;">
+        <!-- Nút Bụi mịn (Góc trên trái) -->
+        <button id="btn-bui-min" class="top-left-btn">Bụi mịn<br>on/off</button>
+        
+        <!-- Bảng thông số Tiến trình (Góc trên phải) -->
+        <div id="info-panel">
+            <div id="timer-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00h 00m 00s</div>
+            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
+                <li>Đã đi: <span id="dist-display">0000.0</span>m</li>
+                <li>Số bước: <span id="step-display">00000</span> bước</li>
+                <li>Tiêu thụ: <span id="cal-display">00</span> calo</li>
+            </ul>
+        </div>
 
+        <!-- Nút Bắt đầu (Ở giữa, dưới cùng) -->
+        <button id="btn-bat-dau" class="action-btn start-btn" onclick="startRunning()">Bắt đầu</button>
+        
+        <!-- Cụm nút Tạm dừng / Kết thúc (Sẽ hiện ra khi bấm Bắt đầu) -->
+        <div id="running-controls" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); gap: 10px;">
+            <button id="btn-tam-dung" class="action-btn pause-btn">Tạm dừng</button>
+            <button id="btn-ket-thuc" class="action-btn end-btn" onclick="endRunning()">Kết thúc</button>
+        </div>
+    </div>
+
+    <!-- TAB 4: CỘNG ĐỒNG (Tương ứng ảnh cong_dong) -->
+    <div id="tab-cong-dong" class="tab-screen" style="display: none; pointer-events: auto;">
+        <!-- Nút Bản đồ cộng đồng (Góc trên trái) -->
+        <button id="btn-ban-do-cd" class="top-left-btn" style="background: #4CAF50; color: white;">Bản đồ<br>cộng đồng</button>
+        
+        <!-- Nút bật/tắt vị trí hình Giọt nước (Góc dưới trái) -->
+        <div id="location-toggle-box" style="position: absolute; bottom: 80px; left: 15px; background: #ccc; padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <span style="font-size: 20px; margin-right: 10px;">📍</span>
+            <input type="checkbox" id="toggle-location" style="transform: scale(1.5);">
+        </div>
+    </div>
+
+    <!-- TAB TRỐNG (Cho các Tab đang phát triển: 2, 3, 5) -->
+    <div id="tab-placeholder" class="tab-screen" style="display: none; pointer-events: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <h3 style="margin: 0; color: #333;">🚧 Đang thi công</h3>
+        <p style="margin: 5px 0 0 0; color: #666;">Chúng tôi đang phát triển tính năng này</p>
+    </div>
+</div>
+
+<!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
+
+<div id="bottom-nav" class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab(1)">🏃</div>
+    <div class="nav-item" onclick="switchTab(2)">📊</div>
+    <div class="nav-item" onclick="switchTab(3)">🏠</div>
+    <div class="nav-item" onclick="switchTab(4)">👥</div>
+    <div class="nav-item" onclick="switchTab(5)">⚙️</div>
+</div>
     <div id="auth-modal" class="overlay-modal">
         <div class="modal-content" id="login-form">
             <h2>Đăng Nhập</h2>
@@ -897,6 +1040,66 @@ window.addEventListener('load', function() {
         }
     }, 1000); 
 });
+    // UI LOGIC - CHUYỂN TAB VÀ ĐIỀU KHIỂN NÚT BẤM
+
+        // HÀM CHUYỂN TAB TRÊN THANH BOTTOM NAV
+        window.switchTab = function(tabIndex) {
+            // 1. Tắt hiển thị tất cả các tab
+            document.querySelectorAll('.tab-screen').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 2. Bỏ viền sáng ở tất cả các icon nav
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // 3. Bật sáng icon được chọn
+            navItems[tabIndex - 1].classList.add('active');
+
+            // 4. Hiển thị nội dung Tab tương ứng
+            if (tabIndex === 1) {
+                document.getElementById('tab-chay-bo').style.display = 'block';
+            } else if (tabIndex === 4) {
+                document.getElementById('tab-cong-dong').style.display = 'block';
+            } else {
+                // Các tab 2, 3, 5 hiện bảng "Đang thi công"
+                document.getElementById('tab-placeholder').style.display = 'block';
+            }
+        };
+
+        // HÀM BẤM NÚT BẮT ĐẦU CHẠY BỘ
+        window.startRunning = function() {
+            // 1. Trượt thanh công cụ xuống dưới biến mất (Animation 0.5s)
+            document.getElementById('bottom-nav').classList.add('nav-hidden');
+            
+            // 2. Ẩn nút "Bắt đầu", Hiện cụm "Tạm dừng / Kết thúc"
+            document.getElementById('btn-bat-dau').style.display = 'none';
+            document.getElementById('running-controls').style.display = 'flex';
+            
+            // 3. Hiện đồng hồ tính giờ
+            document.getElementById('timer-display').style.display = 'block';
+            
+            // Chạy hàm theo dõi GPS cũ của bạn (nếu có)
+            if (typeof startTrackingAction === 'function') {
+                startTrackingAction(); 
+            }
+        };
+
+        // HÀM BẤM NÚT KẾT THÚC
+        window.endRunning = function() {
+            // 1. Kéo thanh công cụ trượt ngược trở lên
+            document.getElementById('bottom-nav').classList.remove('nav-hidden');
+            
+            // 2. Khôi phục giao diện nút "Bắt đầu"
+            document.getElementById('btn-bat-dau').style.display = 'block';
+            document.getElementById('running-controls').style.display = 'none';
+            document.getElementById('timer-display').style.display = 'none';
+            
+            // Dừng theo dõi GPS cũ của bạn (nếu có)
+            if (typeof showEndConfirmation === 'function') {
+                showEndConfirmation();
+            }
+        };
 </script>
 </body>
 </html>

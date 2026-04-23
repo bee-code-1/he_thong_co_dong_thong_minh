@@ -84,54 +84,31 @@
 <!-- LỚP GIAO DIỆN CHÍNH ) -->
 <div id="ui-layer">
     
-    <!-- LAYER TAB 1: CHẠY BỘ  -->
+    <!-- LAYER TAB 1: CHẠY BỘ (Nền trong suốt nhìn xuyên xuống bản đồ) -->
     <div id="tab-1" class="tab-screen active-tab">
-        <!-- Nút Bụi mịn -->
-        <button id="btn-bui-min" class="top-left-btn" onclick="window.toggleBuiMin()">Bụi mịn<br>on/off</button>
         
-        <!-- nút back về vị trí -->
-        <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; top: 60px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto;">📍</button>
-
-        <div id="info-panel">
-            <div id="timer-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00h 00m 00s</div>
+        <!-- 1. BẢNG THÔNG SỐ (Góc trên trái) -->
+        <div id="info-panel" style="position: absolute; top: 15px; left: 15px; right: auto; pointer-events: auto;">
+            <!-- QUAN TRỌNG: Đã sửa id thành time-display để core cũ nhận diện -->
+            <div id="time-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00:00</div>
             <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
-                <li>Đã đi: <span id="dist-display">0000.0</span>m</li>
-                <li>Số bước: <span id="step-display">00000</span> bước</li>
-                <li>Tiêu thụ: <span id="cal-display">00</span> calo</li>
+                <li>Đã đi: <span id="dist-display">0.00</span> km</li>
+                <li>Số bước: <span id="step-display">0</span> bước</li>
+                <li>Tiêu thụ: <span id="cal-display">0.0</span> calo</li>
             </ul>
         </div>
+
+        <!-- 2. NÚT BỤI MỊN  -->
+        <button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto;">Bụi mịn<br>🔴 OFF</button>
         
-        <!-- BỘ NÚT ĐIỀU KHIỂN  -->
+        <!-- 3. NÚT LOCATE ME  -->
+        <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; bottom: 85px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0;">📍</button>
+
+        <!-- 4. BỘ NÚT ĐIỀU KHIỂN CŨ (Ở giữa dưới cùng) -->
         <div id="action-btns-container" style="position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; width: max-content;">
             <button id="start-btn" class="action-btn" onclick="startRunningProxy()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #28a745; min-width: 150px;">▶ BẮT ĐẦU</button>
             <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #ffc107; color: #333; display: none;">⏸ TẠM DỪNG</button>
-            <!-- Nút kết thúc và xác nhận sau 3s -->
             <button id="end-btn" class="action-btn" onclick="window.handleEndClick(event)" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #dc3545; display: none; user-select: none;">⏹ KẾT THÚC</button>
-        </div>
-    </div>
-
-    <!-- LAYER TAB 2: TIẾN TRÌNH (Che khuất hoàn toàn bản đồ) -->
-    <div id="tab-2" class="tab-screen solid-bg">
-        <div class="tab-content">
-            <h2>📊 Tiến Trình</h2>
-            <p>Mọi tính năng thông số sức khoẻ sẽ nằm trên nền trắng này, bản đồ đã bị đẩy xuống dưới.</p>
-        </div>
-    </div>
-
-    <!-- LAYER TAB 3: TRANG CHỦ (Che khuất hoàn toàn bản đồ) -->
-    <div id="tab-3" class="tab-screen solid-bg">
-        <div class="tab-content">
-            <h2>🏠 Trang Chủ</h2>
-            <p>Up ảnh, xem ảnh bạn bè sẽ ở đây.</p>
-        </div>
-    </div>
-
-    <!-- LAYER TAB 4: CỘNG ĐỒNG (Nền trong suốt nhìn xuyên xuống bản đồ) -->
-    <div id="tab-4" class="tab-screen">
-        <button id="btn-ban-do-cd" class="top-left-btn" style="background: #4CAF50; color: white;" onclick="window.toggleRadar()">Bản đồ<br>cộng đồng</button>
-        <div id="location-toggle-box" style="position: absolute; bottom: 80px; left: 15px; background: #ccc; padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-            <span style="font-size: 20px; margin-right: 10px;">📍</span>
-            <input type="checkbox" id="toggle-location" style="transform: scale(1.5);" onclick="window.toggleChiaSe()">
         </div>
     </div>
 
@@ -986,29 +963,32 @@ window.startRunningProxy = function() {
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.add('nav-hidden');
     
-    // 2. Đổi giao diện nút (Chuyển sang cơ chế hiển thị của core cũ)
+    // 2. Đổi giao diện nút 
     document.getElementById('start-btn').style.display = 'none';
     document.getElementById('pause-btn').style.display = 'inline-block';
     document.getElementById('end-btn').style.display = 'inline-block';
     
-    // 3. Hiện đồng hồ
-    document.getElementById('timer-display').style.display = 'block';
+    // 3. Hiện đồng hồ (Đã sửa ID chuẩn)
+    document.getElementById('time-display').style.display = 'block';
     
-    // 4. Kích hoạt Hàm theo dõi GPS lõi cũ của bạn
+    // 4. Kích hoạt Hàm theo dõi GPS lõi cũ
     if (typeof startTrackingAction === 'function') {
         startTrackingAction();
     }
 };
+
+// BẢN VÁ (PATCH) CHO HÀM LƯU TIẾN TRÌNH CŨ
 const originalLuuTienTrinh = window.luuTienTrinh;
 window.luuTienTrinh = function() {
-    //  reset thông số 
+    // Chạy lại toàn bộ cơ chế cũ của bạn
     if (typeof originalLuuTienTrinh === 'function') originalLuuTienTrinh();
     
     // Khôi phục UI mới
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.remove('nav-hidden');
     
-    const timer = document.getElementById('timer-display');
+    // Đã sửa ID chuẩn
+    const timer = document.getElementById('time-display');
     if (timer) timer.style.display = 'none';
 };
 </script>

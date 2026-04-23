@@ -146,7 +146,7 @@
             👥
         </div>
         
-        <!-- Nút Thông báo (-->
+        <!-- Nút Thông báo (Có chấm đỏ) -->
         <div onclick="window.moThongBao()" style="position: relative; background: #eaeaea; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center;">
             🔔
             <span id="cham-do-thong-bao" style="display: none; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid #fff1e6;"></span>
@@ -168,14 +168,6 @@
     </div>
 </div>
 
-<!-- 4. POPUP THÔNG BÁO / LỜI MỜI  -->
-<div id="modal-thong-bao" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
-    <div onclick="event.stopPropagation()" style="background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 70vh; overflow-y: auto; text-align: left; position: relative;">
-        <span onclick="document.getElementById('modal-thong-bao').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
-        <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">🔔 Thông báo</h3>
-        <div id="list-thong-bao-content">Không có thông báo mới.</div>
-    </div>
-</div>
 <!-- LAYER TAB 2: TIẾN TRÌNH (Theo đúng thiết kế tien_trinh.png) -->
 <div id="tab-2" class="tab-screen" style="background-color: #8bd8af; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
     <div style="padding: 20px; text-align: center;">
@@ -189,29 +181,45 @@
         <div id="progress-list" style="display: flex; flex-direction: column-reverse;">
             <!-- Dữ liệu trống mặc định -->
             <div id="empty-progress" style="color: #555; font-style: italic; margin-top: 20px;">
-                Chưa có dữ liệu. Ra ngoài bắt đầu hành trình đi hehe
+                Ko chạy là ko có dữ liệu đâu, ra ngoài và bắt đầu hành trình đi !!
             </div>
         </div>
     </div>
 </div>
-    <!-- LAYER TAB 5: CÀI ĐẶT -->
-    <div id="tab-5" class="tab-screen solid-bg" style="background-color: rgba(0,0,0,0.6);">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 70%; text-align: center; pointer-events: auto;">
-            <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
-            <h3 style="margin: 0; color: #333; font-size: 20px;">Cài Đặt</h3>
-            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;"> Hãy hi vọng nhà phát triển còn sống để update cái này </p>
+<!-- LAYER TAB 5: THÔNG BÁO & CÀI ĐẶT -->
+<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto;">
+    <div style="padding: 20px; text-align: left;">
+        
+        <!-- Header Tab 5 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="color: #dc3545; margin: 0; font-size: 24px;">🔔 Thông báo</h2>
+            
+            <!-- Nút Avatar thu nhỏ để mở Hồ Sơ/Cài đặt -->
+            <div onclick="window.moHoSo()" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid #007bff; cursor: pointer; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" title="Cài đặt tài khoản">
+                <img id="avatar-btn-img" src="https://ui-avatars.com/api/?name=User" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" />
+            </div>
         </div>
-    </div>
 
+        <!-- Danh sách thông báo tự động nhồi vào đây -->
+        <div id="list-thong-bao-content" style="color: #555; font-style: italic; text-align: center; margin-top: 20px;">
+            Không có thông báo mới.
+        </div>
+        
+    </div>
+</div>
 </div>
 <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
-
 <div id="bottom-nav" class="bottom-nav">
     <div class="nav-item active" onclick="switchTab(1)">🏃</div>
     <div class="nav-item" onclick="switchTab(2)">📊</div>
     <div class="nav-item" onclick="switchTab(3)">🏠</div>
     <div class="nav-item" onclick="switchTab(4)">👥</div>
-    <div class="nav-item" onclick="switchTab(5)">⚙️</div>
+    
+    <!-- Tab 5 nay là Tab Thông Báo -->
+    <div class="nav-item" onclick="switchTab(5)" style="position: relative;">
+        🔔
+        <span id="cham-do-thong-bao" style="display: none; position: absolute; top: 0px; right: -2px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid white;"></span>
+    </div>
 </div>
     <div id="auth-modal" class="overlay-modal">
         <div class="modal-content" id="login-form">
@@ -1301,9 +1309,12 @@ window.veBangTinCongDong = function(allUsers) {
                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
                     <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
                 </svg>
-                <img src="${avatarUrl}" style="position: absolute; top: 6px; left: 6px; width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
-                <!-- Chấm trạng thái -->
-                <span style="position: absolute; bottom: 5px; right: 0px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
+                
+                <!-- ẢNH AVATAR (Đã tinh chỉnh kích thước và vị trí) -->
+                <img src="${avatarUrl}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
+                
+                <!-- CHẤM TRẠNG THÁI (Đã dời ra góc dưới bên phải một chút cho đỡ lẹm) -->
+                <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
             </div>
 
             <!-- Thông tin -->

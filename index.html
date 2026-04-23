@@ -112,16 +112,43 @@
         </div>
     </div>
 
-    <!-- LAYER TAB 5: CÀI ĐẶT (Che khuất hoàn toàn bản đồ) -->
-    <div id="tab-5" class="tab-screen solid-bg">
-        <div class="tab-content">
-            <h2>⚙️ Cài Đặt</h2>
-            <p>Hồ sơ cá nhân, đổi mật khẩu.</p>
+    <!-- LAYER TAB 2: TIẾN TRÌNH -->
+    <div id="tab-2" class="tab-screen solid-bg" style="background-color: rgba(0,0,0,0.6);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 70%; text-align: center; pointer-events: auto;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+            <h3 style="margin: 0; color: #333; font-size: 20px;">Tiến Trình</h3>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Tính năng thống kê sức khoẻ đang được thi công và sẽ sớm cập nhật!</p>
+        </div>
+    </div>
+
+    <!-- LAYER TAB 3: TRANG CHỦ -->
+    <div id="tab-3" class="tab-screen solid-bg" style="background-color: rgba(0,0,0,0.6);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 70%; text-align: center; pointer-events: auto;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🏠</div>
+            <h3 style="margin: 0; color: #333; font-size: 20px;">Trang Chủ</h3>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Bảng tin mạng xã hội đang được thi công và sẽ sớm cập nhật!</p>
+        </div>
+    </div>
+
+    <!-- LAYER TAB 4: CỘNG ĐỒNG -->
+    <div id="tab-4" class="tab-screen">
+        <!-- Nút bật Radar Cộng Đồng (Góc trên trái) -->
+        <button id="btn-cong-dong" onclick="window.toggleRadar()" style="position: absolute; top: 15px; left: 15px; background: #FF9800; border: 2px solid white; border-radius: 15px; padding: 10px 15px; font-weight: bold; font-size: 14px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">📡 Radar Cộng đồng</button>
+        
+        <!-- Nút bật Chia sẻ vị trí (Góc dưới trái) -->
+        <button id="btn-chia-se" onclick="window.toggleChiaSe()" style="position: absolute; bottom: 85px; left: 15px; background: #6c757d; border: 2px solid white; border-radius: 15px; padding: 8px 15px; font-weight: bold; font-size: 13px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">🔕 Đang ẩn vị trí</button>
+    </div>
+
+    <!-- LAYER TAB 5: CÀI ĐẶT -->
+    <div id="tab-5" class="tab-screen solid-bg" style="background-color: rgba(0,0,0,0.6);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 70%; text-align: center; pointer-events: auto;">
+            <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
+            <h3 style="margin: 0; color: #333; font-size: 20px;">Cài Đặt</h3>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Giao diện quản lý tuỳ chọn đang được thi công và sẽ sớm cập nhật!</p>
         </div>
     </div>
 
 </div>
-
 <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
 
 <div id="bottom-nav" class="bottom-nav">
@@ -833,9 +860,7 @@ window.moHoSo = function() {
 };
 
 // === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
-// === ĐỌC ẢNH VÀ ĐẨY THẲNG LÊN ĐÁM MÂY FIREBASE ===
 window.thayDoiAnh = function(event) {
-    // Dùng .item(0) thay vì ngoặc vuông để hệ thống không bị lỗi băm code
     const file = event.target.files.item(0);
     
     if (file) {

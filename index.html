@@ -138,7 +138,24 @@
         <!-- Nút bật Chia sẻ vị trí (Góc dưới trái) -->
         <button id="btn-chia-se" onclick="window.toggleChiaSe()" style="position: absolute; bottom: 85px; left: 15px; background: #6c757d; border: 2px solid white; border-radius: 15px; padding: 8px 15px; font-weight: bold; font-size: 13px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">🔕 Đang ẩn vị trí</button>
     </div>
-
+<!-- LAYER TAB 2: TIẾN TRÌNH (Theo đúng thiết kế tien_trinh.png) -->
+<div id="tab-2" class="tab-screen" style="background-color: #8bd8af; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
+    <div style="padding: 20px; text-align: center;">
+        <!-- Header xanh lá đậm -->
+        <div style="background: #28a745; color: white; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            Tiến trình của bạn<br>
+            <span style="font-size: 14px; font-weight: normal;">Lịch sử hoạt động cá nhân</span>
+        </div>
+        
+        <!-- Danh sách các chuyến chạy bộ sẽ được Javascript nhồi vào đây -->
+        <div id="progress-list" style="display: flex; flex-direction: column-reverse;">
+            <!-- Dữ liệu trống mặc định -->
+            <div id="empty-progress" style="color: #555; font-style: italic; margin-top: 20px;">
+                Chưa có dữ liệu. Ra ngoài bắt đầu hành trình đi hehe
+            </div>
+        </div>
+    </div>
+</div>
     <!-- LAYER TAB 5: CÀI ĐẶT -->
     <div id="tab-5" class="tab-screen solid-bg" style="background-color: rgba(0,0,0,0.6);">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 70%; text-align: center; pointer-events: auto;">
@@ -726,30 +743,112 @@ window.hienThiRecap = function() {
     if(rModal) rModal.style.display = 'flex';
 };
 
+// === HÀM LƯU TIẾN TRÌNH (TÍCH HỢP LƯU FIREBASE & VẼ TAB 2) ===
 window.luuTienTrinh = function() {
+    let username = localStorage.getItem('currentUser');
+    
+    // 1. TÍNH TOÁN THỜI GIAN BẮT ĐẦU & KẾT THÚC CỰC CHUẨN
+    const endDateTime = new Date(); 
+    const startDateTime = new Date(endDateTime.getTime() - (elapsedSeconds * 1000)); 
+    
+    const formatAMPM = (date) => {
+        let hours = date.getHours(); let minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return hours + ':' + minutes + ' ' + ampm;
+    };
+    
+    const dateStr = startDateTime.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'}); 
+    const startTimeStr = formatAMPM(startDateTime);
+    const endTimeStr = formatAMPM(endDateTime);
+
+    const timeVal = document.getElementById('recap-time') ? document.getElementById('recap-time').innerText : "00:00";
+    const speedVal = document.getElementById('recap-speed') ? document.getElementById('recap-speed').innerText : "0.00";
+    const distVal = document.getElementById('recap-distance') ? document.getElementById('recap-distance').innerText : "0.00 km";
+    const stepsVal = document.getElementById('recap-steps') ? document.getElementById('recap-steps').innerText : "0";
+    const caloVal = document.getElementById('recap-calo') ? document.getElementById('recap-calo').innerText : "0.0";
+
+    const recordData = {
+        ngay: dateStr, gio_bat_dau: startTimeStr, gio_ket_thuc: endTimeStr,
+        thoi_gian: timeVal, van_toc: speedVal, quang_duong: distVal,
+        buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
+    };
+
+    if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
+        window.db.ref('tien_trinh_tap_luyen/' + username).push(recordData)
+            .then(() => {
+                alert("Đã lưu tiến trình thành công vào hồ sơ!");
+                window.veTheTienTrinh(recordData); 
+            }).catch(err => console.error("Lỗi lưu tiến trình:", err));
+    }
+
     const rModal = document.getElementById('recap-modal');
     if (rModal) rModal.style.display = 'none';
-
+    
     if (typeof isTracking !== 'undefined') isTracking = false;
     if (typeof isPaused !== 'undefined') isPaused = false;
     if (typeof totalDistanceMeter !== 'undefined') totalDistanceMeter = 0;
     if (typeof elapsedSeconds !== 'undefined') elapsedSeconds = 0;
-    if (typeof latestLatLng !== 'undefined') latestLatLng = null;
     if (typeof pathLatLngs !== 'undefined') pathLatLngs = [];
     if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
-
+    
     if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
     if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
     if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
     if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
-
-    const btnStart = document.getElementById('start-btn');
-    const btnPause = document.getElementById('pause-btn');
-    const btnEnd = document.getElementById('end-btn');
-    if(btnStart) { btnStart.style.display = 'inline-block'; btnStart.innerText = "▶ BẮT ĐẦU"; }
-    if(btnPause) btnPause.style.display = 'none';
-    if(btnEnd) { btnEnd.style.display = 'none'; btnEnd.innerText = "⏹ KẾT THÚC"; btnEnd.style.backgroundColor = ""; }
+    
+    document.getElementById('start-btn').style.display = 'inline-block';
+    document.getElementById('pause-btn').style.display = 'none';
+    document.getElementById('end-btn').style.display = 'none';
+    
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.remove('nav-hidden');
+    const timer = document.getElementById('time-display');
+    if (timer) timer.style.display = 'none';
 };
+
+// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH ===
+window.veTheTienTrinh = function(data) {
+    const listContainer = document.getElementById('progress-list');
+    const emptyMsg = document.getElementById('empty-progress');
+    if (emptyMsg) emptyMsg.style.display = 'none'; 
+
+    const cardHTML = `
+    <div style="background: #e0e0e0; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
+            ⏱ Thời gian: ${data.thoi_gian}<br>
+            ⚡ Vận tốc TB: ${data.van_toc} km/h<br>
+            📏 Quãng đường: ${data.quang_duong}<br>
+            👟 Bước chân: ${data.buoc_chan} bước<br>
+            🔥 Calo tiêu thụ: ${data.calo} kcal
+        </div>
+        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed #aaa; padding-left: 15px; min-width: 80px;">
+            <div style="margin-bottom: 5px;">${data.ngay}</div>
+            <div>${data.gio_bat_dau}</div>
+            <div style="font-size: 10px; color: #888; margin: 2px 0;">-----</div>
+            <div>${data.gio_ket_thuc}</div>
+        </div>
+    </div>`;
+    
+    listContainer.insertAdjacentHTML('afterbegin', cardHTML);
+};
+
+// === TỰ ĐỘNG TẢI LỊCH SỬ KHI MỞ TRANG ===
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        let savedUser = localStorage.getItem('currentUser');
+        if (savedUser && typeof window.db !== 'undefined') {
+            window.db.ref('tien_trinh_tap_luyen/' + savedUser).once('value').then((snapshot) => {
+                const dataObj = snapshot.val();
+                if (dataObj) {
+                    const records = Object.values(dataObj).sort((a, b) => a.timestamp - b.timestamp);
+                    records.forEach(record => window.veTheTienTrinh(record));
+                }
+            });
+        }
+    }, 1500); 
+});
 
 // === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
 window.isSharingLocation = false;
@@ -962,15 +1061,7 @@ window.startRunningProxy = function() {
         startTrackingAction();
     }
 };
-
-const originalLuuTienTrinh = window.luuTienTrinh;
-window.luuTienTrinh = function() {
-    if (typeof originalLuuTienTrinh === 'function') originalLuuTienTrinh();
-    const nav = document.getElementById('bottom-nav');
-    if (nav) nav.classList.remove('nav-hidden');
-    const timer = document.getElementById('time-display');
-    if (timer) timer.style.display = 'none';
-};
+    
 </script>
 </body>
 </html>

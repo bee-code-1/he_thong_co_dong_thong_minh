@@ -98,13 +98,20 @@
             </ul>
         </div>
 
-        <!-- 2. NÚT BỤI MỊN  -->
-        <button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto;">Bụi mịn<br>🔴 OFF</button>
-        
-        <!-- 3. NÚT LOCATE ME  -->
-<button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; top: 140px; left: 110px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0;">📍</button>
+<!-- 2. NÚT BỤI MỊN  -->
+<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;">Bụi mịn<br>🔴 OFF</button>
 
-        <!-- 4. BỘ NÚT ĐIỀU KHIỂN CŨ (Ở giữa dưới cùng) -->
+<!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
+<button id="btn-radar-share" onclick="window.toggleRadarAndShare()" style="position: absolute; bottom: 220px; left: 15px; background: #eaeaea; border: 4px solid #b0b0b0; border-radius: 50%; width: 55px; height: 55px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000; transition: all 0.3s;" title="Bật/Tắt Radar Cộng đồng">
+    <svg viewBox="0 0 40 40" style="width: 32px; height: 32px;">
+        <path d="M20 2 C12 2 6 8 6 16 C6 26 20 38 20 38 C20 38 34 26 34 16 C34 8 28 2 20 2 Z" fill="#004BAd" />
+        <circle cx="20" cy="15" r="7" fill="#00C853" />
+    </svg>
+</button>
+
+<!-- 4. NÚT LOCATE ME (Dời xuống dưới, thẳng cột Bụi Mịn, trên nút Tạm Dừng) -->
+<button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; bottom: 150px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000;">📍</button>
+✂️ BƯỚC 3: GỘP LOGIC "2 TRONG 1" (JAVASCRIPT)        <!-- 4. BỘ NÚT ĐIỀU KHIỂN CŨ (Ở giữa dưới cùng) -->
         <div id="action-btns-container" style="position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; width: max-content;">
             <button id="start-btn" class="action-btn" onclick="startRunningProxy()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #28a745; min-width: 150px;">▶ BẮT ĐẦU</button>
             <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #ffc107; color: #333; display: none;">⏸ TẠM DỪNG</button>
@@ -121,14 +128,10 @@
         </div>
     </div>
 
-    <!-- LAYER TAB 4: CỘNG ĐỒNG -->
-    <div id="tab-4" class="tab-screen">
-        <!-- Nút bật Radar Cộng Đồng (Góc trên trái) -->
-        <button id="btn-cong-dong" onclick="window.toggleRadar()" style="position: absolute; top: 15px; left: 15px; background: #FF9800; border: 2px solid white; border-radius: 15px; padding: 10px 15px; font-weight: bold; font-size: 14px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">📡 Radar Cộng đồng</button>
-        
-        <!-- Nút bật Chia sẻ vị trí (Góc dưới trái) -->
-        <button id="btn-chia-se" onclick="window.toggleChiaSe()" style="position: absolute; bottom: 85px; left: 15px; background: #6c757d; border: 2px solid white; border-radius: 15px; padding: 8px 15px; font-weight: bold; font-size: 13px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">🔕 Đang ẩn vị trí</button>
-    </div>
+<!-- LAYER TAB 4: CỘNG ĐỒNG -->
+<div id="tab-4" class="tab-screen">
+    <!-- Nơi này chuẩn bị làm giao diện Mạng xã hội kết bạn -->
+</div>
 <!-- LAYER TAB 2: TIẾN TRÌNH (Theo đúng thiết kế tien_trinh.png) -->
 <div id="tab-2" class="tab-screen" style="background-color: #8bd8af; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
     <div style="padding: 20px; text-align: center;">
@@ -584,88 +587,6 @@ function banToaDoLenMay(username, lat, lng) {
         });
     }
 }
-
-let isRadarOn = false;
-let friendMarkers = {};
-window.toggleRadar = function() {
-    const btn = document.getElementById('btn-cong-dong');
-    if (!btn) return;
-    isRadarOn = !isRadarOn;
-    let banDoHienTai = typeof map !== 'undefined' ? map : null;
-
-    if (isRadarOn) {
-        btn.innerHTML = "📡 Đang quét... (ON)";
-        btn.style.backgroundColor = "#4CAF50";
-        btn.style.animation = "radar-pulse 1.5s infinite";
-
-        let currentUser = localStorage.getItem('currentUser') || "Khach";
-
-        if (typeof window.db !== 'undefined') {
-            window.db.ref('nguoi_dung').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-                const danhSachBanBe = ["Hiep", "Long", "Minh"];
-
-                for (const user in data) {
-                    if (user === currentUser) continue;
-                    
-                    const lat = data[user].toa_do_lat;
-                    const lng = data[user].toa_do_lng;
-                    const thoiGian = data[user].thoi_gian_cap_nhat;
-                    // Lấy ảnh thật từ Firebase Đám mây
-                    const realAvatar = data[user].avatar;
-
-                    if (lat && lng && (Date.now() - thoiGian < 600000)) {
-                        if (friendMarkers[user]) {
-                            friendMarkers[user].setLatLng([lat, lng]);
-                        } else {
-                            const isFriend = danhSachBanBe.includes(user);
-                            // Màu xanh đậm chuẩn giống file gps_icon.png
-                            const pinColor = isFriend ? "#004BAd" : "#9E9E9E";
-                            // Nếu có ảnh đám mây thì dùng, không thì tạo chữ mặc định
-                            const userAvatar = realAvatar ? realAvatar : `https://ui-avatars.com/api/?name=${user}&background=random`;
-
-                            const customGPSHtml = `
-                            <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
-                                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
-                                </svg>
-                                <img src="${userAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
-                            </div>`;
-
-                            const friendIcon = L.divIcon({
-                                className: 'custom-gps-icon',
-                                html: customGPSHtml,
-                                // Dùng L.point chống sập mảng
-                                iconSize: L.point(44, 55),
-                                iconAnchor: L.point(22, 55),
-                                popupAnchor: L.point(0, -50)
-                            });
-
-                            const newMarker = L.marker([lat, lng], {icon: friendIcon});
-                            newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
-                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
-                            friendMarkers[user] = newMarker;
-                        }
-                    }
-                }
-            });
-        }
-    } else {
-        btn.innerHTML = "👥 Mở radar Cộng đồng (OFF)";
-        btn.style.backgroundColor = "#ff9800";
-        btn.style.animation = "none";
-        if (typeof window.db !== 'undefined') window.db.ref('nguoi_dung').off();
-        for (const user in friendMarkers) {
-            if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
-        }
-        friendMarkers = {};
-    }
-};
-    
-const radarBtnObj = document.getElementById('btn-cong-dong');
-if (radarBtnObj) radarBtnObj.onclick = window.toggleRadar;
-
 // === 3. XỬ LÝ NÚT KẾT THÚC VÀ LƯU TIẾN TRÌNH ===
 let confirmTimeout;
 let countdownInterval;
@@ -894,25 +815,97 @@ window.addEventListener('load', function() {
 });
 
 // === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
+// === HÀM GỘP: RADAR CỘNG ĐỒNG & CHIA SẺ VỊ TRÍ ===
 window.isSharingLocation = false;
-window.toggleChiaSe = function() {
+let friendMarkers = {};
+
+window.toggleRadarAndShare = function() {
     window.isSharingLocation = !window.isSharingLocation;
-    const btnChiaSe = document.getElementById('btn-chia-se');
-    if (!btnChiaSe) return;
+    
+    const btn = document.getElementById('btn-radar-share');
+    let currentUser = localStorage.getItem('currentUser') || "Khach";
+    let banDoHienTai = typeof map !== 'undefined' ? map : null;
+
     if (window.isSharingLocation) {
-        btnChiaSe.innerHTML = "🌍 Đang chia sẻ vị trí (Public)";
-        btnChiaSe.style.backgroundColor = "#2196F3";
+        // TRẠNG THÁI BẬT: Viền nút chuyển xanh lá, phát sáng
+        if (btn) {
+            btn.style.borderColor = "#4CAF50";
+            btn.style.boxShadow = "0 0 15px rgba(76, 175, 80, 0.8)";
+        }
+
+        // 1. NGAY LẬP TỨC CHIA SẺ VỊ TRÍ LÊN ĐÁM MÂY (Nếu đã bắt GPS)
+        if (typeof latestLatLng !== 'undefined' && latestLatLng && window.db) {
+            if (typeof window.banToaDoLenMay === 'function') {
+                window.banToaDoLenMay(currentUser, latestLatLng.lat, latestLatLng.lng);
+            }
+        }
+
+        // 2. BẬT RADAR QUÉT BẠN BÈ XUNG QUANH
+        if (typeof window.db !== 'undefined') {
+            window.db.ref('nguoi_dung').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                const danhSachBanBe = ["Hiep", "Long", "Minh"];
+                
+                for (const user in data) {
+                    if (user === currentUser) continue;
+                    const lat = data[user].toa_do_lat;
+                    const lng = data[user].toa_do_lng;
+                    const thoiGian = data[user].thoi_gian_cap_nhat;
+                    const realAvatar = data[user].avatar;
+
+                    // Chỉ hiện những người có online trong vòng 10 phút 
+                    if (lat && lng && (Date.now() - thoiGian < 600000)) {
+                        if (friendMarkers[user]) {
+                            friendMarkers[user].setLatLng([lat, lng]);
+                        } else {
+                            const isFriend = danhSachBanBe.includes(user);
+                            const pinColor = isFriend ? "#004BAd" : "#9E9E9E";
+                            const userAvatar = realAvatar ? realAvatar : `https://ui-avatars.com/api/?name=${user}&background=random`;
+
+                            const customGPSHtml = `
+                            <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
+                                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
+                                </svg>
+                                <img src="${userAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+                            </div>`;
+
+                            const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: L.point(44, 55), iconAnchor: L.point(22, 55), popupAnchor: L.point(0, -50) });
+                            const newMarker = L.marker([lat, lng], {icon: friendIcon});
+                            
+                            newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
+                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
+                            friendMarkers[user] = newMarker;
+                        }
+                    }
+                }
+            });
+        }
+        alert("Đã chia sẻ vị trí công khai và tìm kiếm cộng đồng");
+
     } else {
-        btnChiaSe.innerHTML = "🔕 Đang ẩn vị trí (Private)";
-        btnChiaSe.style.backgroundColor = "#6c757d";
-        let currentUser = localStorage.getItem('currentUser');
+        // TRẠNG THÁI TẮT: Nút trở về viền xám tĩnh lặng
+        if (btn) {
+            btn.style.borderColor = "#b0b0b0";
+            btn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
+        }
+
+        // 1. XÓA VỊ TRÍ CỦA MÌNH KHỎI ĐÁM MÂY 
         if (currentUser && window.db) {
             window.db.ref('nguoi_dung/' + currentUser + '/toa_do_lat').remove();
             window.db.ref('nguoi_dung/' + currentUser + '/toa_do_lng').remove();
         }
+
+        // 2. TẮT RADAR, XÓA MỌI DẤU VẾT BẠN BÈ TRÊN BẢN ĐỒ
+        if (typeof window.db !== 'undefined') window.db.ref('nguoi_dung').off();
+        for (const user in friendMarkers) {
+            if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
+        }
+        friendMarkers = {};
+        alert("🔕 Đã TẮT chia sẻ vị trí và Ẩn Radar!");
     }
 };
-
 let lopBanDoBui = null;
 window.toggleBuiMin = function() {
     if (typeof window.isHienBui === 'undefined') window.isHienBui = false;

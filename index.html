@@ -129,8 +129,52 @@
     </div>
 
 <!-- LAYER TAB 4: CỘNG ĐỒNG -->
-<div id="tab-4" class="tab-screen">
-    <!-- Nơi này chuẩn bị làm giao diện Mạng xã hội kết bạn -->
+<div id="tab-4" class="tab-screen" style="background-color: #fff1e6; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
+    
+    <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Cố định khi cuộn) -->
+    <div style="position: sticky; top: 0; background: #fff1e6; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <!-- Thanh tìm kiếm -->
+        <div style="flex: 1; position: relative;">
+            <span style="position: absolute; left: 10px; top: 8px; color: #888;">🔍</span>
+            <input type="text" id="tim-kiem-user" placeholder="Tìm tên kết bạn..." style="width: 100%; padding: 8px 10px 8px 35px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; background: #eaeaea; font-weight: bold; color: #333;">
+        </div>
+        <!-- Nút Tìm & Thêm -->
+        <button onclick="window.guiLoiMoiKetBan()" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Thêm</button>
+        
+        <!-- Nút Danh sách Bạn bè -->
+        <div onclick="window.moDanhSachBanBe()" style="background: #eaeaea; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center;">
+            👥
+        </div>
+        
+        <!-- Nút Thông báo (-->
+        <div onclick="window.moThongBao()" style="position: relative; background: #eaeaea; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center;">
+            🔔
+            <span id="cham-do-thong-bao" style="display: none; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid #fff1e6;"></span>
+        </div>
+    </div>
+
+    <!-- 2. BẢNG TIN CỘNG ĐỒNG (-->
+    <div id="danh-sach-cong-dong" style="padding: 15px;">
+        <div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Đang tải vệ tinh...</div>
+    </div>
+</div>
+
+<!-- 3. POPUP DANH SÁCH BẠN BÈ  -->
+<div id="modal-ban-be" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
+    <div onclick="event.stopPropagation()" style="background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 70vh; overflow-y: auto; text-align: left; position: relative;">
+        <span onclick="document.getElementById('modal-ban-be').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
+        <h3 style="margin-top: 0; color: #004BAd; border-bottom: 2px solid #eee; padding-bottom: 10px;">👥 Bạn bè (<span id="so-luong-ban">0</span>/12)</h3>
+        <div id="list-ban-be-content">Chưa có bạn bè nào.</div>
+    </div>
+</div>
+
+<!-- 4. POPUP THÔNG BÁO / LỜI MỜI  -->
+<div id="modal-thong-bao" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
+    <div onclick="event.stopPropagation()" style="background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 70vh; overflow-y: auto; text-align: left; position: relative;">
+        <span onclick="document.getElementById('modal-thong-bao').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
+        <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">🔔 Thông báo</h3>
+        <div id="list-thong-bao-content">Không có thông báo mới.</div>
+    </div>
 </div>
 <!-- LAYER TAB 2: TIẾN TRÌNH (Theo đúng thiết kế tien_trinh.png) -->
 <div id="tab-2" class="tab-screen" style="background-color: #8bd8af; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
@@ -869,7 +913,7 @@ window.toggleRadarAndShare = function() {
             window.db.ref('nguoi_dung').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
-                const danhSachBanBe = ["Hiep", "Long", "Minh"];
+                const danhSachBanBe = window.danhSachBanBeThuc || [];
                 
                 for (const user in data) {
                     if (user === currentUser) continue;
@@ -1178,7 +1222,199 @@ window.startRunningProxy = function() {
         startTrackingAction();
     }
 };
+// === 6. HỆ THỐNG MẠNG XÃ HỘI & CỘNG ĐỒNG ===
+window.danhSachBanBeThuc = []; // Lưu mảng bạn bè thật
+window.loiMoiKetBan = [];
+
+// 1. TẢI DỮ LIỆU BẠN BÈ VÀ LỜI MỜI THỜI GIAN THỰC
+window.taiDuLieuCongDong = function() {
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return;
+
+    // Lắng nghe danh sách bạn bè
+    window.db.ref('ban_be/' + user).on('value', snap => {
+        window.danhSachBanBeThuc = snap.val() ? Object.keys(snap.val()) : [];
+        document.getElementById('so-luong-ban').innerText = window.danhSachBanBeThuc.length;
+        veDanhSachBanBe();
+    });
+
+    // Lắng nghe lời mời kết bạn (Để bật chấm đỏ)
+    window.db.ref('loi_moi_ket_ban/' + user).on('value', snap => {
+        window.loiMoiKetBan = snap.val() ? Object.keys(snap.val()) : [];
+        const chamDo = document.getElementById('cham-do-thong-bao');
+        if (window.loiMoiKetBan.length > 0) {
+            chamDo.style.display = 'block';
+        } else {
+            chamDo.style.display = 'none';
+        }
+        veDanhSachThongBao();
+    });
+
+    // Lắng nghe vị trí toàn cộng đồng để vẽ Bảng tin Feed Tab 4
+    window.db.ref('nguoi_dung').on('value', snap => {
+        veBangTinCongDong(snap.val());
+    });
+};
+
+// 2. VẼ BẢNG TIN (FEED) TRÊN TAB 4
+window.veBangTinCongDong = function(allUsers) {
+    const feedContainer = document.getElementById('danh-sach-cong-dong');
+    const currentUser = localStorage.getItem('currentUser');
+    if (!allUsers || !currentUser) return;
+
+    let html = '';
+    // Lấy tọa độ hiện tại của bản thân để tính khoảng cách
+    let myLat = latestLatLng ? latestLatLng.lat : null;
+    let myLng = latestLatLng ? latestLatLng.lng : null;
+
+    for (const u in allUsers) {
+        if (u === currentUser) continue; // Bỏ qua bản thân
+        
+        const data = allUsers[u];
+        const isFriend = window.danhSachBanBeThuc.includes(u);
+        const timeDiff = Date.now() - data.thoi_gian_cap_nhat;
+        const isOnline = timeDiff < 600000; // 10 phút
+        
+        // Cài đặt màu chấm trạng thái
+        const dotColor = isOnline ? "#00C853" : "#9E9E9E";
+        
+        // Tính toán khoảng cách hoặc trạng thái hiển thị
+        let statusText = "Ngoại tuyến";
+        if (isOnline) {
+            if (data.toa_do_lat && data.toa_do_lng && myLat && myLng) {
+                // Tính khoảng cách bằng Leaflet
+                const khoangCach = L.latLng(myLat, myLng).distanceTo(L.latLng(data.toa_do_lat, data.toa_do_lng));
+                statusText = "📍 Cách bạn: " + (khoangCach / 1000).toFixed(1) + " km";
+            } else {
+                statusText = "Đang hoạt động";
+            }
+        }
+
+        const pinColor = isFriend ? "#004BAd" : "#dc3545"; // Bạn bè viền xanh, người lạ viền đỏ
+        const avatarUrl = data.avatar ? data.avatar : `https://ui-avatars.com/api/?name=${u}&background=random`;
+
+        html += `
+        <div style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+            
+            <!-- Cụm Avatar kiểu Pin Bản đồ -->
+            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px;">
+                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
+                </svg>
+                <img src="${avatarUrl}" style="position: absolute; top: 6px; left: 6px; width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+                <!-- Chấm trạng thái -->
+                <span style="position: absolute; bottom: 5px; right: 0px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
+            </div>
+
+            <!-- Thông tin -->
+            <div style="flex: 1;">
+                <div style="font-weight: bold; font-size: 16px; color: #333; margin-bottom: 5px;">${u}</div>
+                <div style="font-size: 13px; font-weight: bold; color: #555; background: #dcdcdc; display: inline-block; padding: 3px 8px; border-radius: 10px;">${statusText}</div>
+            </div>
+
+            <!-- Nút kết bạn (Nếu là người lạ) -->
+            ${!isFriend ? `
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <button onclick="window.guiLoiMoiKetBanCho('${u}')" style="background: rgba(255,255,255,0.7); border: none; border-radius: 8px; padding: 5px; cursor: pointer; font-size: 16px;">👤+</button>
+            </div>
+            ` : ''}
+        </div>`;
+    }
     
+    feedContainer.innerHTML = html === '' ? '<div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Chưa có ai quanh đây...</div>' : html;
+};
+
+// 3. LOGIC GỬI LỜI MỜI KẾT BẠN
+window.guiLoiMoiKetBan = function() {
+    const targetUser = document.getElementById('tim-kiem-user').value.trim();
+    if (!targetUser) return;
+    window.guiLoiMoiKetBanCho(targetUser);
+};
+
+window.guiLoiMoiKetBanCho = function(targetUser) {
+    const user = localStorage.getItem('currentUser');
+    if (user === targetUser) return alert("Không thể tự kết bạn với chính mình!");
+    if (window.danhSachBanBeThuc.length >= 12) return alert("❌ Bạn đã đạt giới hạn 12 bạn bè!");
+    if (window.danhSachBanBeThuc.includes(targetUser)) return alert("Hai người đã là bạn bè rồi!");
+
+    window.db.ref('nguoi_dung/' + targetUser).once('value').then(snap => {
+        if (!snap.exists()) return alert("Không tìm thấy người dùng này!");
+        
+        window.db.ref('loi_moi_ket_ban/' + targetUser + '/' + user).set(Date.now());
+        alert(" Đã gửi lời mời kết bạn cho " + targetUser);
+        document.getElementById('tim-kiem-user').value = '';
+    });
+};
+
+// 4. QUẢN LÝ POPUP BẠN BÈ & THÔNG BÁO
+window.moDanhSachBanBe = function() { document.getElementById('modal-ban-be').style.display = 'flex'; };
+window.moThongBao = function() { document.getElementById('modal-thong-bao').style.display = 'flex'; };
+
+window.veDanhSachBanBe = function() {
+    const container = document.getElementById('list-ban-be-content');
+    if (window.danhSachBanBeThuc.length === 0) {
+        container.innerHTML = 'Chưa có bạn bè nào. Hãy đi ra ngoài kết bạn đi!';
+        return;
+    }
+    let html = '';
+    window.danhSachBanBeThuc.forEach(b => {
+        html += `<div style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold; color: #333; display: flex; justify-content: space-between;">
+            <span>👤 ${b}</span>
+            <button onclick="window.xoaBan('${b}')" style="background: #dc3545; color: white; border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer;">Xóa</button>
+        </div>`;
+    });
+    container.innerHTML = html;
+};
+
+window.veDanhSachThongBao = function() {
+    const container = document.getElementById('list-thong-bao-content');
+    if (window.loiMoiKetBan.length === 0) {
+        container.innerHTML = 'Không có thông báo mới.';
+        return;
+    }
+    let html = '';
+    window.loiMoiKetBan.forEach(nguoiGui => {
+        html += `<div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ddd;">
+            <div style="font-weight: bold; margin-bottom: 5px;">${nguoiGui} muốn kết bạn với bạn!</div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.chapNhanBan('${nguoiGui}')" style="flex: 1; background: #28a745; color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer;">Chấp nhận</button>
+                <button onclick="window.tuChoiBan('${nguoiGui}')" style="flex: 1; background: #6c757d; color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer;">Từ chối</button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+};
+
+window.chapNhanBan = function(nguoiGui) {
+    const user = localStorage.getItem('currentUser');
+    if (window.danhSachBanBeThuc.length >= 12) return alert("Bạn đã đạt giới hạn 12 bạn bè!");
+    
+    // Thêm vào danh sách của 2 người
+    window.db.ref('ban_be/' + user + '/' + nguoiGui).set(true);
+    window.db.ref('ban_be/' + nguoiGui + '/' + user).set(true);
+    // Xóa lời mời
+    window.tuChoiBan(nguoiGui);
+    alert("Đã trở thành bạn bè với " + nguoiGui);
+};
+
+window.tuChoiBan = function(nguoiGui) {
+    const user = localStorage.getItem('currentUser');
+    window.db.ref('loi_moi_ket_ban/' + user + '/' + nguoiGui).remove();
+};
+
+window.xoaBan = function(banBe) {
+    if(!confirm("Bạn có chắc muốn hủy kết bạn với " + banBe + "?")) return;
+    const user = localStorage.getItem('currentUser');
+    window.db.ref('ban_be/' + user + '/' + banBe).remove();
+    window.db.ref('ban_be/' + banBe + '/' + user).remove();
+};
+
+// GỌI HÀM TẢI DỮ LIỆU CỘNG ĐỒNG KHI F5
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        if(localStorage.getItem('currentUser')) window.taiDuLieuCongDong();
+    }, 1500);
+});    
 </script>
 </body>
 </html>

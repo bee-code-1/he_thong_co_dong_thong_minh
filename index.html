@@ -1201,14 +1201,22 @@ window.switchTab = function(tabIndex) {
     document.querySelectorAll('.tab-screen').forEach(tab => {
         tab.classList.remove('active-tab');
     });
-    
     // 2. Tắt viền sáng của tất cả các icon dưới đáy
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => item.classList.remove('active'));
-    
     // 3. Đưa Layer vừa bấm LÊN TRÊN CÙNG và làm sáng icon tương ứng
     document.getElementById('tab-' + tabIndex).classList.add('active-tab');
     navItems[tabIndex - 1].classList.add('active');
+
+    // 💡 FIX LỖI "CHỮ US": TỰ ĐỘNG CẬP NHẬT AVATAR KHI MỞ TAB 5
+    if (tabIndex === 5) {
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
+            let btnImg = document.getElementById('avatar-btn-img');
+            if (btnImg) btnImg.src = avtUrl;
+        }
+    }
 };
 
 // HÀM TRUNG GIAN NỐI NÚT BẮT ĐẦU VỚI LOGIC CŨ

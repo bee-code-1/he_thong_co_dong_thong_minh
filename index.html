@@ -81,12 +81,17 @@
 <body>
 
     <div id="map"></div>
-<!-- LỚP GIAO DIỆN CHÍNH (QUẢN LÝ CÁC LAYER TAB) -->
+<!-- LỚP GIAO DIỆN CHÍNH ) -->
 <div id="ui-layer">
     
-    <!-- LAYER TAB 1: CHẠY BỘ (Nền trong suốt nhìn xuyên xuống bản đồ) -->
+    <!-- LAYER TAB 1: CHẠY BỘ  -->
     <div id="tab-1" class="tab-screen active-tab">
+        <!-- Nút Bụi mịn -->
         <button id="btn-bui-min" class="top-left-btn" onclick="window.toggleBuiMin()">Bụi mịn<br>on/off</button>
+        
+        <!-- nút back về vị trí -->
+        <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; top: 60px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto;">📍</button>
+
         <div id="info-panel">
             <div id="timer-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00h 00m 00s</div>
             <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
@@ -95,10 +100,13 @@
                 <li>Tiêu thụ: <span id="cal-display">00</span> calo</li>
             </ul>
         </div>
-        <button id="btn-bat-dau" class="action-btn start-btn" onclick="startRunning()">Bắt đầu</button>
-        <div id="running-controls" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); gap: 10px;">
-            <button id="btn-tam-dung" class="action-btn pause-btn" onclick="pauseTrackingAction()">Tạm dừng</button>
-            <button id="btn-ket-thuc" class="action-btn end-btn" onclick="endRunning()">Kết thúc</button>
+        
+        <!-- BỘ NÚT ĐIỀU KHIỂN  -->
+        <div id="action-btns-container" style="position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; width: max-content;">
+            <button id="start-btn" class="action-btn" onclick="startRunningProxy()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #28a745; min-width: 150px;">▶ BẮT ĐẦU</button>
+            <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #ffc107; color: #333; display: none;">⏸ TẠM DỪNG</button>
+            <!-- Nút kết thúc và xác nhận sau 3s -->
+            <button id="end-btn" class="action-btn" onclick="window.handleEndClick(event)" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #dc3545; display: none; user-select: none;">⏹ KẾT THÚC</button>
         </div>
     </div>
 
@@ -972,39 +980,37 @@ window.switchTab = function(tabIndex) {
     navItems[tabIndex - 1].classList.add('active');
 };
 
-        // HÀM BẤM NÚT BẮT ĐẦU CHẠY BỘ
-        window.startRunning = function() {
-            // 1. Trượt thanh công cụ xuống dưới biến mất (Animation 0.5s)
-            document.getElementById('bottom-nav').classList.add('nav-hidden');
-            
-            // 2. Ẩn nút "Bắt đầu", Hiện cụm "Tạm dừng / Kết thúc"
-            document.getElementById('btn-bat-dau').style.display = 'none';
-            document.getElementById('running-controls').style.display = 'flex';
-            
-            // 3. Hiện đồng hồ tính giờ
-            document.getElementById('timer-display').style.display = 'block';
-            
-            // Chạy hàm theo dõi GPS cũ của bạn (nếu có)
-            if (typeof startTrackingAction === 'function') {
-                startTrackingAction(); 
-            }
-        };
-
-        // HÀM BẤM NÚT KẾT THÚC
-        window.endRunning = function() {
-            // 1. Kéo thanh công cụ trượt ngược trở lên
-            document.getElementById('bottom-nav').classList.remove('nav-hidden');
-            
-            // 2. Khôi phục giao diện nút "Bắt đầu"
-            document.getElementById('btn-bat-dau').style.display = 'block';
-            document.getElementById('running-controls').style.display = 'none';
-            document.getElementById('timer-display').style.display = 'none';
-            
-            // Dừng theo dõi GPS cũ của bạn (nếu có)
-            if (typeof showEndConfirmation === 'function') {
-                showEndConfirmation();
-            }
-        };
+// HÀM TRUNG GIAN NỐI NÚT BẮT ĐẦU VỚI LOGIC CŨ
+window.startRunningProxy = function() {
+    // 1. Giấu thanh điều hướng dưới đáy
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.add('nav-hidden');
+    
+    // 2. Đổi giao diện nút (Chuyển sang cơ chế hiển thị của core cũ)
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('pause-btn').style.display = 'inline-block';
+    document.getElementById('end-btn').style.display = 'inline-block';
+    
+    // 3. Hiện đồng hồ
+    document.getElementById('timer-display').style.display = 'block';
+    
+    // 4. Kích hoạt Hàm theo dõi GPS lõi cũ của bạn
+    if (typeof startTrackingAction === 'function') {
+        startTrackingAction();
+    }
+};
+const originalLuuTienTrinh = window.luuTienTrinh;
+window.luuTienTrinh = function() {
+    //  reset thông số 
+    if (typeof originalLuuTienTrinh === 'function') originalLuuTienTrinh();
+    
+    // Khôi phục UI mới
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.remove('nav-hidden');
+    
+    const timer = document.getElementById('timer-display');
+    if (timer) timer.style.display = 'none';
+};
 </script>
 </body>
 </html>

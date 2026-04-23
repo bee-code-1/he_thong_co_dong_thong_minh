@@ -237,6 +237,57 @@
         
         <h2 style="color: #007bff; margin-top: 0; margin-bottom: 15px;"> Cái mặt chó của tôi </h2>
         
+        <!-- Khu vực Avatar (Bấm vào hình để đổi) -->
+        <div style="margin-bottom: 20px; position: relative; display: inline-block;">
+            <img id="hs-avatar-preview" src="https://ui-avatars.com/api/?name=User" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #007bff; object-fit: cover; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" onclick="document.getElementById('upload-avatar').click();" title="Bấm để đổi ảnh đại diện">
+            <!-- SỬA LỖI MOBILE: Làm tàng hình input thay vì display:none -->
+            <input type="file" id="upload-avatar" accept="image/*" style="opacity: 0; position: absolute; left: 0; top: 0; width: 1px; height: 1px; z-index: -1;" onchange="window.thayDoiAnh(event)">
+            <div style="font-size: 12px; color: #888; margin-top: 8px;">đừng đổi ảnh nữa</div>
+        </div>
+
+        <!-- Các chỉ số tùy chỉnh -->
+        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+            <label style="font-weight: bold; font-size: 14px; color: #333;">  Chiều cao (cm):</label>
+            <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+            
+            <label style="font-weight: bold; font-size: 14px; color: #333;">  Cân nặng (kg):</label>
+            <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+            
+            <label style="font-weight: bold; font-size: 14px; color: #333;">  Sải chân (m/bước):</label>
+            <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
+        </div>
+
+        <!-- KHU VỰC ĐỔI MẬT KHẨU MỚI THÊM VÀO -->
+        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-top: 2px dashed #ccc;">
+            <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 15px;">🔐 Đổi mật khẩu</h4>
+            
+            <div style="position: relative; margin-bottom: 10px;">
+                <input type="password" id="hs-old-pass" placeholder="Nhập mật khẩu cũ" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
+                <span id="eye-old" onclick="window.toggleEye('hs-old-pass', 'eye-old')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
+            </div>
+
+            <div style="position: relative; margin-bottom: 10px;">
+                <input type="password" id="hs-new-pass" placeholder="Nhập mật khẩu mới" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
+                <span id="eye-new" onclick="window.toggleEye('hs-new-pass', 'eye-new')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
+            </div>
+
+            <div style="position: relative;">
+                <input type="password" id="hs-confirm-pass" placeholder="Xác nhận mật khẩu mới" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
+                <span id="eye-confirm" onclick="window.toggleEye('hs-confirm-pass', 'eye-confirm')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
+            </div>
+        </div>
+
+        <!-- Nút LƯU và ĐĂNG XUẤT -->
+        <button onclick="window.luuHoSo()" style="background-color: #28a745; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            LƯU THAY ĐỔI
+        </button>
+        
+        <button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            ĐĂNG XUẤT để cmmd
+        </button>
+    </div>
+</div>
+        
 <!-- Khu vực Avatar (Bấm vào hình để đổi) -->
 <div style="margin-bottom: 20px; position: relative; display: inline-block;">
     <img id="hs-avatar-preview" src="https://ui-avatars.com/api/?name=User" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #007bff; object-fit: cover; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" onclick="document.getElementById('upload-avatar').click();" title="Bấm để đổi ảnh đại diện">
@@ -992,10 +1043,50 @@ window.thayDoiAnh = function(event) {
     }
 };
 
-// === LƯU LẠI CÁC CHỈ SỐ CƠ THỂ ===
+// === HÀM BẬT/TẮT CON MẮT XEM MẬT KHẨU ===
+window.toggleEye = function(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.innerText = "🙈"; // Đổi thành mặt khỉ che mắt
+    } else {
+        input.type = "password";
+        icon.innerText = "👁️"; // Đổi lại thành mắt mở
+    }
+};
+
+// === LƯU LẠI CÁC CHỈ SỐ CƠ THỂ & KIỂM TRA ĐỔI MẬT KHẨU ===
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');
     if (!user) return;
+
+    let userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
+
+    // 1. KIỂM TRA LOGIC ĐỔI MẬT KHẨU
+    const oldPass = document.getElementById('hs-old-pass').value;
+    const newPass = document.getElementById('hs-new-pass').value;
+    const confirmPass = document.getElementById('hs-confirm-pass').value;
+
+    // Nếu người dùng có gõ chữ vào bất kỳ ô mật khẩu nào
+    if (oldPass !== "" || newPass !== "" || confirmPass !== "") {
+        if (oldPass !== userData.password) {
+            alert("❌ Lỗi: Mật khẩu cũ không chính xác!");
+            return; // Dừng lại, không cho lưu
+        }
+        if (newPass !== confirmPass) {
+            alert("❌ Lỗi: Mật khẩu mới và Xác nhận không giống nhau!");
+            return; 
+        }
+        if (newPass.length < 3) {
+            alert("❌ Lỗi: Mật khẩu mới phải có ít nhất 3 ký tự!");
+            return;
+        }
+        // Nếu qua hết các ải, cập nhật mật khẩu mới
+        userData.password = newPass; 
+    }
+
+    // 2. LƯU CHỈ SỐ CƠ THỂ NHƯ CŨ
     const weightInput = document.getElementById('hs-edit-weight');
     const strideInput = document.getElementById('hs-edit-stride');
     const w = weightInput ? parseFloat(weightInput.value) || 65 : 65;
@@ -1004,12 +1095,19 @@ window.luuHoSo = function() {
     if (typeof window.userWeight !== 'undefined') window.userWeight = w;
     if (typeof window.stepsPerMeter !== 'undefined') window.stepsPerMeter = 1 / s;
 
-    let userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
     userData.weight = w;
     userData.strideLength = s;
+    
+    // Đẩy toàn bộ dữ liệu (cả Pass mới và Chỉ số) vào ổ cứng
     localStorage.setItem("appUser_" + user, JSON.stringify(userData));
+    alert(" Đã lưu thay đổi hồ sơ thành công!");
 
-    alert("Đã lưu thay đổi hồ sơ thành công!");
+    // Xóa trắng 3 ô nhập mật khẩu để bảo mật cho lần mở sau
+    document.getElementById('hs-old-pass').value = '';
+    document.getElementById('hs-new-pass').value = '';
+    document.getElementById('hs-confirm-pass').value = '';
+
+    // Đóng bảng
     const modal = document.getElementById('hoso-modal');
     if (modal) modal.style.display = 'none';
 };

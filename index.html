@@ -596,7 +596,7 @@ function initGPS() {
         let altitudeInfo = "";
         // Nếu đang bật Bản đồ Địa hình và đã lấy được độ cao -> Hiển thị
         if (window.isHienDiaHinh && window.latestAltitude !== 0) {
-            altitudeInfo = ` | ~ ${Math.round(window.latestAltitude)}m`;
+            altitudeInfo = ` |  ${Math.round(window.latestAltitude)}m`;
         }
 
         let myRealAvatar = localStorage.getItem("avatar_" + username);

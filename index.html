@@ -121,103 +121,106 @@
     </div>
 
 <!-- LAYER TAB 3: TRANG CHỦ (GIAO DIỆN LOCKET & WIDGET) -->
-<div id="tab-3" class="tab-screen" style="background-color: #8bd8af; display: flex; flex-direction: column; pointer-events: auto;">
-    
-    <!-- 🌟 KHU VỰC TRÊN CÙNG: WIDGET MÔI TRƯỜNG & STORY BẠN BÈ -->
-    <div id="top-widget-area" style="flex: 1; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow: hidden;">
+<div id="tab-3" class="tab-screen" style="pointer-events: auto;">
+    <!-- Khung bọc Flexbox (Giải quyết triệt để lỗi đè bản đồ) -->
+    <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column;">
         
-        <!-- Hàng 1: Các Widget Môi trường (Sẽ lấy dữ liệu từ API bên thứ 3) -->
-        <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-            <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                ⛅ 28°C
+        <!-- 🌟 KHU VỰC TRÊN CÙNG: WIDGET MÔI TRƯỜNG & STORY BẠN BÈ -->
+        <div id="top-widget-area" style="flex: 1; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow: hidden;">
+            
+            <!-- Hàng 1: Các Widget Môi trường (Sẽ lấy dữ liệu từ API bên thứ 3) -->
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    ⛅ 28°C
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    😷 AQI: 120 (Hà Nội)
+                </div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                😷 AQI: 120 (Hà Nội)
+
+            <!-- Hàng 2: Thanh Story Bạn bè (Avatar + Tên + Cuộn ngang) -->
+            <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0 10px 0; scrollbar-width: none; -ms-overflow-style: none;">
+                
+                <!-- Người bạn 1 (Có viền đỏ giả lập Story chưa xem) -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Hiep&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Hiệp</span>
+                </div>
+
+                <!-- Người bạn 2 -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Lan&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Lan Anh</span>
+                </div>
+
+                <!-- Người bạn 3 -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Minh&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Minh</span>
+                </div>
+
+                <!-- Người bạn 4 -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Khoa&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Khoa</span>
+                </div>
+                
+                <!-- Người bạn 5 -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Tu&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Tú</span>
+                </div>
+                
+                 <!-- Người bạn 6 (Viền xám giả lập đã xem) -->
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
+                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ccc; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <img src="https://ui-avatars.com/api/?name=Trang&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                    </div>
+                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Trang</span>
+                </div>
+
             </div>
         </div>
 
-        <!-- Hàng 2: Thanh Story Bạn bè (Avatar + Tên + Cuộn ngang) -->
-        <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0 10px 0; scrollbar-width: none; -ms-overflow-style: none;">
+        <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
+        <div style="padding-bottom: 95px;"> <!-- Chừa khoảng trống 95px cho thanh điều hướng đáy -->
             
-            <!-- Người bạn 1 (Có viền đỏ giả lập Story chưa xem) -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Hiep&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+            <!-- 1. KHU VỰC ẢNH CỦA BẠN BÈ -->
+            <div style="width: 85%; aspect-ratio: 1; background-color: #28a745; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2);">
+                <div style="position: absolute; bottom: 5px; left: 10px; width: 65px; height: 65px; background-color: #004BAd; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
+                <div style="position: absolute; bottom: 15px; left: 85px; right: 15px; height: 45px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
+            </div>
+
+            <!-- 2. THANH TƯƠNG TÁC (Bình luận & Cảm xúc) -->
+            <div style="width: 85%; margin: 0 auto 25px; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
+                <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
+                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
+                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
+                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
                 </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Hiệp</span>
             </div>
 
-            <!-- Người bạn 2 -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Lan&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+            <!-- 3. THANH CÔNG CỤ CHỤP / TẢI ẢNH -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 25px;">
+                <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Tải ảnh lên">🖼️</div>
+                
+                <div style="width: 80px; height: 80px; background-color: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Chụp ảnh">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
                 </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Lan Anh</span>
-            </div>
 
-            <!-- Người bạn 3 -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Minh&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Minh</span>
+                <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="One Connect">🗺️</div>
             </div>
-
-            <!-- Người bạn 4 -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Khoa&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Khoa</span>
-            </div>
-            
-            <!-- Người bạn 5 -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Tu&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Tú</span>
-            </div>
-            
-             <!-- Người bạn 6 (Viền xám giả lập đã xem) -->
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ccc; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                    <img src="https://ui-avatars.com/api/?name=Trang&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                </div>
-                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Trang</span>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
-    <div style="padding-bottom: 95px;"> <!-- Chừa khoảng trống 95px cho thanh điều hướng đáy -->
-        
-        <!-- 1. KHU VỰC ẢNH CỦA BẠN BÈ -->
-        <div style="width: 85%; aspect-ratio: 1; background-color: #28a745; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2);">
-            <div style="position: absolute; bottom: 5px; left: 10px; width: 65px; height: 65px; background-color: #004BAd; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
-            <div style="position: absolute; bottom: 15px; left: 85px; right: 15px; height: 45px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
-        </div>
-
-        <!-- 2. THANH TƯƠNG TÁC (Bình luận & Cảm xúc) -->
-        <div style="width: 85%; margin: 0 auto 25px; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-            <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
-            <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
-                <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
-                <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
-                <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
-            </div>
-        </div>
-
-        <!-- 3. THANH CÔNG CỤ CHỤP / TẢI ẢNH -->
-        <div style="display: flex; justify-content: center; align-items: center; gap: 25px;">
-            <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Tải ảnh lên">🖼️</div>
-            
-            <div style="width: 80px; height: 80px; background-color: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Chụp ảnh">
-                <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
-            </div>
-
-            <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="One Connect">🗺️</div>
         </div>
     </div>
 </div>

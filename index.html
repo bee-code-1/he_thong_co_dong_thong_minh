@@ -132,14 +132,14 @@
     </div>
 
     <!-- 2. THANH TƯƠNG TÁC (Bình luận & Cảm xúc) -->
-    <div style="width: 85%; margin: 0 auto; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 12px 20px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+    <div style="width: 85%; margin: 0 auto; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
         <!-- Ô nhập bình luận -->
-        <input type="text" placeholder="Nói gì đó....." style="flex: 1; border: none; background: transparent; font-size: 16px; color: #555; outline: none; font-weight: bold;">
-        <!-- Nơi bày tỏ cảm xúc  -->
-        <div style="display: flex; gap: 10px; font-size: 24px; cursor: pointer;">
-            <span style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">❤️</span>
-            <span style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🔥</span>
-            <span style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">😢</span>
+        <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
+        <!-- Nơi bày tỏ cảm xúc (Tim, Lửa, Buồn) -->
+        <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
+            <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
+            <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
+            <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
         </div>
     </div>
 

@@ -128,15 +128,15 @@
         <!-- 🌟 KHU VỰC TRÊN CÙNG: WIDGET MÔI TRƯỜNG & STORY BẠN BÈ -->
         <div id="top-widget-area" style="flex: 1; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow: hidden;">
             
-            <!-- Hàng 1: Các Widget Môi trường (Sẽ lấy dữ liệu từ API bên thứ 3) -->
-            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-                <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                    ⛅ 28°C
-                </div>
-                <div style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                    😷 AQI: 120 (Hà Nội)
-                </div>
+        <!-- Hàng 1: Các Widget Môi trường  -->
+        <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+            <div id="widget-thoi-tiet" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                ⏳ Đang đo...
             </div>
+            <div id="widget-bui-min" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                ⏳ Chờ GPS...
+            </div>
+        </div>
 
             <!-- Hàng 2: Thanh Story Bạn bè (Avatar + Tên + Cuộn ngang) -->
             <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0 10px 0; scrollbar-width: none; -ms-overflow-style: none;">
@@ -443,7 +443,58 @@
     //  KHỞI TẠO BẢN ĐỒ 
     const map = L.map('map', { zoomControl: false }).setView([21.028511, 105.804817], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    
+// === API LẤY THỜI TIẾT, BỤI MỊN VÀ TÊN QUẬN/HUYỆN THỜI GIAN THỰC ===
+window.thoiGianCapNhatMoiTruong = 0; // Biến chặn spam API
+window.capNhatThoiTietAQI = function(lat, lng) {
+    const now = Date.now();
+    // Chỉ gọi API 15 phút một lần (900,000 ms) để tránh bị chặn IP
+    if (now - window.thoiGianCapNhatMoiTruong < 900000) return;
+    window.thoiGianCapNhatMoiTruong = now;
 
+    // 1. DỊCH NGƯỢC TỌA ĐỘ LẤY TÊN QUẬN/HUYỆN (Nominatim OSM)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`)
+        .then(res => res.json())
+        .then(data => {
+            // Ưu tiên lấy tên Huyện/Thị xã, nếu không có thì lấy tên Thành phố
+            let tenKhuVuc = data.address.town || data.address.city_district || data.address.suburb || data.address.county || data.address.city || "Gần đây";
+
+            // 2. LẤY NHIỆT ĐỘ & THỜI TIẾT (Open-Meteo)
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`)
+                .then(res => res.json())
+                .then(weatherData => {
+                    const temp = Math.round(weatherData.current_weather.temperature);
+                    const code = weatherData.current_weather.weathercode;
+                    
+                    // Logic biến đổi Icon theo mã thời tiết WMO
+                    let icon = "☀️"; // Mặc định Nắng
+                    if (code >= 1 && code <= 3) icon = "⛅"; // Có mây
+                    else if (code >= 45 && code <= 48) icon = "🌫️"; // Sương mù
+                    else if (code >= 51 && code <= 67) icon = "🌧️"; // Mưa
+                    else if (code >= 71 && code <= 77) icon = "🌨️"; // Tuyết
+                    else if (code >= 95) icon = "⛈️"; // Bão sấm sét
+
+                    document.getElementById('widget-thoi-tiet').innerHTML = `${icon} ${temp}°C`;
+                });
+
+            // 3. LẤY CHỈ SỐ BỤI MỊN US AQI (Open-Meteo Air Quality)
+            fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi`)
+                .then(res => res.json())
+                .then(aqiData => {
+                    const aqi = Math.round(aqiData.current.us_aqi);
+                    
+                    // Logic biến đổi Icon và Màu sắc theo mức độ ô nhiễm US AQI
+                    let aqiIcon = "🟢"; // Tốt (0-50)
+                    if (aqi > 50 && aqi <= 100) aqiIcon = "🟡"; // Trung bình
+                    else if (aqi > 100 && aqi <= 150) aqiIcon = "🟠"; // Kém cho người nhạy cảm
+                    else if (aqi > 150 && aqi <= 200) aqiIcon = "🔴"; // Xấu
+                    else if (aqi > 200) aqiIcon = "🟣"; // Rất xấu / Nguy hại
+
+                    document.getElementById('widget-bui-min').innerHTML = `${aqiIcon} AQI: ${aqi} (${tenKhuVuc})`;
+                });
+        })
+        .catch(err => console.error("Lỗi cập nhật API môi trường:", err));
+};
     // TẢI DỮ LIỆU QGIS Thanh Oai
     fetch('bando_thanhoai.geojson')
         .then(response => response.json())
@@ -666,7 +717,10 @@ function initGPS() {
         
         // 🛑 BỘ LỌC 1: Lọc Độ Chính Xác
         if (doChinhXac > 12) return;
-        
+        // 💡 KÍCH HOẠT API THỜI TIẾT & BỤI MỊN THEO TỌA ĐỘ HIỆN TẠI
+        if (typeof window.capNhatThoiTietAQI === 'function') {
+            window.capNhatThoiTietAQI(lat, lng);
+        }        
         let username = localStorage.getItem('currentUser') || "Khach";
         if (username && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
             if (typeof window.banToaDoLenMay === 'function') window.banToaDoLenMay(username, lat, lng);

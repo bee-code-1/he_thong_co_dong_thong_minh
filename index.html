@@ -1063,10 +1063,10 @@ window.toggleDiaHinh = function() {
         btn.style.color = 'white';
         btn.innerHTML = 'Địa hình<br>⛰️ ON';
         
-        // Khởi tạo và ném lớp đường bình độ lên bản đồ
+        // Khởi tạo và ném lớp đường bình độ lên bản đồ (Bản đồ Esri siêu mượt)
         if (!lopDiaHinh && typeof L !== 'undefined' && typeof map !== 'undefined') {
-            lopDiaHinh = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                maxZoom: 17, attribution: 'Map style: © OpenTopoMap (CC-BY-SA)'
+            lopDiaHinh = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 17, attribution: 'Map style: © Esri'
             });
         }
         if (lopDiaHinh && typeof map !== 'undefined') lopDiaHinh.addTo(map);

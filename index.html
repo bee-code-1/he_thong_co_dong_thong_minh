@@ -302,6 +302,12 @@
             <div style="font-size: 12px; color: #888; margin-top: 8px;">đừng đổi ảnh nữa</div>
         </div>
 
+        <!-- TÊN TÀI KHOẢN KO THỂ SỬA -->
+        <div style="background: #e9ecef; border-radius: 8px; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; font-size: 15px; text-align: left;">
+            <span style="color: #555; font-weight: bold;"> Tài khoản:</span> 
+            <span id="hs-display-username" style="color: #dc3545; font-weight: bold; font-size: 16px;">...</span>
+        </div>
+
         <!-- Các chỉ số tùy chỉnh -->
         <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
             <label style="font-weight: bold; font-size: 14px; color: #333;">  Chiều cao (cm):</label>
@@ -394,72 +400,82 @@
         reg.style.display = reg.style.display === 'none' ? 'block' : 'none';
     }
 
-    function processAuth(mode) {
-        const user = document.getElementById(mode === 'login' ? 'login-user' : 'reg-user').value.trim();
-        const pass = document.getElementById(mode === 'login' ? 'login-pass' : 'reg-pass').value.trim();
-        
-        if(!user || !pass) return alert("Nhập đủ thông tin!");
-        
-        // Giới hạn 8 ký tự và không chứa khoảng trắng
-        if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự!");
-        if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng!");
+function processAuth(mode) {
+    const user = document.getElementById(mode === 'login' ? 'login-user' : 'reg-user').value.trim();
+    const pass = document.getElementById(mode === 'login' ? 'login-pass' : 'reg-pass').value.trim();
+    if(!user || !pass) return alert("Nhập đủ thông tin!");
+    // Giới hạn 8 ký tự và không chứa khoảng trắng
+    if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự!");
+    if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng!");
 
-        if (mode === 'register') {
-            // KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE)
-            if (typeof db !== 'undefined') {
-                // Gọi lên đám mây Firebase hỏi xem tên này có ai xài chưa
-                db.ref('nguoi_dung/' + user).once('value').then(function(snapshot) {
-                    if (snapshot.exists()) {
-                        // Tên đã bị xí phần trên mạng lưới
-                        alert("Tên tài khoản '" + user + "' đã có người sử dụng. Vui lòng chọn tên khác!");
-                    } else {
-                        // Tên hợp lệ, chưa ai dùng -> Lưu vào máy
-                        localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
-                        currentUser = user;
-                        localStorage.setItem('currentUser', user); 
-                        
-                        // tạo chỗ trống lưu tên người dùng
-                        db.ref('nguoi_dung/' + user).set({
-                            trang_thai: "Vừa tạo tài khoản",
-                            thoi_gian_cap_nhat: Date.now()
-                        });
+    if (mode === 'register') {
+        // KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE)
+        if (typeof db !== 'undefined') {
+            db.ref('nguoi_dung/' + user).once('value').then(function(snapshot) {
+                if (snapshot.exists()) {
+                    alert("Tên tài khoản '" + user + "' đã có người sử dụng. Vui lòng chọn tên khác!");
+                } else {
+                    localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
+                    currentUser = user;
+                    localStorage.setItem('currentUser', user);
 
-                        document.getElementById('auth-modal').style.display = 'none';
-                        document.getElementById('onboarding-modal').style.display = 'flex';
-                    }
-                }).catch(function(error) {
-                    alert("Lỗi kết nối mạng: Không thể kiểm tra dữ liệu!");
-                });
-            } else {
-                alert("Hệ thống chưa kết nối được với máy chủ Firebase!");
-            }
+                    // 💡 FIX LỖI CHỮ "US" KHI VỪA TẠO TÀI KHOẢN XONG
+                    let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
+                    let btnImg = document.getElementById('avatar-btn-img');
+                    if (btnImg) btnImg.src = avtUrl;
+
+                    db.ref('nguoi_dung/' + user).set({
+                        trang_thai: "Vừa tạo tài khoản",
+                        thoi_gian_cap_nhat: Date.now()
+                    });
+                    document.getElementById('auth-modal').style.display = 'none';
+                    document.getElementById('onboarding-modal').style.display = 'flex';
+                }
+            }).catch(function(error) {
+                alert("Lỗi kết nối mạng: Không thể kiểm tra dữ liệu!");
+            });
         } else {
-            //  LOGIC ĐĂNG NHẬP 
-            const data = JSON.parse(localStorage.getItem("appUser_" + user));
-            if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
-            currentUser = user; 
-            userWeight = data.weight || 65; 
+            alert("Hệ thống chưa kết nối được với máy chủ Firebase!");
+        }
+    } else {
+        //  LOGIC ĐĂNG NHẬP
+        const data = JSON.parse(localStorage.getItem("appUser_" + user));
+        if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
+        currentUser = user;
+        userWeight = data.weight || 65;
+        stepsPerMeter = 1 / (data.strideLength || 0.7);
+        localStorage.setItem('currentUser', user); 
+
+        // 💡 FIX LỖI CHỮ "US" KHI VỪA BẤM ĐĂNG NHẬP
+        let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
+        let btnImg = document.getElementById('avatar-btn-img');
+        if (btnImg) btnImg.src = avtUrl;
+
+        document.getElementById('auth-modal').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+    }
+}
+
+//  tự động log in nếu f5
+window.addEventListener('load', function() {
+    let savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        const data = JSON.parse(localStorage.getItem("appUser_" + savedUser));
+        if (data) {
+            currentUser = savedUser;
+            userWeight = data.weight || 65;
             stepsPerMeter = 1 / (data.strideLength || 0.7);
-            localStorage.setItem('currentUser', user); // Lưu thẻ nhớ phiên đăng nhập
+            
+            // 💡 FIX LỖI CHỮ "US" KHI F5 TẢI LẠI TRANG
+            let avtUrl = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
+            let btnImg = document.getElementById('avatar-btn-img');
+            if (btnImg) btnImg.src = avtUrl;
+
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
         }
     }
-
-    //  tự động log in nếu f5
-    window.addEventListener('load', function() {
-        let savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            const data = JSON.parse(localStorage.getItem("appUser_" + savedUser));
-            if (data) {
-                currentUser = savedUser;
-                userWeight = data.weight || 65;
-                stepsPerMeter = 1 / (data.strideLength || 0.7);
-                document.getElementById('auth-modal').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-            }
-        }
-    });
+});
 
     function saveProfile(skip) {
         const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
@@ -1018,6 +1034,10 @@ window.moHoSo = function() {
         let previewImg = document.getElementById('hs-avatar-preview');
         if (previewImg) previewImg.src = avatarUrl;
 
+        // 💡 HIỂN THỊ TÊN TÀI KHOẢN CỐ ĐỊNH
+        let nameDisplay = document.getElementById('hs-display-username');
+        if (nameDisplay) nameDisplay.innerText = user;
+
         let w = parseFloat(userData.weight); if (isNaN(w)) w = 65;
         let s = parseFloat(userData.strideLength); if (isNaN(s)) s = 0.7;
         let h = Math.round(s / 0.415 * 100);
@@ -1028,11 +1048,6 @@ window.moHoSo = function() {
 
         let modal = document.getElementById('hoso-modal');
         if (modal) modal.style.display = 'flex';
-
-        // 💡 KHI MỞ HỒ SƠ -> GIẤU THANH ĐIỀU HƯỚNG ĐI
-        const nav = document.getElementById('bottom-nav');
-        if (nav) nav.classList.add('nav-hidden');
-
     } catch (err) { console.error("Lỗi mở hồ sơ:", err); }
 };
 

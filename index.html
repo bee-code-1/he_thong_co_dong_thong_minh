@@ -557,40 +557,38 @@ window.addEventListener('load', function() {
         btn.style.color = isPaused ? 'white' : '#333';
     }
 
-// --- GPS LÕI (ĐÃ CẮT BỎ OSRM VÀ DÙNG BỘ LỌC 3 TẦNG) ---
+// --- GPS LÕI (ĐÃ TÍCH HỢP 3D VÀ SỬA LỖI) ---
 function initGPS() {
     const fog = document.getElementById('fog-layer');
     polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
-
+    
     gpsWatcherId = navigator.geolocation.watchPosition(position => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const doChinhXac = position.coords.accuracy;
         const currentTimestamp = Date.now();
-
-        // 🛑 BỘ LỌC 1: Lọc Độ Chính Xác (Accuracy < 12m)
+        
+        // 🛑 BỘ LỌC 1: Lọc Độ Chính Xác
         if (doChinhXac > 12) return;
-
-        // Bắn tọa độ lên đám mây
-        let username = localStorage.getItem('currentUser');
+        
+        let username = localStorage.getItem('currentUser') || "Khach";
         if (username && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
             if (typeof window.banToaDoLenMay === 'function') window.banToaDoLenMay(username, lat, lng);
         }
-
+        
         const currentLatLng = L.latLng(lat, lng);
         latestLatLng = currentLatLng;
-
+        
         const startBtn = document.getElementById('start-btn');
         if (startBtn && startBtn.innerText === "ĐANG KẾT NỐI GPS...") {
             if (typeof window.startTrackingAction === 'function') window.startTrackingAction();
         }
-
+        
         if (typeof isFirstLocation !== 'undefined' && isFirstLocation) {
             map.setView([lat, lng], 18);
             isFirstLocation = false;
         }
-
-        // Tạo Avatar Giọt nước trên map
+        
         let myRealAvatar = localStorage.getItem("avatar_" + username);
         let myAvatar = myRealAvatar ? myRealAvatar : `https://ui-avatars.com/api/?name=${username}&background=random`;
         const myGPSHtml = `
@@ -599,72 +597,58 @@ function initGPS() {
                 <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
             </svg>
             <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box; z-index: 2;" />
-    
-            <!-- Bảng tên bant thân màu đỏ -->
             <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); background: #dc3545; color: white; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 12px; z-index: 3; white-space: nowrap; border: 1px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
                 ${username} (Bạn)
             </div>
         </div>`;
         const myIcon = L.divIcon({ className: 'user-icon', html: myGPSHtml, iconSize: L.point(44, 55), iconAnchor: L.point(22, 55) });
-        
-        if (!userMarker) { userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map); } 
+        if (!userMarker) { userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map); }
         else { userMarker.setLatLng([lat, lng]); userMarker.setIcon(myIcon); }
 
-// VẼ ĐƯỜNG ĐI CHUẨN XÁC VÀ TÍNH QUÃNG ĐƯỜNG 3D (Tích hợp NASA SRTM)
-if (pathLatLngs.length > 0 && isTracking && !isPaused) {
-    const lastPoint = pathLatLngs[pathLatLngs.length - 1];
-    const dist2D = map.distance(lastPoint, currentLatLng);
-    const timeDiff = (currentTimestamp - lastTimestamp) / 1000;
-    const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0;
+        // VẼ ĐƯỜNG ĐI CHUẨN XÁC VÀ TÍNH QUÃNG ĐƯỜNG 3D
+        if (pathLatLngs.length > 0 && isTracking && !isPaused) {
+            const lastPoint = pathLatLngs[pathLatLngs.length - 1];
+            const dist2D = map.distance(lastPoint, currentLatLng);
+            const timeDiff = (currentTimestamp - lastTimestamp) / 1000;
+            const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0;
 
-    // 🛑 BỘ LỌC 2 & 3: Chỉ tính khi đi > 5m (tránh bị API chặn vì spam) và Vận tốc < 10m/s
-    if (dist2D > 5 && currentSpeed < 10) {
-        
-        // 💡 GỌI API ĐỘ CAO (OPEN TOPO DATA - SRTM 30m)
-        fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lng}`)
-            .then(response => response.json())
-            .then(apiData => {
-                if (apiData && apiData.results && apiData.results.length > 0) {
-                    const currentZ = apiData.results.elevation || 0; // Độ cao Z hiện tại
-                    const lastZ = lastPoint.alt !== undefined ? lastPoint.alt : currentZ; // Độ cao Z bước trước
-                    
-                    // NỘI SUY QUÃNG ĐƯỜNG 3D (Định lý Pytago)
-                    const deltaZ = currentZ - lastZ;
-                    const dist3D = Math.sqrt(Math.pow(dist2D, 2) + Math.pow(deltaZ, 2));
+            if (dist2D > 5 && currentSpeed < 10) {
+                fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lng}`)
+                    .then(response => response.json())
+                    .then(apiData => {
+                        if (apiData && apiData.results && apiData.results.length > 0) {
+                            const currentZ = apiData.results.elevation || 0; 
+                            const lastZ = lastPoint.alt !== undefined ? lastPoint.alt : currentZ; 
+                            const deltaZ = currentZ - lastZ;
+                            const dist3D = Math.sqrt(Math.pow(dist2D, 2) + Math.pow(deltaZ, 2));
 
-                    // Cộng dồn khoảng cách thực tế vào tổng
-                    totalDistanceMeter += dist3D;
-                    
-                    // Lưu lại độ cao Z vào điểm này để bước sau tính tiếp
-                    currentLatLng.alt = currentZ;
-                } else {
-                    totalDistanceMeter += dist2D; // Nếu API lỗi, tạm cộng quãng đường 2D
-                }
+                            totalDistanceMeter += dist3D;
+                            currentLatLng.alt = currentZ;
+                        } else {
+                            totalDistanceMeter += dist2D; 
+                        }
 
-                // Cập nhật giao diện và Firebase sau khi đã có quãng đường mới
-                if (username && window.isSharingLocation && window.db) {
-                    window.db.ref('lich_su_di_chuyen/' + username).push({ lat: lat, lng: lng, thoi_gian: currentTimestamp });
-                }
-                
-                let canNang = parseFloat(userWeight) || 65;
-                let buoc = parseFloat(stepsPerMeter) || 1.42;
-                
-                pathLatLngs.push(currentLatLng);
-                if(polyline) polyline.setLatLngs(pathLatLngs);
-                lastTimestamp = currentTimestamp;
-                
-                if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-                if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-                if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
-            })
-            .catch(err => {
-                console.error("Lỗi lấy dữ liệu độ cao:", err);
-                // Lỗi mạng thì vẫn cộng 2D để app không bị đơ
-                totalDistanceMeter += dist2D;
-                pathLatLngs.push(currentLatLng);
-            });
-    }
-}
+                        if (username && window.isSharingLocation && window.db) {
+                            window.db.ref('lich_su_di_chuyen/' + username).push({ lat: lat, lng: lng, thoi_gian: currentTimestamp });
+                        }
+                        
+                        let canNang = parseFloat(userWeight) || 65;
+                        let buoc = parseFloat(stepsPerMeter) || 1.42;
+                        
+                        pathLatLngs.push(currentLatLng);
+                        if(polyline) polyline.setLatLngs(pathLatLngs);
+                        lastTimestamp = currentTimestamp;
+                        
+                        if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+                        if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
+                        if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
+                    })
+                    .catch(err => {
+                        console.error("Lỗi lấy dữ liệu độ cao:", err);
+                        totalDistanceMeter += dist2D;
+                        pathLatLngs.push(currentLatLng);
+                    });
+            }
         } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
             pathLatLngs.push(currentLatLng);
             lastTimestamp = currentTimestamp;

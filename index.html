@@ -216,7 +216,7 @@
         </div>
 
         <!-- TRỤC CUỘN DỌC CHÍNH (Đã fix lỗi liệt cuộn) -->
-        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 120px; height: 100%;">
+        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1 1 0; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 120px;">
             
             <!-- ITEM 1: KHUNG CAMERA & BỘ 4 NÚT CHỨC NĂNG -->
             <div class="snap-item" style="position: relative; margin-top: 10px; scroll-snap-align: start;">
@@ -2122,6 +2122,75 @@ window.switchTab = function(tabIndex) {
     }
 };
 
+// === HỆ THỐNG THÔNG BÁO BẠN BÈ (ĐÃ FIX LỖI TRẮNG) ===
+let isFirstLoadFeed = true;
+let timerXoaTB = null;
+
+// Hàm Nhấn giữ để xóa thông báo
+window.batDauXoaTB = function(idTB) {
+    timerXoaTB = setTimeout(() => {
+        if(confirm("Xóa thông báo này khỏi máy?")) {
+            const el = document.getElementById(idTB);
+            if(el) el.remove();
+            window.luuThongBaoLocal();
+        }
+    }, 1000); 
+};
+window.huyXoaTB = function() {
+    if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; }
+};
+
+window.luuThongBaoLocal = function() {
+    const container = document.getElementById('list-thong-bao-content');
+    if(container) localStorage.setItem('locket_notifications', container.innerHTML);
+};
+
+window.taiThongBaoLocal = function() {
+    const savedData = localStorage.getItem('locket_notifications');
+    const container = document.getElementById('list-thong-bao-content');
+    if (savedData && savedData.trim() !== '' && container) {
+        container.innerHTML = savedData;
+    }
+};
+
+// Cỗ máy in thông báo bị mất nay đã trở lại
+window.themThongBaoLocket = function(avatar, ten, noiDung) {
+    const date = new Date();
+    let hours = date.getHours(); let minutes = date.getMinutes();
+    let ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12; hours = hours ? hours : 12; 
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    const timeStr = hours + ':' + minutes + ' ' + ampm;
+
+    const idTB = 'tb_' + Date.now() + Math.floor(Math.random()*1000);
+    
+    const tbHTML = `
+        <div id="${idTB}" class="thong-bao-item" 
+             onmousedown="window.batDauXoaTB('${idTB}')" onmouseup="window.huyXoaTB()" onmouseleave="window.huyXoaTB()"
+             ontouchstart="window.batDauXoaTB('${idTB}')" ontouchend="window.huyXoaTB()" ontouchmove="window.huyXoaTB()"
+             style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; user-select: none;">
+            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
+                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#004BAd" />
+                </svg>
+                <img src="${avatar}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white;" />
+            </div>
+            <div style="flex: 1; text-align: left;">
+                <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 3px;">${ten}</div>
+                <div style="font-size: 13px; color: #555; line-height: 1.4;">${noiDung}</div>
+                <div style="font-size: 11px; color: #888; margin-top: 4px;">🕒 ${timeStr}</div>
+            </div>
+        </div>
+    `;
+    const container = document.getElementById('list-thong-bao-content');
+    if (container && container.innerText.includes('Không có thông báo')) container.innerHTML = '';
+    if (container) container.insertAdjacentHTML('afterbegin', tbHTML);
+    window.luuThongBaoLocal();
+
+    const chamDo = document.getElementById('cham-do-thong-bao');
+    if(chamDo) chamDo.style.display = 'block';
+};
+
 // 4. LẮNG NGHE & RENDER FEED (SCROLL SNAP)
 window.langNgheLocket = function() {
     if (!window.db) return;
@@ -2137,6 +2206,16 @@ window.langNgheLocket = function() {
             posts.push({ key: child.key, ...child.val() });
         });
         
+        // KIỂM TRA BÀI MỚI ĐỂ BẬT THÔNG BÁO (Lọc lần tải trang đầu tiên)
+        if (posts.length > 0 && !isFirstLoadFeed) {
+            const baiMoiNhat = posts[posts.length - 1]; 
+            if (baiMoiNhat.nguoi_gui !== currentUser) {
+                const noiDungTB = baiMoiNhat.loai === 'text' ? 'đã chia sẻ một ghi chú mới' : 'đã đăng một ảnh mới';
+                window.themThongBaoLocket(baiMoiNhat.avatar, baiMoiNhat.nguoi_gui, noiDungTB);
+            }
+        }
+        isFirstLoadFeed = false;
+
         posts.reverse().forEach(data => {
             let timeDate = new Date(data.thoi_gian);
             let hours = timeDate.getHours();
@@ -2202,6 +2281,14 @@ window.xacNhanXoaVinhVien = function() {
         });
     }
 };
+
+// 6. KHỞI ĐỘNG HỆ THỐNG KHI F5
+window.addEventListener('load', () => { 
+    window.taiThongBaoLocal(); // Lấy thông báo cũ lưu trong máy ra
+    setTimeout(() => { 
+        if (typeof window.langNgheLocket === 'function') window.langNgheLocket(); 
+    }, 2000); 
+});
     
 </script>
 </body>

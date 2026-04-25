@@ -1728,56 +1728,87 @@ window.closeOneConnect = function() {
 window.miniMaps = {}; // Biến lưu trữ các bản đồ mini để tránh tải lại nhiều lần
 
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
-    // 1. Tọa độ giả lập của bạn (Tui) - Sau này sẽ lấy từ GPS thật
-    const myLat = 21.028511; 
-    const myLng = 105.804817;
-    const myAvatar = "https://ui-avatars.com/api/?name=Hiep&background=17a2b8&color=fff";
-    const myColor = "#2196F3"; 
+    const currentUser = localStorage.getItem('currentUser');
+    let myLat, myLng;
 
-    if (!window.miniMaps[mapId]) {
-        // Khởi tạo bản đồ mini
-        const mMap = L.map(mapId, { zoomControl: false, attributionControl: false });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mMap);
-        window.miniMaps[mapId] = mMap;
+    // 💡 KHỐI LỆNH 1: HÀM THỰC THI VẼ (Sẽ được gọi sau khi chốt được tọa độ)
+    const thucHienVeBanDo = () => {
+        const myAvatar = localStorage.getItem("avatar_" + currentUser) || `https://ui-avatars.com/api/?name=${currentUser}&background=17a2b8&color=fff`;
+        const myColor = "#2196F3";
 
-        // Hàm tạo icon giọt nước chứa avt
-        const createDropIcon = (avatar, color) => {
-            return L.divIcon({
-                className: 'custom-waterdrop-icon',
-                html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                iconSize: [1],
-                iconAnchor: [22.5, 45] 
-            });
-        };
+        // Khởi tạo bản đồ mini nếu chưa có
+        if (!window.miniMaps[mapId]) {
+            const mMap = L.map(mapId, { zoomControl: false, attributionControl: false });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mMap);
+            window.miniMaps[mapId] = mMap;
 
-        // Gắn 2 icon location lên bản đồ
-        L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
-        L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
+            const createDropIcon = (avatar, color) => {
+                return L.divIcon({
+                    className: 'custom-waterdrop-icon',
+                    html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
+                    iconSize: [2],
+                    iconAnchor: [22.5, 45]
+                });
+            };
 
-        // 2. GỌI API OSRM ĐỂ TÌM ĐƯỜNG VÀ TÍNH KHOẢNG CÁCH THẬT
-        fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?geometries=geojson`)
-            .then(res => res.json())
-            .then(data => {
-                if(data.routes && data.routes) {
-                    // Vẽ tuyến đường màu xanh 
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[2], coord]);
-                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    
-                    // Căn chỉnh bản đồ tự động zoom để nhìn thấy cả 2 người
-                    mMap.fitBounds(polyline.getBounds(), { padding: [3] });
+            // Gắn 2 marker lên bản đồ
+            L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
+            L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
 
-                    // số liệu khoảng cách thực tế 
-                    const distanceKm = (data.routes.distance / 1000).toFixed(1);
-                    document.getElementById(distId).innerHTML = `${distanceKm} km`;
-                }
-            })
-            .catch(err => console.error("Lỗi OSRM:", err));
-    }
-    setTimeout(() => {
-        if(window.miniMaps[mapId]) {
-            window.miniMaps[mapId].invalidateSize();
+            // GỌI OSRM ĐỂ TÍNH KHOẢNG CÁCH VÀ VẼ ĐƯỜNG
+            fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.routes && data.routes) {
+                        // Vá lỗi lấy tọa độ vẽ đường chuẩn xác của OSRM (Lng, Lat) sang Leaflet (Lat, Lng)
+                        const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[3], coord]);
+                        const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                        
+                        mMap.fitBounds(polyline.getBounds(), { padding: [4] });
+
+                        const distanceKm = (data.routes.distance / 1000).toFixed(1);
+                        document.getElementById(distId).innerHTML = `${distanceKm} km`;
+                    }
+                })
+                .catch(err => {
+                    console.error("Lỗi OSRM:", err);
+                    document.getElementById(distId).innerHTML = "Lỗi tuyến đường";
+                });
         }
-    }, 400);
+
+        // Fix lỗi màn hình xám của Leaflet khi mở Accordion
+        setTimeout(() => {
+            if(window.miniMaps[mapId]) window.miniMaps[mapId].invalidateSize();
+        }, 400);
+    };
+
+    // 💡 KHỐI LỆNH 2: TÌM TỌA ĐỘ BẢN THÂN TRƯỚC KHI VẼ
+    if (typeof latestLatLng !== 'undefined' && latestLatLng !== null) {
+        // Ưu tiên 1: Lấy GPS trực tiếp nếu đang di chuyển
+        myLat = latestLatLng.lat;
+        myLng = latestLatLng.lng;
+        thucHienVeBanDo();
+    } else {
+        // Ưu tiên 2: Nếu không có GPS, tìm vị trí cuối cùng trên Đám mây
+        if (window.db && currentUser) {
+            window.db.ref('nguoi_dung/' + currentUser).once('value').then(snap => {
+                const myData = snap.val();
+                if (myData && myData.toa_do_lat && myData.toa_do_lng) {
+                    myLat = myData.toa_do_lat;
+                    myLng = myData.toa_do_lng;
+                } else {
+                    // Ưu tiên 3: Nếu là tài khoản mới tinh chưa từng có GPS -> Mặc định HUS
+                    myLat = 21.028511;
+                    myLng = 105.804817;
+                }
+                thucHienVeBanDo();
+            });
+        } else {
+            myLat = 21.028511;
+            myLng = 105.804817;
+            thucHienVeBanDo();
+        }
+    }
 };    
     
 // === LOGIC ACCORDION & UX CHO ONE CONNECT ===

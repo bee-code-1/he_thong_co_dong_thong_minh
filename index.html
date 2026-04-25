@@ -2229,7 +2229,7 @@ window.langNgheLocket = function() {
             const baiMoiNhat = posts[posts.length - 1]; 
             if (baiMoiNhat.nguoi_gui !== currentUser) {
                 const noiDungTB = baiMoiNhat.loai === 'text' ? 'đã chia sẻ một ghi chú mới' : 'đã đăng một ảnh mới';
-                window.themThongBaoLocket(baiMoiNhat.avatar, baiMoiNhat.nguoi_gui, noiDungTB);
+                if(typeof window.themThongBaoLocket === 'function') window.themThongBaoLocket(baiMoiNhat.avatar, baiMoiNhat.nguoi_gui, noiDungTB);
             }
         }
         isFirstLoadFeed = false;
@@ -2245,11 +2245,20 @@ window.langNgheLocket = function() {
             let touchEvents = '';
             let interactionBar = '';
 
-            // Nếu là bài CỦA MÌNH -> Cho phép Xóa, KHÔNG hiển thị thanh tương tác
+            // NẾU LÀ BÀI CỦA MÌNH -> Hiện nút XÓA ẢNH rõ ràng
             if (data.nguoi_gui === currentUser) {
+                // Vẫn giữ tính năng nhấn giữ cho ai quen dùng Locket
                 touchEvents = `onmousedown="window.batDauXoaBai('${data.key}')" onmouseup="window.huyXoaBai()" onmouseleave="window.huyXoaBai()" ontouchstart="window.batDauXoaBai('${data.key}')" ontouchend="window.huyXoaBai()" ontouchmove="window.huyXoaBai()"`;
+                
+                // THÊM NÚT BẤM XÓA Ở DƯỚI GÓC PHẢI
+                interactionBar = `
+                <div style="width: 85%; margin: 10px auto 0; display: flex; justify-content: flex-end;">
+                    <button onclick="window.hienPopupXoa('${data.key}')" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 5px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                        🗑️ Xóa bài này
+                    </button>
+                </div>`;
             } else {
-                // Nếu là bài BẠN BÈ -> Hiện thanh Tương tác động
+                // NẾU LÀ BÀI BẠN BÈ -> Hiện thanh Tương tác động (Bình luận + Cảm xúc)
                 interactionBar = `
                 <div style="width: 85%; margin: 10px auto 0; background-color: #e0e0e0; border-radius: 20px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
                     <input type="text" placeholder="Viết bình luận..." 
@@ -2292,25 +2301,30 @@ window.langNgheLocket = function() {
         if (isFirstLoadTuongTac) { isFirstLoadTuongTac = false; return; }
 
         const currentUser = localStorage.getItem('currentUser');
-        // NẾU MÌNH LÀ NGƯỜI NHẬN TƯƠNG TÁC TỪ NGƯỜI KHÁC
         if (data.nguoi_nhan === currentUser && data.nguoi_gui !== currentUser) {
             let noiDungThongBao = data.loai === 'binh_luan' 
                 ? `đã bình luận: "${data.noi_dung}"` 
                 : `cảm thấy ${data.noi_dung} về bài đăng của bạn`;
-            window.themThongBaoLocket(data.avatar, data.nguoi_gui, noiDungThongBao);
+            if(typeof window.themThongBaoLocket === 'function') window.themThongBaoLocket(data.avatar, data.nguoi_gui, noiDungThongBao);
         }
     });
 };
 
 // 4. CƠ CHẾ POPUP XÓA BÀI
+// Hàm mới: Gọi popup hiện lên trực tiếp khi bấm nút
+window.hienPopupXoa = function(key) {
+    idBaiCanXoa = key;
+    const popup = document.getElementById('delete-popup-overlay');
+    if(popup) {
+        popup.style.display = 'flex';
+        setTimeout(() => popup.classList.add('show'), 10);
+    }
+};
+
+// Hàm cũ: Nhấn giữ để xóa (Dành cho ai quen thao tác Locket)
 window.batDauXoaBai = function(key) {
     longPressTimer = setTimeout(() => {
-        idBaiCanXoa = key;
-        const popup = document.getElementById('delete-popup-overlay');
-        if(popup) {
-            popup.style.display = 'flex';
-            setTimeout(() => popup.classList.add('show'), 10);
-        }
+        window.hienPopupXoa(key);
     }, 800); 
 };
 window.huyXoaBai = function() { if (longPressTimer) clearTimeout(longPressTimer); };
@@ -2332,11 +2346,11 @@ window.xacNhanXoaVinhVien = function() {
 
 // 5. KHỞI ĐỘNG HỆ THỐNG KHI F5
 window.addEventListener('load', () => { 
-    window.taiThongBaoLocal(); 
+    if(typeof window.taiThongBaoLocal === 'function') window.taiThongBaoLocal(); 
     setTimeout(() => { 
         if (typeof window.langNgheLocket === 'function') window.langNgheLocket(); 
     }, 2000); 
-})
+});
     
 </script>
 </body>

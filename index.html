@@ -1848,54 +1848,80 @@ window.toggleConnectExpandReal = function(element) {
     }
 };
 
-// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT TỪ FIREBASE ===
+// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LỊCH SỬ OFFLINE) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
     container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
 
-    // Gọi vào Node chứa tọa độ của mọi người trên Firebase
     if (!window.db) {
         container.innerHTML = '<div style="text-align: center; color: #e74c3c; margin-top: 50px;">Chưa kết nối Máy chủ Firebase.</div>';
         return;
     }
 
-    // Quét dữ liệu từ bảng vi_tri_hien_tai
     window.db.ref('vi_tri_hien_tai').once('value').then((snapshot) => {
         const data = snapshot.val();
         if (!data) {
-            container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai bật chia sẻ vị trí.</div>';
+            container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>';
             return;
         }
 
         let html = '';
-        // Lặp qua từng người trong Database
+        const now = Date.now(); // Lấy thời gian hiện tại của máy bạn
+
         for (let userId in data) {
             const user = data[userId];
             
-            // BỎ QUA NẾU ĐÓ LÀ CHÍNH MÌNH (Lọc theo tên đăng nhập hiện tại)
             const currentUsername = localStorage.getItem('gis_username');
             if (userId === currentUsername) continue; 
 
             const lat = user.lat;
             const lng = user.lng;
-            // Giả lập avatar nếu người dùng chưa có ảnh
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
 
-            // Sinh code HTML tự động cho từng người bạn thật
+            // === AI XỬ LÝ THỜI GIAN ONLINE / OFFLINE ===
+            // Lấy thời gian cập nhật cuối cùng, nếu không có thì mặc định là đang online
+            const lastUpdate = user.thoi_gian_cap_nhat || user.thoi_gian || now; 
+            const diffMinutes = Math.floor((now - lastUpdate) / 60000); // Đổi ra phút
+
+            let statusText = "hoạt động gần đây";
+            let dotColor = "#00d26a"; // Màu xanh lá (Online)
+            let opacityStyle = "1";   // Sáng rõ
+            let textOpacity = "1";
+
+            // Nếu quá 5 phút không cập nhật GPS -> Chuyển sang chế độ Offline (Lịch sử)
+            if (diffMinutes > 5) {
+                dotColor = "#999"; // Màu xám (Offline)
+                opacityStyle = "0.6"; // Làm mờ ảnh đại diện đi
+                textOpacity = "0.7";
+                
+                if (diffMinutes < 60) {
+                    statusText = `offline ${diffMinutes} phút trước`;
+                } else {
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+                    if (diffDays > 0) {
+                         statusText = `offline ${diffDays} ngày trước`;
+                    } else {
+                         statusText = `offline ${diffHours} giờ trước`;
+                    }
+                }
+            }
+
+            // Sinh code HTML tự động với trạng thái mờ/sáng tương ứng
             html += `
             <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
                  data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-avatar="${avatar}" data-mapid="${mapId}" data-distid="${distId}">
                 
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                    <div style="position: relative;">
+                    <div style="position: relative; opacity: ${opacityStyle};">
                         <img src="${avatar}" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                        <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #00d26a; border-radius: 50%; border: 2px solid white;"></div>
+                        <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white;"></div>
                     </div>
-                    <div style="flex: 1; text-align: left;">
+                    <div style="flex: 1; text-align: left; opacity: ${textOpacity};">
                         <div style="font-weight: 800; font-size: 17px; color: #333;">${userId}</div>
-                        <div style="font-size: 13px; color: #666; font-weight: 600;">hoạt động gần đây</div>
+                        <div style="font-size: 13px; color: #666; font-weight: 600;">${statusText}</div>
                     </div>
                     <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
                 </div>
@@ -1904,7 +1930,7 @@ window.fetchRealFriends = function() {
                     <div style="padding: 0 20px 20px;">
                         <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); z-index: 1;"></div>
                         <div style="margin-top: 15px; background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                            bạn cách <span style="color: #004BAd;">${userId}</span> <span id="${distId}" style="color: #e74c3c;">đang tính toán OSRM...</span>
+                            bạn cách vị trí cuối của <span style="color: #004BAd;">${userId}</span> <span id="${distId}" style="color: #e74c3c;">đang tính toán...</span>
                         </div>
                     </div>
                 </div>

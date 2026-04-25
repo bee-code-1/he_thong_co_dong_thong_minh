@@ -896,7 +896,6 @@ try {
         firebase.initializeApp(firebaseConfig);
     }
     window.db = firebase.database();
-    window.storage = firebase.storage(); 
     console.log("Đã cắm điện Firebase và Nhà kho thành công!");
 } catch(e) { 
     console.error("Lỗi Firebase:", e); 
@@ -1984,7 +1983,7 @@ window.fetchRealFriends = function() {
 let currentStream = null;
 let facingMode = "user"; 
     
-// === ĐƯỜNG ỐNG BƠM ẢNH LÊN IMGBB 
+// === ĐƯỜNG ỐNG BƠM ẢNH LÊN IMGBB (LÁCH LUẬT FIREBASE) ===
 window.dayAnhLenStorage = function(base64Image) {
     const user = localStorage.getItem('currentUser');
     if (!user) return alert("Vui lòng đăng nhập để gửi ảnh!");
@@ -1992,19 +1991,15 @@ window.dayAnhLenStorage = function(base64Image) {
     console.log("Đang nén và đẩy ảnh lên đám mây ImgBB...");
     const commentInput = document.querySelector('input[placeholder="Nói gì đó....."]');
     if(commentInput) {
-        commentInput.placeholder = "⏳ Đang tải ảnh lên...";
+        commentInput.placeholder = " Đang tải ảnh lên...";
         commentInput.disabled = true;
     }
 
-    // 1. API Key của Hiệp đã được lắp vào đây:
     const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89"; 
-
-    // 2. Tách bỏ đoạn prefix (data:image/jpeg;base64,) chỉ lấy phần lõi ảnh trước khi gửi
     const base64Data = base64Image.split(',')[1]; 
     const formData = new FormData();
     formData.append("image", base64Data);
 
-    // 3. Bơm ảnh thẳng lên máy chủ ImgBB bằng API v1 (POST)
     fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
         method: "POST",
         body: formData
@@ -2012,16 +2007,14 @@ window.dayAnhLenStorage = function(base64Image) {
     .then(response => response.json())
     .then(result => {
         if(result.success) {
-            // 4. THÀNH CÔNG: LẤY ĐƯỢC LINK URL TỪ IMGBB
             const downloadURL = result.data.url;
             console.log("Đã cất kho xong! Lấy được Link URL:", downloadURL);
             
             if(commentInput) {
-                commentInput.placeholder = "✅ Đã tải xong! Nhập bình luận...";
+                commentInput.placeholder = " Đã tải xong! Nhập bình luận...";
                 commentInput.disabled = false;
             }
             
-            // 5. GIAI ĐOẠN 3: Bắn link URL lên Realtime Database để bạn bè nhận được
             if (typeof window.banTinHieuLocket === 'function') {
                 window.banTinHieuLocket(downloadURL);
             }

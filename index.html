@@ -852,41 +852,28 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
 }
 </script>
 
-!-- Cấu hình kết nối vào Đám mây  -->
-    <!-- Tải thư viện Firebase lõi và Database -->
+<!-- Cấu hình kết nối vào Đám mây -->
+<!-- Tải thư viện Firebase lõi và Database -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script>
-    // 1. Dán Cấu hình Firebase 
-    const firebaseConfig = {
-        apiKey: "ĐIỀN_API_KEY_CỦA_BẠN",
-        authDomain: "ĐIỀN_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://ĐIỀN_PROJECT_ID-default-rtdb.firebaseio.com",
-        projectId: "ĐIỀN_PROJECT_ID",
-        storageBucket: "ĐIỀN_PROJECT_ID.appspot.com",
-        messagingSenderId: "ĐIỀN_SENDER_ID",
-        appId: "ĐIỀN_APP_ID"
-    };
-
-    // 2. Khởi tạo máy chủ
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    
-    // 3. Khai báo window.db để các hàm One Connect dùng chung
-    window.db = firebase.database();
-    console.log("Đã cắm điện Firebase thành công!");
-</script>
 <script>
-// === 1. FIREBASE CONFIG ===
+// === 1. FIREBASE CONFIG CHUẨN ===
 const firebaseConfig = {
     databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/"
 };
-try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    window.db = firebase.database();
-} catch(e) { console.error("Lỗi Firebase:", e); }
 
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    window.db = firebase.database();
+    console.log("Đã cắm điện Firebase thành công!");
+} catch(e) { 
+    console.error("Lỗi Firebase:", e); 
+}
+</script>
+
+<script>
 // === 2. BẮN TỌA ĐỘ VÀ RADAR CỘNG ĐỒNG ===
 function banToaDoLenMay(username, lat, lng) {
     let userHeight = localStorage.getItem('appUser_height') || "Chưa nhập";

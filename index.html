@@ -805,58 +805,49 @@ function initGPS() {
         if (!userMarker) { userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map); }
         else { userMarker.setLatLng([lat, lng]); userMarker.setIcon(myIcon); }
 
-        // VẼ ĐƯỜNG ĐI CHUẨN XÁC VÀ TÍNH QUÃNG ĐƯỜNG 3D
-        if (pathLatLngs.length > 0 && isTracking && !isPaused) {
-            const lastPoint = pathLatLngs[pathLatLngs.length - 1];
-            const dist2D = map.distance(lastPoint, currentLatLng);
-            const timeDiff = (currentTimestamp - lastTimestamp) / 1000;
-            const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0;
+// VẼ ĐƯỜNG ĐI CHUẨN XÁC VÀ TÍNH QUÃNG ĐƯỜNG
+if (pathLatLngs.length > 0 && isTracking && !isPaused) {
+    const lastPoint = pathLatLngs[pathLatLngs.length - 1];
+    const dist2D = map.distance(lastPoint, currentLatLng);
 
-            if (dist2D > 5 && currentSpeed < 10) {
-                fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lng}`)
-                    .then(response => response.json())
-                    .then(apiData => {
-                        if (apiData && apiData.results && apiData.results.length > 0) {
-                            const currentZ = apiData.results.elevation || 0; 
-                            window.latestAltitude = currentZ; // Cập nhật độ cao chuẩn xác từ NASA vào biến toàn cục
-                            
-                            const lastZ = lastPoint.alt !== undefined ? lastPoint.alt : currentZ; 
-                            const deltaZ = currentZ - lastZ;
-                            const dist3D = Math.sqrt(Math.pow(dist2D, 2) + Math.pow(deltaZ, 2));
+    // 1. BỘ ĐẾM SIÊU NHẠY: Cứ nhích > 2 mét là nhảy số luôn (Chống lag sân nhà)
+    if (dist2D > 2) {
+        totalDistanceMeter += dist2D;
+        let canNang = parseFloat(userWeight) || 65;
+        let buoc = parseFloat(stepsPerMeter) || 1.42;
 
-                            totalDistanceMeter += dist3D;
-                            currentLatLng.alt = currentZ;
-                        } else {
-                            totalDistanceMeter += dist2D; 
-                        }
+        // Cập nhật giao diện NGAY LẬP TỨC (Không bị phụ thuộc mạng)
+        if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+        if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
+        if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
 
-                        if (username && window.isSharingLocation && window.db) {
-                            window.db.ref('lich_su_di_chuyen/' + username).push({ lat: lat, lng: lng, thoi_gian: currentTimestamp });
-                        }
-                        
-                        let canNang = parseFloat(userWeight) || 65;
-                        let buoc = parseFloat(stepsPerMeter) || 1.42;
-                        
-                        pathLatLngs.push(currentLatLng);
-                        if(polyline) polyline.setLatLngs(pathLatLngs);
-                        lastTimestamp = currentTimestamp;
-                        
-                        if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-                        if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-                        if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
-                    })
-                    .catch(err => {
-                        console.error("Lỗi lấy dữ liệu độ cao:", err);
-                        totalDistanceMeter += dist2D;
-                        pathLatLngs.push(currentLatLng);
-                    });
-            }
-        } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
-            pathLatLngs.push(currentLatLng);
-            lastTimestamp = currentTimestamp;
+        // Lưu tọa độ để vẽ đường lập tức
+        pathLatLngs.push(currentLatLng);
+        if(polyline) polyline.setLatLngs(pathLatLngs);
+        lastTimestamp = currentTimestamp;
+
+        // Bắn lên Firebase nếu đang bật tính năng chia sẻ vị trí cộng đồng
+        if (currentUser && window.isSharingLocation && window.db) {
+            window.db.ref('lich_su_di_chuyen/' + currentUser).push({ lat: currentLatLng.lat, lng: currentLatLng.lng, thoi_gian: currentTimestamp });
         }
+
+        // 2. GỌI API ĐỘ CAO NGẦM (Chạy ngầm phía sau, không làm kẹt giao diện)
+        if (dist2D > 10) { 
+            fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${currentLatLng.lat},${currentLatLng.lng}`)
+            .then(res => res.json())
+            .then(apiData => {
+                if (apiData && apiData.results && apiData.results.length > 0) {
+                    window.latestAltitude = apiData.results.elevation || 0;
+                }
+            }).catch(e => console.log("Lỗi tải độ cao ngầm"));
+        }
+    }
+} else if (!isTracking || isPaused || pathLatLngs.length === 0) {
+    pathLatLngs.push(currentLatLng);
+    lastTimestamp = currentTimestamp;
+}
     }, err => {
-        alert("Lỗi GPS: Vui lòng bật Vị trí.");
+        alert("Lỗi GPS: Vui lòng bật định vị :v ");
     }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
 }
 </script>

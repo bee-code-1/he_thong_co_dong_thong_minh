@@ -1992,7 +1992,7 @@ window.dayAnhLenStorage = function(base64Image) {
     // Đổi trạng thái khung bình luận để báo hiệu cho người dùng
     const commentInput = document.querySelector('input[placeholder="Nói gì đó....."]');
     if(commentInput) {
-        commentInput.placeholder = "⏳ Đang tải ảnh lên...";
+        commentInput.placeholder = " Đang tải ảnh lên...";
         commentInput.disabled = true;
     }
 
@@ -2021,7 +2021,7 @@ window.dayAnhLenStorage = function(base64Image) {
                 console.log("Đã cất kho xong! Lấy được Link URL:", downloadURL);
                 
                 if(commentInput) {
-                    commentInput.placeholder = "✅ Đã tải xong! Nhập bình luận...";
+                    commentInput.placeholder = " Đã tải xong! Nhập bình luận...";
                     commentInput.disabled = false;
                 }
                 

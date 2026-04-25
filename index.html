@@ -82,15 +82,13 @@
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background-color: #fff1e6; 
-    z-index: 4000; /* Nổi lên trên cùng mọi thứ */
-    
-    /* Trạng thái tắt: Thu nhỏ bằng 0, mờ đi và bo tròn như cái icon */
+    background-color: #fff1e6;
+    z-index: 4000;
+    display: flex;          
+    flex-direction: column; 
     transform: scale(0);
     opacity: 0;
     border-radius: 100px;
-    
-    /* Hiệu ứng nảy  */
     transition: transform 0.5s cubic-bezier(0.25, 1, 0.4, 1.2), opacity 0.3s ease, border-radius 0.4s ease;
     pointer-events: none;
     overflow: hidden;
@@ -477,7 +475,7 @@
 </div>
     
 <!-- MÀN HÌNH ONE CONNECT (Sẽ bung nở từ nút 🗺️) -->
-<div id="one-connect-screen" style="display: flex; flex-direction: column;">
+<div id="one-connect-screen">
     
     <!-- Thanh điều hướng trên cùng (Cố định, không bị cuộn) -->
     <div style="padding: 15px 20px; background: #004BAd; color: white; display: flex; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); padding-top: 25px; z-index: 10; flex-shrink: 0;">
@@ -489,6 +487,18 @@
     <div id="danh-sach-ban-be-that" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scrollbar-width: none; -ms-overflow-style: none;">
         <!-- Javascript sẽ đổ code HTML bạn bè vào đây -->
     </div>
+</div>
+    <!-- POPUP XÓA BÀI ĐĂNG -->
+<div id="delete-popup-overlay">
+    <div id="delete-popup-box">
+        <p style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px;">🗑️ Xóa bài này?</p>
+        <p style="font-size: 13px; color: #888; margin-bottom: 20px;">Hành động này không thể hoàn tác.</p>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.dongPopupXoa()" style="flex:1; padding:12px; border-radius:12px; border:none; background:#e0e0e0; font-weight:bold; cursor:pointer;">Hủy</button>
+            <button onclick="window.xacNhanXoaVinhVien()" style="flex:1; padding:12px; border-radius:12px; border:none; background:#dc3545; color:white; font-weight:bold; cursor:pointer;">Xóa vĩnh viễn</button>
+        </div>
+    </div>
+</div>
     
 <script>
     //  KHỞI TẠO BẢN ĐỒ 
@@ -1981,10 +1991,12 @@ window.chupAnhLocket = function() {
 };
 
 window.xuLyTaiAnh = function(event) {
-    const file = event.target.files; if (!file) return;
+    const file = event.target.files[0];  
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) { hienThiBanNhao('image', e.target.result); };
     reader.readAsDataURL(file);
+    event.target.value = '';
 };
 
 window.moTrangThaiGhiChu = function() { hienThiBanNhao('text', null); };
@@ -2011,32 +2023,52 @@ function hienThiBanNhao(type, data) {
     }
 }
 
-window.huyDangBai = function() { window.startLiveCamera(); };
+window.huyDangBai = function() { 
+    window.startLiveCamera(); 
+    // ✅ Bổ sung reset trắng nội dung khi người dùng bấm Hủy
+    const noteInput = document.getElementById('note-input');
+    if (noteInput) noteInput.value = '';
+    cheDoDangBai = null; 
+};
 
 // 3. ĐĂNG BÀI CHÍNH THỨC
 window.xacNhanDangBai = function() {
     const user = localStorage.getItem('currentUser');
     if (!user || !window.db) return alert("Vui lòng đăng nhập!");
     
-    const caption = document.getElementById('draft-caption') ? document.getElementById('draft-caption').value.trim() : '';
-    document.getElementById('draft-overlay').style.display = 'none'; 
-
+    const captionObj = document.getElementById('draft-caption');
+    const caption = captionObj ? captionObj.value.trim() : '';
+    
     if (cheDoDangBai === 'text') {
-        const noteContent = document.getElementById('note-input') ? document.getElementById('note-input').value.trim() : '';
-        if(!noteContent) return window.huyDangBai();
+        const noteObj = document.getElementById('note-input');
+        const noteContent = noteObj ? noteObj.value.trim() : '';
+        
+        if (!noteContent) return window.huyDangBai();
+        
+        document.getElementById('draft-overlay').style.display = 'none';
         dayLenFirebase('text', noteContent, caption);
+        
+        if (noteObj) noteObj.value = ''; // ✅ Reset nội dung sau đăng
+        cheDoDangBai = null; // ✅ Reset trạng thái
+        
     } else if (cheDoDangBai === 'image') {
+        document.getElementById('draft-overlay').style.display = 'none';
+        cheDoDangBai = null; // ✅ Thêm dòng này để reset trạng thái
+        
         console.log("Đang nén và đẩy ảnh lên ImgBB...");
-        const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89"; 
-        const base64Data = anhDangCho.split(',')[1]; 
+        const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89";
+        const base64Data = anhDangCho.split(',')[6];
         const formData = new FormData(); formData.append("image", base64Data);
-
+        
         fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData })
         .then(res => res.json())
         .then(result => {
             if(result.success) dayLenFirebase('image', result.data.url, caption);
             else throw new Error("ImgBB Error");
-        }).catch(err => { alert("Lỗi tải ảnh!"); window.huyDangBai(); });
+        }).catch(err => { 
+            alert("Lỗi tải ảnh!"); 
+            window.huyDangBai(); 
+        });
     }
 };
 

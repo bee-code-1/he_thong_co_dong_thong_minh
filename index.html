@@ -127,6 +127,32 @@
     object-fit: cover;
     transform: rotate(45deg); /* Xoay ngược ảnh lại cho thẳng */
 }
+
+/* === HIỆU ỨNG CUỘN LOCKET & POPUP === */
+.locket-feed-container {
+    flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; 
+    display: flex; flex-direction: column; gap: 30px; 
+    padding-bottom: 120px; scroll-behavior: smooth;
+    scrollbar-width: none; /* Ẩn thanh cuộn */
+}
+.locket-feed-container::-webkit-scrollbar { display: none; }
+
+.snap-item { scroll-snap-align: center; flex-shrink: 0; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+
+/* Popup Xóa Ảnh */
+#delete-popup-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+    z-index: 9999; display: none; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.3s ease; pointer-events: auto;
+}
+#delete-popup-box {
+    background: white; padding: 25px; border-radius: 20px; width: 80%; max-width: 320px;
+    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transform: scale(0.5); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#delete-popup-overlay.show { opacity: 1; }
+#delete-popup-overlay.show #delete-popup-box { transform: scale(1); }
          
     </style>
 </head>
@@ -172,126 +198,76 @@
         </div>
     </div>
 
-<!-- LAYER TAB 3: TRANG CHỦ (GIAO DIỆN LOCKET & WIDGET) -->
+<!-- LAYER TAB 3: TRANG CHỦ (GIAO DIỆN LOCKET & WIDGET MỚI) -->
 <div id="tab-3" class="tab-screen" style="pointer-events: auto;">
-    <!-- Khung bọc Flexbox (Giải quyết triệt để lỗi đè bản đồ) -->
     <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column;">
         
-        <!-- 🌟 KHU VỰC TRÊN CÙNG: WIDGET MÔI TRƯỜNG & STORY BẠN BÈ -->
-        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px;">
-        <!-- Hàng 1: Các Widget Môi trường  -->
-        <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-            <div id="widget-thoi-tiet" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                 Đang đo...
+        <!-- Thanh Widget & Story (Thu gọn bớt khoảng đệm) -->
+        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                <div id="widget-thoi-tiet" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Đang đo...</div>
+                <div id="widget-bui-min" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Chờ GPS...</div>
             </div>
-            <div id="widget-bui-min" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                 Chờ GPS...
-            </div>
-        </div>
-
-            <!-- Hàng 2: Thanh Story Bạn bè (Avatar + Tên + Cuộn ngang) -->
-            <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0 10px 0; scrollbar-width: none; -ms-overflow-style: none;">
-                
-                <!-- Người bạn 1 (Có viền đỏ giả lập Story chưa xem) -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Hiep&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Hiệp</span>
-                </div>
-
-                <!-- Người bạn 2 -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Lan&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Lan Anh</span>
-                </div>
-
-                <!-- Người bạn 3 -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Minh&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Minh</span>
-                </div>
-
-                <!-- Người bạn 4 -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Khoa&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Khoa</span>
-                </div>
-                
-                <!-- Người bạn 5 -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Tu&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Tú</span>
-                </div>
-                
-                 <!-- Người bạn 6 (Viền xám giả lập đã xem) -->
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;">
-                    <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ccc; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                        <img src="https://ui-avatars.com/api/?name=Trang&background=random" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
-                    </div>
-                    <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">Trang</span>
-                </div>
-
+            <!-- Thanh Story mô phỏng -->
+            <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none;">
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; flex-shrink: 0;"><img src="https://ui-avatars.com/api/?name=H" style="width:100%; border-radius:50%;"></div>
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; flex-shrink: 0;"><img src="https://ui-avatars.com/api/?name=M" style="width:100%; border-radius:50%;"></div>
             </div>
         </div>
 
-        <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
-        <div style="padding-bottom: 95px; margin-top: auto;">
-           
-            <!-- KHU VỰC FEED HIỂN THỊ ẢNH NHẬN ĐƯỢC TỪ BẠN BÈ -->
-<div id="khu-vuc-feed-locket"></div>
+        <!-- TRỤC CUỘN DỌC CHÍNH (SNAP SCROLL) -->
+        <div id="locket-scroll-container" class="locket-feed-container">
             
-<!-- 1. KHUNG KÍNH NGẮM LOCKET (LIVE CAMERA) -->
-<div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
-    
-    <!-- Kính ngắm Camera -->
-    <video id="locket-live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
-    
-    <!-- Ảnh hiển thị sau khi chụp hoặc tải lên -->
-    <img id="locket-captured-img" style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 5;" />
+            <!-- ITEM 1: KHUNG CAMERA (Luôn nằm trên cùng) -->
+            <div class="snap-item" style="position: relative; margin-top: 10px;">
+                <div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
+                    
+                    <!-- Lớp Camera Live -->
+                    <video id="locket-live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <div id="btn-flip-camera" onclick="window.flipCamera()" style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;">🔄</div>
+                    
+                    <!-- Lớp Soạn Ghi Chú (Chữ) -->
+                    <div id="text-note-editor" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); z-index: 8; padding: 20px; box-sizing: border-box; justify-content: center; align-items: center;">
+                        <textarea id="note-input" placeholder="Bạn đang nghĩ gì?" style="width: 100%; height: 80%; background: transparent; border: none; outline: none; color: #333; font-size: 24px; font-weight: 900; text-align: center; resize: none;"></textarea>
+                    </div>
 
-    <!-- Nút Lật Camera (Chỉ hiện khi đang bật Video) -->
-    <div id="btn-flip-camera" onclick="window.flipCamera()" style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; backdrop-filter: blur(4px);">🔄</div>
+                    <!-- Lớp Ảnh Preview & Caption (Chờ Xác nhận) -->
+                    <img id="locket-captured-img" style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 15;" />
+                    <div id="draft-overlay" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); z-index: 20; box-sizing: border-box; flex-direction: column; gap: 10px;">
+                        <input type="text" id="draft-caption" placeholder="Thêm mô tả..." style="width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; font-weight: bold; box-sizing: border-box;">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="window.huyDangBai()" style="flex:1; padding: 10px; border-radius: 15px; border: none; background: #dc3545; color: white; font-weight: bold; cursor: pointer;">Hủy bỏ</button>
+                            <button onclick="window.xacNhanDangBai()" style="flex:1; padding: 10px; border-radius: 15px; border: none; background: #28a745; color: white; font-weight: bold; cursor: pointer;">🚀 Đăng</button>
+                        </div>
+                    </div>
+                    <canvas id="locket-canvas" style="display: none;"></canvas>
+                </div>
+                
+                <!-- BỘ NÚT CHỤP ẢNH & VIẾT CHỮ (Chỉ hiện khi chưa chụp) -->
+                <div id="camera-controls" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px;">
+                    <input type="file" id="widget-upload-input" accept="image/*" style="display: none;" onchange="window.xuLyTaiAnh(event)">
+                    <div onclick="document.getElementById('widget-upload-input').click()" style="width: 55px; height: 55px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">🖼️</div>
+                    <div onclick="window.chupAnhLocket()" style="width: 75px; height: 75px; background: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
+                        <div style="width: 45px; height: 45px; border-radius: 50%; border: 4px solid white;"></div>
+                    </div>
+                    <div onclick="window.moTrangThaiGhiChu()" style="width: 55px; height: 55px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">📝</div>
+                </div>
+            </div>
 
-    <!-- Canvas ẩn dùng để cắt ảnh -->
-    <canvas id="locket-canvas" style="display: none;"></canvas>
-</div>
+            <!-- ITEM 2, 3, 4... KHU VỰC FEED (Sẽ được JS nhồi vào dưới dạng các snap-item) -->
+            <div id="khu-vuc-feed-locket" style="display: contents;"></div>
 
-<!-- 2. THANH TƯƠNG TÁC (Giữ nguyên của bạn) -->
-<div style="width: 85%; margin: 0 auto 25px; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-    <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
-    <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
-        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
-        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
-        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
-    </div>
-</div>
-
-<!-- 3. THANH CÔNG CỤ CHỤP / TẢI ẢNH -->
-<div style="display: flex; justify-content: center; align-items: center; gap: 25px;">
-    <!-- Ống ngầm tải ảnh -->
-    <input type="file" id="widget-upload-input" accept="image/*" style="display: none;" onchange="window.xuLyTaiAnh(event)">
-    
-    <!-- Nút Trái (Tải ảnh từ máy) -->
-    <div onclick="document.getElementById('widget-upload-input').click()" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">🖼️</div>
-    
-    <!-- Nút Giữa (Chụp ảnh Live) -->
-    <div onclick="window.chupAnhLocket()" style="width: 80px; height: 80px; background-color: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-        <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
-    </div>
-    
-    <!-- Nút Phải (One Connect - Giữ nguyên) -->
-    <div onclick="window.openOneConnect(this)" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">🗺️</div>
-</div>
         </div>
+    </div>
+</div>
+
+<!-- POPUP XÓA BÀI CỦA CHÍNH MÌNH -->
+<div id="delete-popup-overlay" onclick="window.dongPopupXoa()">
+    <div id="delete-popup-box" onclick="event.stopPropagation()">
+        <h3 style="color: #dc3545; margin-top: 0;">Cảnh báo!</h3>
+        <p style="color: #555; font-size: 14px; font-weight: bold;">Bạn có chắc chắn muốn xóa bài đăng này vĩnh viễn khỏi server không?</p>
+        <button onclick="window.xacNhanXoaVinhVien()" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 10px; font-weight: bold; margin-bottom: 10px; cursor: pointer; font-size: 16px;">🗑️ Xóa vĩnh viễn</button>
+        <button onclick="window.dongPopupXoa()" style="width: 100%; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">Hủy</button>
     </div>
 </div>
 
@@ -1981,155 +1957,135 @@ window.fetchRealFriends = function() {
     });
 };
 
-// === HỆ THỐNG WEBRTC CAMERA (CHUẨN LOCKET) ===
+// === BỘ NÃO CAMERA, GHI CHÚ VÀ LOCKET MỚI ===
 let currentStream = null;
 let facingMode = "user";
+let cheDoDangBai = "none"; // 'image' hoặc 'text'
+let anhDangCho = null; 
+let idBaiCanXoa = null;
+let longPressTimer = null;
 
-// === ĐƯỜNG ỐNG BƠM ẢNH LÊN IMGBB (LÁCH LUẬT FIREBASE) ===
-window.dayAnhLenStorage = function(base64Image) {
-    const user = localStorage.getItem('currentUser');
-    if (!user) return alert("Vui lòng đăng nhập để gửi ảnh!");
-
-    console.log("Đang nén và đẩy ảnh lên đám mây ImgBB...");
-    const commentInput = document.querySelector('input[placeholder="Nói gì đó....."]');
-    if(commentInput) {
-        commentInput.placeholder = "⏳ Đang tải ảnh lên...";
-        commentInput.disabled = true;
-    }
-
-    const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89"; 
-    const base64Data = base64Image.split(',')[1]; 
-    const formData = new FormData();
-    formData.append("image", base64Data);
-
-    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: "POST",
-        body: formData
-    })
-    .then(response => response.json())
-    .then(result => {
-        if(result.success) {
-            const downloadURL = result.data.url;
-            console.log("Đã cất kho xong! Lấy được Link URL:", downloadURL);
-            
-            if(commentInput) {
-                commentInput.placeholder = "✅ Đã tải xong! Nhập bình luận...";
-                commentInput.disabled = false;
-            }
-            
-            if (typeof window.banTinHieuLocket === 'function') {
-                window.banTinHieuLocket(downloadURL);
-            }
-        } else {
-            throw new Error("Lỗi từ server ImgBB");
-        }
-    })
-    .catch(error => {
-        console.error("Lỗi upload ảnh:", error);
-        if(commentInput) {
-            commentInput.placeholder = "Nói gì đó.....";
-            commentInput.disabled = false;
-        }
-        alert("Lỗi tải ảnh lên đám mây! Hãy thử lại.");
-    });
-};
-
-// Hàm xin quyền và bật Camera
+// 1. MỞ CAMERA TRỰC TIẾP
 window.startLiveCamera = async function() {
     const video = document.getElementById('locket-live-video');
-    const img = document.getElementById('locket-captured-img');
-    const btnFlip = document.getElementById('btn-flip-camera');
-
-    if(img) img.style.display = 'none';
+    if(document.getElementById('locket-captured-img')) document.getElementById('locket-captured-img').style.display = 'none';
+    if(document.getElementById('text-note-editor')) document.getElementById('text-note-editor').style.display = 'none';
+    if(document.getElementById('draft-overlay')) document.getElementById('draft-overlay').style.display = 'none';
+    if(document.getElementById('camera-controls')) document.getElementById('camera-controls').style.display = 'flex';
+    
     if(video) video.style.display = 'block';
-    if(btnFlip) btnFlip.style.display = 'flex';
-
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-    }
+    if(document.getElementById('btn-flip-camera')) document.getElementById('btn-flip-camera').style.display = 'flex';
+    
+    cheDoDangBai = "none";
+    if (currentStream) currentStream.getTracks().forEach(track => track.stop());
     try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } },
-            audio: false
-        });
-        video.srcObject = currentStream;
-        video.style.transform = facingMode === "user" ? "scaleX(-1)" : "scaleX(1)";
-    } catch (err) {
-        console.error("Lỗi bật Camera: ", err);
-        alert("Không thể mở Camera. Vui lòng cấp quyền máy ảnh cho trang web!");
-    }
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } }, audio: false });
+        if(video) {
+            video.srcObject = currentStream;
+            video.style.transform = facingMode === "user" ? "scaleX(-1)" : "scaleX(1)";
+        }
+    } catch (err) { console.error("Lỗi Camera", err); }
 };
 
-// Hàm lật Camera (Trước <-> Sau)
-window.flipCamera = function() {
-    facingMode = facingMode === "user" ? "environment" : "user";
-    window.startLiveCamera();
-};
+window.flipCamera = function() { facingMode = facingMode === "user" ? "environment" : "user"; window.startLiveCamera(); };
 
-// Hàm Bấm nút chụp (Nút giữa)
+// 2. CHỤP ẢNH / TẢI ẢNH -> VÀO CHẾ ĐỘ CHỜ XÁC NHẬN (DRAFT)
 window.chupAnhLocket = function() {
     const video = document.getElementById('locket-live-video');
     const canvas = document.getElementById('locket-canvas');
-    const img = document.getElementById('locket-captured-img');
-    const btnFlip = document.getElementById('btn-flip-camera');
-
-    if (!currentStream) {
-        window.startLiveCamera();
-        return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (!currentStream) { window.startLiveCamera(); return; }
+    
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    
-    if (facingMode === "user") {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
+    if (facingMode === "user") { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
     
-    img.src = imageDataURL;
-    img.style.display = 'block';
-    video.style.display = 'none';
-    btnFlip.style.display = 'none';
-
-    currentStream.getTracks().forEach(track => track.stop());
-    currentStream = null;
-
-    // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH LÊN MÂY
-    window.dayAnhLenStorage(imageDataURL);
+    anhDangCho = canvas.toDataURL('image/jpeg', 0.8);
+    hienThiBanNhao('image', anhDangCho);
 };
 
-// Hàm Tải ảnh từ máy (Nút trái)
 window.xuLyTaiAnh = function(event) {
-    const file = event.target.files;
-    if (!file) return;
-
+    const file = event.target.files; if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = document.getElementById('locket-captured-img');
-        const video = document.getElementById('locket-live-video');
-        const btnFlip = document.getElementById('btn-flip-camera');
-
-        img.src = e.target.result;
-        img.style.display = 'block';
-        video.style.display = 'none';
-        btnFlip.style.display = 'none';
-
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-            currentStream = null;
-        }
-
-        // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH LÊN MÂY
-        window.dayAnhLenStorage(e.target.result);
-    };
+    reader.onload = function(e) { hienThiBanNhao('image', e.target.result); };
     reader.readAsDataURL(file);
 };
 
-// TÍCH HỢP UX: Bật Camera khi vào Trang chủ
+window.moTrangThaiGhiChu = function() { hienThiBanNhao('text', null); };
+
+function hienThiBanNhao(type, data) {
+    cheDoDangBai = type;
+    if(document.getElementById('locket-live-video')) document.getElementById('locket-live-video').style.display = 'none';
+    if(document.getElementById('btn-flip-camera')) document.getElementById('btn-flip-camera').style.display = 'none';
+    if(document.getElementById('camera-controls')) document.getElementById('camera-controls').style.display = 'none';
+    if(document.getElementById('draft-overlay')) document.getElementById('draft-overlay').style.display = 'flex';
+    if(document.getElementById('draft-caption')) document.getElementById('draft-caption').value = '';
+
+    if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); currentStream = null; }
+
+    if (type === 'image') {
+        anhDangCho = data;
+        const img = document.getElementById('locket-captured-img');
+        img.src = data; img.style.display = 'block';
+        if(document.getElementById('text-note-editor')) document.getElementById('text-note-editor').style.display = 'none';
+    } else {
+        if(document.getElementById('locket-captured-img')) document.getElementById('locket-captured-img').style.display = 'none';
+        if(document.getElementById('text-note-editor')) document.getElementById('text-note-editor').style.display = 'flex';
+        if(document.getElementById('note-input')) document.getElementById('note-input').value = '';
+    }
+}
+
+window.huyDangBai = function() { window.startLiveCamera(); };
+
+// 3. ĐĂNG BÀI CHÍNH THỨC
+window.xacNhanDangBai = function() {
+    const user = localStorage.getItem('currentUser');
+    if (!user || !window.db) return alert("Vui lòng đăng nhập!");
+    
+    const caption = document.getElementById('draft-caption') ? document.getElementById('draft-caption').value.trim() : '';
+    document.getElementById('draft-overlay').style.display = 'none'; 
+
+    if (cheDoDangBai === 'text') {
+        const noteContent = document.getElementById('note-input') ? document.getElementById('note-input').value.trim() : '';
+        if(!noteContent) return window.huyDangBai();
+        dayLenFirebase('text', noteContent, caption);
+    } else if (cheDoDangBai === 'image') {
+        console.log("Đang nén và đẩy ảnh lên ImgBB...");
+        const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89"; 
+        const base64Data = anhDangCho.split(',')[1]; 
+        const formData = new FormData(); formData.append("image", base64Data);
+
+        fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData })
+        .then(res => res.json())
+        .then(result => {
+            if(result.success) dayLenFirebase('image', result.data.url, caption);
+            else throw new Error("ImgBB Error");
+        }).catch(err => { alert("Lỗi tải ảnh!"); window.huyDangBai(); });
+    }
+};
+
+function dayLenFirebase(type, urlOrText, caption) {
+    const user = localStorage.getItem('currentUser');
+    const avatar = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
+    
+    window.db.ref('bang_tin_tong_hop').push({
+        nguoi_gui: user,
+        loai: type,
+        noi_dung: urlOrText,
+        loi_nhan: caption,
+        thoi_gian: Date.now(),
+        avatar: avatar
+    }).then(() => {
+        console.log("Đăng bài thành công!");
+        window.startLiveCamera();
+        setTimeout(() => {
+            const feed = document.getElementById('locket-scroll-container');
+            if(feed) feed.scrollBy({ top: 400, behavior: 'smooth' });
+        }, 500);
+    });
+}
+
+// TÍCH HỢP UX: Tự động bật Camera khi người dùng vuốt sang Tab 3 (Trang chủ)
 const oldSwitchTab = window.switchTab;
 window.switchTab = function(tabIndex) {
     if(typeof oldSwitchTab === 'function') oldSwitchTab(tabIndex);
@@ -2146,247 +2102,86 @@ window.switchTab = function(tabIndex) {
     }
 };
 
-// === HỆ THỐNG PHÁT & NHẬN TÍN HIỆU LOCKET (GIAI ĐOẠN 3) ===
-window.banTinHieuLocket = function(imageUrl) {
-    const user = localStorage.getItem('currentUser');
-    if (!user || !window.db) return;
-
-    const commentInput = document.querySelector('input[placeholder="✅ Đã tải xong! Nhập bình luận..."]');
-    const loiNhan = commentInput ? commentInput.value : "";
-
-    window.db.ref('bang_tin_anh/moi_nhat').set({
-        nguoi_gui: user,
-        anh_url: imageUrl,
-        loi_nhan: loiNhan,
-        thoi_gian: Date.now(),
-        avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`
-    }).then(() => {
-        console.log("Đã phát sóng ảnh thành công toàn server!");
-        if(commentInput) {
-            commentInput.value = "";
-            commentInput.placeholder = "Nói gì đó.....";
-        }
-    }).catch(err => console.error("Lỗi phát sóng: ", err));
-};
-
-// === BỘ CÔNG CỤ XỬ LÝ GIAO DIỆN VÀ TƯƠNG TÁC LOCKET (BẢN CHUẨN UX) ===
-window.nguoiDangAnhHienTai = ""; // Biến ghi nhớ chủ nhân của bức ảnh hiện tại
-
-window.formatAMPM = function(timestamp) {
-    let date = new Date(timestamp);
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    let ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12; hours = hours ? hours : 12; 
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    return hours + ':' + minutes + ' ' + ampm;
-};
-
-// 1. HỆ THỐNG THÔNG BÁO LƯU MÁY (Giao diện giống Danh sách bạn bè)
-let timerXoaTB = null;
-window.batDauXoaTB = function(idTB) {
-    timerXoaTB = setTimeout(() => {
-        if(confirm("Xóa thông báo này?")) {
-            document.getElementById(idTB).remove();
-            window.luuThongBaoLocal();
-        }
-    }, 1000); // Nhấn giữ 1 giây
-};
-window.huyXoaTB = function() {
-    if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; }
-};
-
-// Hàm sinh Giao diện Thông báo chuẩn 
-window.themThongBaoLocket = function(avatar, ten, noiDung) {
-    const timeStr = window.formatAMPM(Date.now());
-    const idTB = 'tb_' + Date.now() + Math.floor(Math.random()*1000);
-    
-    // Giao diện dải chữ nhật xám, có icon Pin chứa Avatar bên trái (Y hệt mục kết bạn)
-    const tbHTML = `
-        <div id="${idTB}" class="thong-bao-item" 
-             onmousedown="window.batDauXoaTB('${idTB}')" onmouseup="window.huyXoaTB()" onmouseleave="window.huyXoaTB()"
-             ontouchstart="window.batDauXoaTB('${idTB}')" ontouchend="window.huyXoaTB()" ontouchmove="window.huyXoaTB()"
-             style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; user-select: none;">
-            
-            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
-                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#004BAd" />
-                </svg>
-                <img src="${avatar}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
-                <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: #00C853; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
-            </div>
-
-            <div style="flex: 1; text-align: left;">
-                <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 3px;">${ten}</div>
-                <div style="font-size: 13px; color: #555; line-height: 1.4;">${noiDung}</div>
-                <div style="font-size: 11px; color: #888; margin-top: 4px;">🕒 ${timeStr}</div>
-            </div>
-        </div>
-    `;
-    const container = document.getElementById('list-thong-bao-content');
-    if (container.innerText.includes('Không có thông báo')) container.innerHTML = '';
-    container.insertAdjacentHTML('afterbegin', tbHTML);
-    window.luuThongBaoLocal(); // LƯU VÀO MÁY NGƯỜI DÙNG
-
-    const chamDo = document.getElementById('cham-do-thong-bao');
-    if(chamDo) chamDo.style.display = 'block';
-};
-
-window.luuThongBaoLocal = function() {
-    const container = document.getElementById('list-thong-bao-content');
-    localStorage.setItem('locket_notifications', container.innerHTML);
-};
-
-window.taiThongBaoLocal = function() {
-    const savedData = localStorage.getItem('locket_notifications');
-    const container = document.getElementById('list-thong-bao-content');
-    if (savedData && savedData.trim() !== '') {
-        container.innerHTML = savedData;
-    }
-};
-
-// 2. GỬI TƯƠNG TÁC (BÌNH LUẬN / CẢM XÚC) BẰNG THANH CÓ SẴN
-window.guiTuongTac = function(loai, noiDung) {
-    const user = localStorage.getItem('currentUser');
-    // Nếu chưa đăng nhập, chưa có mạng, hoặc ảnh là của chính mình thì không bắn lên
-    if (!user || !window.db || !window.nguoiDangAnhHienTai) return;
-    if (user === window.nguoiDangAnhHienTai) return; 
-
-    // Bắn tín hiệu tương tác lên Đám mây
-    window.db.ref('tuong_tac_anh/moi_nhat').set({
-        nguoi_gui: user,
-        nguoi_nhan: window.nguoiDangAnhHienTai,
-        loai: loai,
-        noi_dung: noiDung,
-        avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`,
-        thoi_gian: Date.now()
-    });
-};
-
-// Đánh thức thanh Bình Luận tĩnh trên trang
-window.khoiTaoThanhTuongTac = function() {
-    const inputBinhLuan = document.querySelector('#tab-3 input[type="text"]');
-    if (inputBinhLuan) {
-        // Gắn chức năng: Nhấn Enter để gửi Bình luận
-        inputBinhLuan.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && this.value.trim() !== '' && !this.disabled) {
-                window.guiTuongTac('binh_luan', this.value.trim());
-                this.value = ''; // Xóa trắng sau khi gửi
-                // Tạo thông báo nhỏ tạm thời
-                const oldPh = this.placeholder;
-                this.placeholder = "Đã gửi bình luận!";
-                setTimeout(() => { this.placeholder = oldPh; }, 2000);
-            }
-        });
-
-        // Gắn chức năng cho 3 nút cảm xúc
-        const camXucContainer = inputBinhLuan.nextElementSibling;
-        if (camXucContainer && camXucContainer.children.length >= 3) {
-            camXucContainer.children.onclick = function() {
-                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
-                window.guiTuongTac('cam_xuc', '❤️');
-            };
-            camXucContainer.children[1].onclick = function() {
-                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
-                window.guiTuongTac('cam_xuc', '🔥');
-            };
-            camXucContainer.children[2].onclick = function() {
-                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
-                window.guiTuongTac('cam_xuc', '😢');
-            };
-        }
-    }
-};
-
-// 3. BỘ NÃO LẮNG NGHE LOCKET (BẢN FIX LỖI ĐÚP THÔNG BÁO)
-let isFirstLoadAnh = true;
-let isFirstLoadTuongTac = true;
-
+// 4. LẮNG NGHE & RENDER FEED (SCROLL SNAP)
 window.langNgheLocket = function() {
     if (!window.db) return;
     
-    // A. LẮNG NGHE ẢNH MỚI
-    window.db.ref('bang_tin_anh/moi_nhat').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        const timeStr = window.formatAMPM(data.thoi_gian);
+    window.db.ref('bang_tin_tong_hop').limitToLast(30).on('value', (snapshot) => {
+        const feedContainer = document.getElementById('khu-vuc-feed-locket');
+        if (!feedContainer) return;
+        feedContainer.innerHTML = ''; 
+        
         const currentUser = localStorage.getItem('currentUser');
-        window.nguoiDangAnhHienTai = data.nguoi_gui; // Lưu chủ ảnh lại
+        let posts = [];
+        snapshot.forEach(child => {
+            posts.push({ key: child.key, ...child.val() });
+        });
         
-        const cameraFrame = document.getElementById('locket-main-frame');
-        if (cameraFrame) cameraFrame.style.display = 'none';
-
-        // Render Khung ảnh xanh và Lời nhắn cam (Nếu có)
-        const postHTML = `
-            <div style="margin-bottom: 25px; animation: fadeIn 0.5s;">
-                <div style="width: 85%; aspect-ratio: 1; border-radius: 25px; margin: 0 auto 5px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden; background-color: #28a745;">
-                    <img src="${data.anh_url}" style="width: 100%; height: 100%; object-fit: cover;" />
-                    <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3); object-fit: cover; background: #004BAd; z-index: 2;" />
-                    
-                    ${data.loi_nhan && data.loi_nhan.trim() !== "" ? 
-                    `<div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">
-                        ${data.loi_nhan}
-                    </div>` : ''}
-                </div>
-                <div style="text-align: center; color: #555; font-size: 13px; font-weight: bold; margin-bottom: 10px;">
-                    🕒 ${timeStr}
-                </div>
-            </div>
-        `;
-        
-        const feed = document.getElementById('khu-vuc-feed-locket');
-        if(feed) feed.innerHTML = postHTML;
-        
-        // 🚨 CHỐT CHẶN: Bỏ qua lần load đầu tiên, chỉ thông báo khi có cập nhật mới
-        if (isFirstLoadAnh) {
-            isFirstLoadAnh = false;
-        } else {
-            if (data.nguoi_gui !== currentUser) {
-                window.themThongBaoLocket(data.avatar, data.nguoi_gui, "đã đăng một ảnh mới");
+        posts.reverse().forEach(data => {
+            let timeDate = new Date(data.thoi_gian);
+            let hours = timeDate.getHours();
+            let minutes = timeDate.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12; hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            let timeStr = hours + ':' + minutes + ' ' + ampm;
+            
+            let touchEvents = '';
+            if (data.nguoi_gui === currentUser) {
+                touchEvents = `onmousedown="window.batDauXoaBai('${data.key}')" onmouseup="window.huyXoaBai()" onmouseleave="window.huyXoaBai()" ontouchstart="window.batDauXoaBai('${data.key}')" ontouchend="window.huyXoaBai()" ontouchmove="window.huyXoaBai()"`;
             }
-        }
-    });
 
-    // B. LẮNG NGHE TƯƠNG TÁC (BÌNH LUẬN & CẢM XÚC)
-    window.db.ref('tuong_tac_locket/moi_nhat').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        // 🚨 CHỐT CHẶN: Bỏ qua lần load đầu tiên
-        if (isFirstLoadTuongTac) {
-            isFirstLoadTuongTac = false;
-            return; 
-        }
-
-        const currentUser = localStorage.getItem('currentUser');
-        
-        if (data.nguoi_nhan === currentUser && data.nguoi_gui !== currentUser) {
-            let noiDungThongBao = "";
-            if (data.loai === 'binh_luan') {
-                noiDungThongBao = `đã bình luận: "${data.noi_dung}"`;
-            } else if (data.loai === 'cam_xuc') {
-                noiDungThongBao = `cảm thấy ${data.noi_dung} về ảnh của bạn`;
+            let innerContent = '';
+            if (data.loai === 'text') {
+                innerContent = `<div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #222; font-size: 22px; font-weight: 900; text-align: center; padding: 20px; box-sizing: border-box; word-wrap: break-word;">${data.noi_dung}</div>`;
+            } else {
+                innerContent = `<img src="${data.noi_dung}" style="width: 100%; height: 100%; object-fit: cover;" />`;
             }
-            window.themThongBaoLocket(data.avatar, data.nguoi_gui, noiDungThongBao);
-        }
+
+            let postHTML = `
+            <div class="snap-item">
+                <div ${touchEvents} style="width: 85%; aspect-ratio: 1; border-radius: 25px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden; background-color: #28a745; cursor: pointer;">
+                    ${innerContent}
+                    <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; object-fit: cover; z-index: 2;" />
+                    ${data.loi_nhan ? `<div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background: #fd7e14; border-radius: 12px; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">${data.loi_nhan}</div>` : ''}
+                </div>
+                <div style="text-align: center; color: #555; font-size: 13px; font-weight: bold; margin-top: 10px;">
+                    ${data.nguoi_gui} • 🕒 ${timeStr}
+                </div>
+            </div>`;
+            
+            feedContainer.insertAdjacentHTML('beforeend', postHTML);
+        });
     });
 };
 
-// KHỞI ĐỘNG HỆ THỐNG
-window.addEventListener('load', () => {
-    window.taiThongBaoLocal();
-    window.khoiTaoThanhTuongTac();
-    setTimeout(() => {
-        if (typeof window.langNgheLocket === 'function') window.langNgheLocket();
-    }, 2000);
-});
-
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (typeof window.langNgheLocket === 'function') window.langNgheLocket();
-    }, 2000);
-});
+// 5. CƠ CHẾ POPUP XÓA BÀI
+window.batDauXoaBai = function(key) {
+    longPressTimer = setTimeout(() => {
+        idBaiCanXoa = key;
+        const popup = document.getElementById('delete-popup-overlay');
+        if(popup) {
+            popup.style.display = 'flex';
+            setTimeout(() => popup.classList.add('show'), 10);
+        }
+    }, 800); 
+};
+window.huyXoaBai = function() { if (longPressTimer) clearTimeout(longPressTimer); };
+window.dongPopupXoa = function() {
+    const popup = document.getElementById('delete-popup-overlay');
+    if(popup) {
+        popup.classList.remove('show');
+        setTimeout(() => popup.style.display = 'none', 300);
+    }
+    idBaiCanXoa = null;
+};
+window.xacNhanXoaVinhVien = function() {
+    if(idBaiCanXoa && window.db) {
+        window.db.ref('bang_tin_tong_hop/' + idBaiCanXoa).remove().then(() => {
+            window.dongPopupXoa();
+        });
+    }
+};
     
 </script>
 </body>

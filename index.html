@@ -560,31 +560,6 @@ window.capNhatThoiTietAQI = function(lat, lng) {
         })
         .catch(err => console.error("Lỗi cập nhật API môi trường:", err));
 };
-    // TẢI DỮ LIỆU QGIS Thanh Oai
-    fetch('bando_thanhoai.geojson')
-        .then(response => response.json())
-        .then(data => {
-            const thanhOaiLayer = L.geoJSON(data, {
-                style: function (feature) {
-                    return { color: "#ff7800", weight: 2, opacity: 0.8, fillColor: "#ffff00", fillOpacity: 0.2 };
-                },
-                onEachFeature: function (feature, layer) {
-                    if (feature.properties) {
-                        let popupContent = "<b>Thông tin khu vực:</b><br>";
-                        for (let key in feature.properties) {
-                            popupContent += `${key}: ${feature.properties[key]}<br>`;
-                        }
-                        layer.bindPopup(popupContent);
-                    }
-                }
-            }).addTo(map);
-            // Tự động zoom đến khu vực Thanh Oai
-            map.fitBounds(thanhOaiLayer.getBounds());
-            console.log("Đã tải thành công dữ liệu Thanh Oai!");
-        })
-        .catch(error => {
-            console.warn("Chưa tải được dữ liệu Thanh Oai hoặc sai định dạng:", error);
-        });
 
         //  BIẾN TOÀN CỤC
         let currentUser = "", userWeight = 65, stepsPerMeter = 0;

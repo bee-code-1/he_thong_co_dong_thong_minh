@@ -1752,14 +1752,6 @@ window.closeOneConnect = function() {
 };
 
 // === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
-window.miniMaps = {}; // Biến lưu trữ các bản đồ mini để tránh tải lại nhiều lần
-
-// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
-window.miniMaps = {}; 
-
-// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
-window.miniMaps = {};
-// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
 window.miniMaps = {};
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
     const currentUser = localStorage.getItem('currentUser');
@@ -1778,7 +1770,7 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                 return L.divIcon({
                     className: 'custom-waterdrop-icon',
                     html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                    iconSize: [1],
+                    iconSize: [1], /* TỚ ĐÃ ĐIỀN CHÍNH XÁC KÍCH THƯỚC VÀO ĐÂY */
                     iconAnchor: [22.5, 45]
                 });
             };
@@ -1786,14 +1778,14 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
             L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
 
-            // FIX CÚ PHÁP OSRM VÀ ĐẢO CHIỀU TỌA ĐỘ
+            // FIX CÚ PHÁP OSRM VÀ ĐẢO CHIỀU TỌA ĐỘ TỪ [LNG, LAT] SANG [LAT, LNG]
             fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?overview=full&geometries=geojson`)
             .then(res => res.json())
             .then(data => {
                 if(data.routes && data.routes.length > 0) {
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[2], coord]);
+                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[3], coord]); /* ĐẢO TỌA ĐỘ CHUẨN XÁC */
                     const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: [3] });
+                    mMap.fitBounds(polyline.getBounds(), { padding: [2] }); /* TỚ ĐÃ ĐIỀN PADDING 20px VÀO ĐÂY */
                     
                     const distanceKm = (data.routes.distance / 1000).toFixed(1);
                     document.getElementById(distId).innerHTML = `${distanceKm} km`;

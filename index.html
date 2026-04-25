@@ -178,8 +178,7 @@
     <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column;">
         
         <!-- 🌟 KHU VỰC TRÊN CÙNG: WIDGET MÔI TRƯỜNG & STORY BẠN BÈ -->
-        <div id="top-widget-area" style="flex: 1; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow: hidden;">
-            
+        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px;">
         <!-- Hàng 1: Các Widget Môi trường  -->
         <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
             <div id="widget-thoi-tiet" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
@@ -245,7 +244,7 @@
         </div>
 
         <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
-        <div style="padding-bottom: 95px;"> <!-- Chừa khoảng trống 95px cho thanh điều hướng đáy -->
+        <div style="padding-bottom: 95px; margin-top: auto;">
            
             <!-- KHU VỰC FEED HIỂN THỊ ẢNH NHẬN ĐƯỢC TỪ BẠN BÈ -->
 <div id="khu-vuc-feed-locket"></div>
@@ -355,7 +354,7 @@
     </div>
 </div>
 <!-- LAYER TAB 5: THÔNG BÁO & CÀI ĐẶT -->
-<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto;">
+<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 100px;">
     <div style="padding: 20px; text-align: left;">
         
        <!-- Header Tab 5 -->
@@ -2254,7 +2253,7 @@ window.guiTuongTac = function(loai, noiDung) {
     if (user === window.nguoiDangAnhHienTai) return; 
 
     // Bắn tín hiệu tương tác lên Đám mây
-    window.db.ref('tuong_tac_locket/moi_nhat').set({
+    window.db.ref('tuong_tac_anh/moi_nhat').set({
         nguoi_gui: user,
         nguoi_nhan: window.nguoiDangAnhHienTai,
         loai: loai,
@@ -2299,7 +2298,10 @@ window.khoiTaoThanhTuongTac = function() {
     }
 };
 
-// 3. BỘ NÃO LẮNG NGHE LOCKET (Nhận ảnh & Nhận Tương tác)
+// 3. BỘ NÃO LẮNG NGHE LOCKET (BẢN FIX LỖI ĐÚP THÔNG BÁO)
+let isFirstLoadAnh = true;
+let isFirstLoadTuongTac = true;
+
 window.langNgheLocket = function() {
     if (!window.db) return;
     
@@ -2310,7 +2312,7 @@ window.langNgheLocket = function() {
 
         const timeStr = window.formatAMPM(data.thoi_gian);
         const currentUser = localStorage.getItem('currentUser');
-        window.nguoiDangAnhHienTai = data.nguoi_gui; // Lưu chủ ảnh lại để lát còn biết gửi bình luận cho ai
+        window.nguoiDangAnhHienTai = data.nguoi_gui; // Lưu chủ ảnh lại
         
         const cameraFrame = document.getElementById('locket-main-frame');
         if (cameraFrame) cameraFrame.style.display = 'none';
@@ -2336,9 +2338,13 @@ window.langNgheLocket = function() {
         const feed = document.getElementById('khu-vuc-feed-locket');
         if(feed) feed.innerHTML = postHTML;
         
-        // Gửi thông báo ảnh mới
-        if (data.nguoi_gui !== currentUser) {
-            window.themThongBaoLocket(data.avatar, data.nguoi_gui, "đã đăng một ảnh mới");
+        // 🚨 CHỐT CHẶN: Bỏ qua lần load đầu tiên, chỉ thông báo khi có cập nhật mới
+        if (isFirstLoadAnh) {
+            isFirstLoadAnh = false;
+        } else {
+            if (data.nguoi_gui !== currentUser) {
+                window.themThongBaoLocket(data.avatar, data.nguoi_gui, "đã đăng một ảnh mới");
+            }
         }
     });
 
@@ -2347,9 +2353,14 @@ window.langNgheLocket = function() {
         const data = snapshot.val();
         if (!data) return;
 
+        // 🚨 CHỐT CHẶN: Bỏ qua lần load đầu tiên
+        if (isFirstLoadTuongTac) {
+            isFirstLoadTuongTac = false;
+            return; 
+        }
+
         const currentUser = localStorage.getItem('currentUser');
         
-        // NẾU MÌNH CHÍNH LÀ NGƯỜI NHẬN (Ảnh do mình đăng) thì nảy thông báo!
         if (data.nguoi_nhan === currentUser && data.nguoi_gui !== currentUser) {
             let noiDungThongBao = "";
             if (data.loai === 'binh_luan') {

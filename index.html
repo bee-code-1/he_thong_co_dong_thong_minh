@@ -2322,12 +2322,27 @@ window.hienPopupXoa = function(key) {
 };
 
 // Hàm cũ: Nhấn giữ để xóa (Dành cho ai quen thao tác Locket)
+// === CƠ CHẾ POPUP XÓA BÀI (CHUẨN 100%) ===
+
+// Hàm 1: Gọi popup hiện lên trực tiếp khi bấm nút Xóa
+window.hienPopupXoa = function(key) {
+    idBaiCanXoa = key;
+    const popup = document.getElementById('delete-popup-overlay');
+    if(popup) {
+        popup.style.display = 'flex';
+        setTimeout(() => popup.classList.add('show'), 10);
+    }
+};
+
+// Hàm 2: Nhấn giữ để xóa (Dùng lại Hàm 1 để nảy popup)
 window.batDauXoaBai = function(key) {
     longPressTimer = setTimeout(() => {
         window.hienPopupXoa(key);
     }, 800); 
 };
 window.huyXoaBai = function() { if (longPressTimer) clearTimeout(longPressTimer); };
+
+// Hàm 3: Rút Popup xuống khi bấm Hủy hoặc Xóa xong
 window.dongPopupXoa = function() {
     const popup = document.getElementById('delete-popup-overlay');
     if(popup) {
@@ -2336,10 +2351,13 @@ window.dongPopupXoa = function() {
     }
     idBaiCanXoa = null;
 };
+
+// Hàm 4: Xác nhận "Trảm" bài đăng khỏi Firebase
 window.xacNhanXoaVinhVien = function() {
     if(idBaiCanXoa && window.db) {
         window.db.ref('bang_tin_tong_hop/' + idBaiCanXoa).remove().then(() => {
             window.dongPopupXoa();
+            console.log("Đã xóa bài đăng thành công!");
         });
     }
 };

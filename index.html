@@ -6,6 +6,7 @@
     <title>con chó</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -246,32 +247,48 @@
         <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
         <div style="padding-bottom: 95px;"> <!-- Chừa khoảng trống 95px cho thanh điều hướng đáy -->
             
-            <!-- 1. KHU VỰC ẢNH CỦA BẠN BÈ -->
-            <div style="width: 85%; aspect-ratio: 1; background-color: #28a745; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2);">
-                <div style="position: absolute; bottom: 5px; left: 10px; width: 65px; height: 65px; background-color: #004BAd; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
-                <div style="position: absolute; bottom: 15px; left: 85px; right: 15px; height: 45px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
-            </div>
+<!-- 1. KHUNG KÍNH NGẮM LOCKET (LIVE CAMERA) -->
+<div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
+    
+    <!-- Kính ngắm Camera -->
+    <video id="locket-live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+    
+    <!-- Ảnh hiển thị sau khi chụp hoặc tải lên -->
+    <img id="locket-captured-img" style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 5;" />
 
-            <!-- 2. THANH TƯƠNG TÁC (Bình luận & Cảm xúc) -->
-            <div style="width: 85%; margin: 0 auto 25px; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-                <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
-                <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
-                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
-                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
-                    <span style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
-                </div>
-            </div>
+    <!-- Nút Lật Camera (Chỉ hiện khi đang bật Video) -->
+    <div id="btn-flip-camera" onclick="window.flipCamera()" style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; backdrop-filter: blur(4px);">🔄</div>
 
-            <!-- 3. THANH CÔNG CỤ CHỤP / TẢI ẢNH -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 25px;">
-                <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Tải ảnh lên">🖼️</div>
-                
-                <div style="width: 80px; height: 80px; background-color: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="Chụp ảnh">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
-                </div>
+    <!-- Canvas ẩn dùng để cắt ảnh -->
+    <canvas id="locket-canvas" style="display: none;"></canvas>
+</div>
 
-                <div onclick="window.openOneConnect(this)" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="One Connect">🗺️</div>
-            </div>
+<!-- 2. THANH TƯƠNG TÁC (Giữ nguyên của bạn) -->
+<div style="width: 85%; margin: 0 auto 25px; background-color: #e0e0e0; border-radius: 25px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+    <input type="text" placeholder="Nói gì đó....." style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 5px;">
+    <div style="display: flex; gap: 6px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
+        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">❤️</span>
+        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">🔥</span>
+        <span onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">😢</span>
+    </div>
+</div>
+
+<!-- 3. THANH CÔNG CỤ CHỤP / TẢI ẢNH -->
+<div style="display: flex; justify-content: center; align-items: center; gap: 25px;">
+    <!-- Ống ngầm tải ảnh -->
+    <input type="file" id="widget-upload-input" accept="image/*" style="display: none;" onchange="window.xuLyTaiAnh(event)">
+    
+    <!-- Nút Trái (Tải ảnh từ máy) -->
+    <div onclick="document.getElementById('widget-upload-input').click()" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">🖼️</div>
+    
+    <!-- Nút Giữa (Chụp ảnh Live) -->
+    <div onclick="window.chupAnhLocket()" style="width: 80px; height: 80px; background-color: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+        <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
+    </div>
+    
+    <!-- Nút Phải (One Connect - Giữ nguyên) -->
+    <div onclick="window.openOneConnect(this)" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">🗺️</div>
+</div>
         </div>
     </div>
 </div>
@@ -816,7 +833,7 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
 
     // Vận động viên chạy bộ nhanh nhất cũng chỉ 10-12m/s. 
     // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> HỦY BỎ NGAY LẬP TỨC
-    if (currentSpeed > 12) {
+    if (currentSpeed > 7) {
         console.warn("Đã chặn 1 điểm GPS nhiễu! Trôi xa: " + dist2D.toFixed(1) + "m");
         return; // Đóng sập hàm lại, không cộng số liệu, không vẽ đường ngoằn ngoèo!
     }
@@ -1959,6 +1976,134 @@ window.fetchRealFriends = function() {
         html += '<div style="height: 30px; flex-shrink: 0;"></div>'; 
         container.innerHTML = html; 
     });
+};
+
+// === HỆ THỐNG WEBRTC CAMERA (CHUẨN LOCKET) ===
+let currentStream = null;
+let facingMode = "user"; // Mặc định là cam trước (user). Cam sau là 'environment'
+
+// Hàm xin quyền và bật Camera
+window.startLiveCamera = async function() {
+    const video = document.getElementById('locket-live-video');
+    const img = document.getElementById('locket-captured-img');
+    const btnFlip = document.getElementById('btn-flip-camera');
+    
+    // Tắt ảnh đã chụp đi (nếu có), bật lại Kính ngắm
+    if(img) img.style.display = 'none';
+    if(video) video.style.display = 'block';
+    if(btnFlip) btnFlip.style.display = 'flex';
+
+    // Tắt luồng camera cũ (nếu đang lật cam)
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+    }
+
+    try {
+        currentStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } },
+            audio: false
+        });
+        video.srcObject = currentStream;
+        
+        // Lật gương (Mirror) nếu là cam trước
+        video.style.transform = facingMode === "user" ? "scaleX(-1)" : "scaleX(1)";
+    } catch (err) {
+        console.error("Lỗi bật Camera: ", err);
+        alert("Không thể mở Camera. Vui lòng cấp quyền máy ảnh cho trang web!");
+    }
+};
+
+// Hàm lật Camera (Trước <-> Sau)
+window.flipCamera = function() {
+    facingMode = facingMode === "user" ? "environment" : "user";
+    window.startLiveCamera();
+};
+
+// Hàm Bấm nút chụp (Nút giữa)
+window.chupAnhLocket = function() {
+    const video = document.getElementById('locket-live-video');
+    const canvas = document.getElementById('locket-canvas');
+    const img = document.getElementById('locket-captured-img');
+    const btnFlip = document.getElementById('btn-flip-camera');
+
+    if (!currentStream) {
+        // Nếu camera đang tắt (người dùng vừa tải ảnh từ máy lên xong), thì bật lại camera
+        window.startLiveCamera();
+        return;
+    }
+
+    // Cắt khung hình hiện tại từ Video dán sang Canvas
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    // Xử lý vụ lật gương (nếu là cam trước thì ảnh chụp ra cũng phải lật lại cho đúng)
+    if (facingMode === "user") {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Biến Canvas thành ảnh
+    const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Hiện ảnh vừa chụp, tắt video đi để đóng băng khoảnh khắc
+    img.src = imageDataURL;
+    img.style.display = 'block';
+    video.style.display = 'none';
+    btnFlip.style.display = 'none';
+
+    // Tắt hẳn đèn Camera cho đỡ tốn pin
+    currentStream.getTracks().forEach(track => track.stop());
+    currentStream = null;
+
+    console.log("Đã chụp ảnh xong! Chuẩn bị quy trình gửi Firebase Storage...");
+};
+
+// Hàm Tải ảnh từ thư viện máy (Nút trái)
+window.xuLyTaiAnh = function(event) {
+    const file = event.target.files;
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.getElementById('locket-captured-img');
+        const video = document.getElementById('locket-live-video');
+        const btnFlip = document.getElementById('btn-flip-camera');
+
+        // Hiện ảnh tải lên, tắt Kính ngắm
+        img.src = e.target.result;
+        img.style.display = 'block';
+        video.style.display = 'none';
+        btnFlip.style.display = 'none';
+
+        // Tắt camera nếu đang bật
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+// TÍCH HỢP UX: Tự động bật Camera khi người dùng vuốt sang Tab 3 (Trang chủ)
+const oldSwitchTab = window.switchTab;
+window.switchTab = function(tabIndex) {
+    if(typeof oldSwitchTab === 'function') oldSwitchTab(tabIndex);
+    
+    if (tabIndex === 3) {
+        // Vào Trang chủ và Tự bật Camera 
+        const img = document.getElementById('locket-captured-img');
+        if (img && (img.style.display === 'none' || img.src === '')) {
+            window.startLiveCamera();
+        }
+    } else {
+        // Rời khỏi Trang chủ 
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+    }
 };
     
 </script>

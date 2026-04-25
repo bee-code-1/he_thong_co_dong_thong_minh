@@ -2286,18 +2286,6 @@ window.langNgheLocket = function() {
     });
 };
 
-// 4. CƠ CHẾ POPUP XÓA BÀI
-// Hàm mới: Gọi popup hiện lên trực tiếp khi bấm nút
-window.hienPopupXoa = function(key) {
-    idBaiCanXoa = key;
-    const popup = document.getElementById('delete-popup-overlay');
-    if(popup) {
-        popup.style.display = 'flex';
-        setTimeout(() => popup.classList.add('show'), 10);
-    }
-};
-
-// Hàm cũ: Nhấn giữ để xóa (Dành cho ai quen thao tác Locket)
 // === CƠ CHẾ POPUP XÓA BÀI (CHUẨN 100%) ===
 
 // Hàm 1: Gọi popup hiện lên trực tiếp khi bấm nút Xóa

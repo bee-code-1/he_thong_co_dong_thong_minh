@@ -198,40 +198,40 @@
         </div>
     </div>
 
-<!-- LAYER TAB 3: TRANG CHỦ (GIAO DIỆN LOCKET & WIDGET MỚI) -->
+<!-- LAYER TAB 3: TRANG CHỦ (BẢN FIX CUỘN + BẠN BÈ THẬT + ONE CONNECT) -->
 <div id="tab-3" class="tab-screen" style="pointer-events: auto;">
-    <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column;">
+    <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
         
-        <!-- Thanh Widget & Story (Thu gọn bớt khoảng đệm) -->
-        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px;">
+        <!-- Thanh Widget & Story Bạn Bè Thật -->
+        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px; z-index: 50; background: #8bd8af;">
             <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
                 <div id="widget-thoi-tiet" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Đang đo...</div>
                 <div id="widget-bui-min" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Chờ GPS...</div>
             </div>
-            <!-- Thanh Story mô phỏng -->
-            <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none;">
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; flex-shrink: 0;"><img src="https://ui-avatars.com/api/?name=H" style="width:100%; border-radius:50%;"></div>
-                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #ff0000; flex-shrink: 0;"><img src="https://ui-avatars.com/api/?name=M" style="width:100%; border-radius:50%;"></div>
+            
+            <!-- Khu vực danh sách bạn bè thật (Sẽ được JS nhồi vào đây) -->
+            <div id="story-ban-be-list" style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none;">
+                <div style="text-align: center; color: #555; font-size: 12px; width: 100%; font-style: italic;">Đang tải bạn bè...</div>
             </div>
         </div>
 
-        <!-- TRỤC CUỘN DỌC CHÍNH (SNAP SCROLL) -->
-        <div id="locket-scroll-container" class="locket-feed-container">
+        <!-- TRỤC CUỘN DỌC CHÍNH (Đã fix lỗi liệt cuộn) -->
+        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 120px; height: 100%;">
             
-            <!-- ITEM 1: KHUNG CAMERA (Luôn nằm trên cùng) -->
-            <div class="snap-item" style="position: relative; margin-top: 10px;">
+            <!-- ITEM 1: KHUNG CAMERA & BỘ 4 NÚT CHỨC NĂNG -->
+            <div class="snap-item" style="position: relative; margin-top: 10px; scroll-snap-align: start;">
                 <div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
                     
                     <!-- Lớp Camera Live -->
                     <video id="locket-live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
                     <div id="btn-flip-camera" onclick="window.flipCamera()" style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;">🔄</div>
                     
-                    <!-- Lớp Soạn Ghi Chú (Chữ) -->
+                    <!-- Lớp Soạn Ghi Chú -->
                     <div id="text-note-editor" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); z-index: 8; padding: 20px; box-sizing: border-box; justify-content: center; align-items: center;">
                         <textarea id="note-input" placeholder="Bạn đang nghĩ gì?" style="width: 100%; height: 80%; background: transparent; border: none; outline: none; color: #333; font-size: 24px; font-weight: 900; text-align: center; resize: none;"></textarea>
                     </div>
 
-                    <!-- Lớp Ảnh Preview & Caption (Chờ Xác nhận) -->
+                    <!-- Lớp Ảnh Preview & Caption -->
                     <img id="locket-captured-img" style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 15;" />
                     <div id="draft-overlay" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); z-index: 20; box-sizing: border-box; flex-direction: column; gap: 10px;">
                         <input type="text" id="draft-caption" placeholder="Thêm mô tả..." style="width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; font-weight: bold; box-sizing: border-box;">
@@ -243,31 +243,22 @@
                     <canvas id="locket-canvas" style="display: none;"></canvas>
                 </div>
                 
-                <!-- BỘ NÚT CHỤP ẢNH & VIẾT CHỮ (Chỉ hiện khi chưa chụp) -->
-                <div id="camera-controls" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px;">
+                <!-- TRẢ LẠI NÚT ONE CONNECT (4 NÚT CÂN ĐỐI) -->
+                <div id="camera-controls" style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 20px;">
                     <input type="file" id="widget-upload-input" accept="image/*" style="display: none;" onchange="window.xuLyTaiAnh(event)">
-                    <div onclick="document.getElementById('widget-upload-input').click()" style="width: 55px; height: 55px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">🖼️</div>
-                    <div onclick="window.chupAnhLocket()" style="width: 75px; height: 75px; background: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
-                        <div style="width: 45px; height: 45px; border-radius: 50%; border: 4px solid white;"></div>
+                    <div onclick="document.getElementById('widget-upload-input').click()" style="width: 50px; height: 50px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">🖼️</div>
+                    <div onclick="window.moTrangThaiGhiChu()" style="width: 50px; height: 50px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">📝</div>
+                    <div onclick="window.chupAnhLocket()" style="width: 70px; height: 70px; background: #888; border-radius: 50%; border: 4px solid #555; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; border: 4px solid white;"></div>
                     </div>
-                    <div onclick="window.moTrangThaiGhiChu()" style="width: 55px; height: 55px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">📝</div>
+                    <div onclick="window.openOneConnect(this)" style="width: 50px; height: 50px; background: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">🗺️</div>
                 </div>
             </div>
 
-            <!-- ITEM 2, 3, 4... KHU VỰC FEED (Sẽ được JS nhồi vào dưới dạng các snap-item) -->
+            <!-- ITEM FEED SẼ ĐƯỢC ĐỔ VÀO ĐÂY -->
             <div id="khu-vuc-feed-locket" style="display: contents;"></div>
 
         </div>
-    </div>
-</div>
-
-<!-- POPUP XÓA BÀI CỦA CHÍNH MÌNH -->
-<div id="delete-popup-overlay" onclick="window.dongPopupXoa()">
-    <div id="delete-popup-box" onclick="event.stopPropagation()">
-        <h3 style="color: #dc3545; margin-top: 0;">Cảnh báo!</h3>
-        <p style="color: #555; font-size: 14px; font-weight: bold;">Bạn có chắc chắn muốn xóa bài đăng này vĩnh viễn khỏi server không?</p>
-        <button onclick="window.xacNhanXoaVinhVien()" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 10px; font-weight: bold; margin-bottom: 10px; cursor: pointer; font-size: 16px;">🗑️ Xóa vĩnh viễn</button>
-        <button onclick="window.dongPopupXoa()" style="width: 100%; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">Hủy</button>
     </div>
 </div>
 
@@ -1519,29 +1510,58 @@ window.taiDuLieuCongDong = function() {
     const user = localStorage.getItem('currentUser');
     if (!user || typeof window.db === 'undefined') return;
 
-    // Lắng nghe danh sách bạn bè
     window.db.ref('ban_be/' + user).on('value', snap => {
         window.danhSachBanBeThuc = snap.val() ? Object.keys(snap.val()) : [];
-        document.getElementById('so-luong-ban').innerText = window.danhSachBanBeThuc.length;
-        veDanhSachBanBe();
+        const slb = document.getElementById('so-luong-ban');
+        if(slb) slb.innerText = window.danhSachBanBeThuc.length;
+        if(typeof window.veDanhSachBanBe === 'function') window.veDanhSachBanBe();
     });
 
-    // Lắng nghe lời mời kết bạn (Để bật chấm đỏ)
     window.db.ref('loi_moi_ket_ban/' + user).on('value', snap => {
         window.loiMoiKetBan = snap.val() ? Object.keys(snap.val()) : [];
         const chamDo = document.getElementById('cham-do-thong-bao');
-        if (window.loiMoiKetBan.length > 0) {
-            chamDo.style.display = 'block';
-        } else {
-            chamDo.style.display = 'none';
-        }
-        veDanhSachThongBao();
+        if(chamDo) chamDo.style.display = window.loiMoiKetBan.length > 0 ? 'block' : 'none';
+        if(typeof window.veDanhSachThongBao === 'function') window.veDanhSachThongBao();
     });
 
-    // Lắng nghe vị trí toàn cộng đồng để vẽ Bảng tin Feed Tab 4
+    // Lắng nghe mạng lưới toàn server
     window.db.ref('nguoi_dung').on('value', snap => {
-        veBangTinCongDong(snap.val());
+        const allUsers = snap.val();
+        if(typeof window.veBangTinCongDong === 'function') window.veBangTinCongDong(allUsers);
+        // KÍCH HOẠT VẼ STORY BẠN BÈ THẬT LÊN TRANG CHỦ
+        if(typeof window.capNhatStoryBanBe === 'function') window.capNhatStoryBanBe(allUsers);
     });
+};
+
+// HÀM VẼ STORY BẠN BÈ LÊN TRANG CHỦ (Avatar thật + Online/Offline)
+window.capNhatStoryBanBe = function(allUsers) {
+    const storyContainer = document.getElementById('story-ban-be-list');
+    if (!storyContainer || !allUsers) return;
+
+    let html = '';
+    // Lọc ra các bạn bè đã kết bạn để vẽ lên
+    window.danhSachBanBeThuc.forEach(banBe => {
+        if(allUsers[banBe]) {
+            const data = allUsers[banBe];
+            const avatar = data.avatar || `https://ui-avatars.com/api/?name=${banBe}&background=random`;
+            // Check online: Cập nhật trong vòng 10 phút (600,000 ms)
+            const isOnline = (Date.now() - (data.thoi_gian_cap_nhat || 0)) < 600000;
+            const borderColor = isOnline ? '#28a745' : '#ccc'; // Xanh lá = Online, Xám = Offline
+
+            html += `
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 60px; cursor: pointer;" title="${isOnline ? 'Đang hoạt động' : 'Ngoại tuyến'}">
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid ${borderColor}; padding: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                    <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: white;" />
+                </div>
+                <span style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">${banBe}</span>
+            </div>`;
+        }
+    });
+
+    if (html === '') {
+        html = '<div style="text-align: center; color: #555; font-size: 12px; width: 100%; font-style: italic;">Chưa có bạn bè nào. Qua Tab 4 kết bạn đi!</div>';
+    }
+    storyContainer.innerHTML = html;
 };
 
 // 2. VẼ BẢNG TIN (FEED) TRÊN TAB 4

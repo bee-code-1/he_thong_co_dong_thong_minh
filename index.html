@@ -2170,35 +2170,20 @@ window.banTinHieuLocket = function(imageUrl) {
     }).catch(err => console.error("Lỗi phát sóng: ", err));
 };
 
-// === BỘ CÔNG CỤ XỬ LÝ GIAO DIỆN LOCKET MỚI ===
+// === BỘ CÔNG CỤ XỬ LÝ GIAO DIỆN VÀ TƯƠNG TÁC LOCKET (BẢN CHUẨN UX) ===
+window.nguoiDangAnhHienTai = ""; // Biến ghi nhớ chủ nhân của bức ảnh hiện tại
 
-// 1. Hàm chuyển đổi Timestamp thành định dạng 00:00 AM/PM
 window.formatAMPM = function(timestamp) {
     let date = new Date(timestamp);
     let hours = date.getHours();
     let minutes = date.getMinutes();
     let ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; 
+    hours = hours % 12; hours = hours ? hours : 12; 
     minutes = minutes < 10 ? '0' + minutes : minutes;
     return hours + ':' + minutes + ' ' + ampm;
 };
 
-// 2. Hàm Thả Cảm Xúc (Đổi màu & Phóng to)
-window.thaCamXuc = function(element, type) {
-    element.style.transform = 'scale(1.5)';
-    setTimeout(() => { element.style.transform = 'scale(1)'; }, 200);
-    
-    if (type === 'tim') {
-        element.innerText = element.innerText === '🤍' ? '❤️' : '🤍';
-    } else if (type === 'lua') {
-        element.style.filter = element.style.filter === 'grayscale(100%)' ? 'none' : 'grayscale(100%)';
-    } else if (type === 'buon') {
-        element.style.filter = element.style.filter === 'grayscale(100%)' ? 'none' : 'grayscale(100%)';
-    }
-};
-
-// 3. Hệ Thống Quản Lý Thông Báo (Có Nhấn Giữ & Lưu LocalStorage)
+// 1. HỆ THỐNG THÔNG BÁO LƯU MÁY (Giao diện giống Danh sách bạn bè)
 let timerXoaTB = null;
 window.batDauXoaTB = function(idTB) {
     timerXoaTB = setTimeout(() => {
@@ -2206,34 +2191,44 @@ window.batDauXoaTB = function(idTB) {
             document.getElementById(idTB).remove();
             window.luuThongBaoLocal();
         }
-    }, 1000); // Nhấn giữ 1 giây sẽ hỏi xóa
+    }, 1000); // Nhấn giữ 1 giây
 };
 window.huyXoaTB = function() {
     if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; }
 };
 
-window.themThongBaoLocket = function(nguoi_gui, avatar, thoi_gian) {
-    const timeStr = window.formatAMPM(thoi_gian);
-    const idTB = 'tb_' + thoi_gian;
+// Hàm sinh Giao diện Thông báo chuẩn 
+window.themThongBaoLocket = function(avatar, ten, noiDung) {
+    const timeStr = window.formatAMPM(Date.now());
+    const idTB = 'tb_' + Date.now() + Math.floor(Math.random()*1000);
+    
+    // Giao diện dải chữ nhật xám, có icon Pin chứa Avatar bên trái (Y hệt mục kết bạn)
     const tbHTML = `
         <div id="${idTB}" class="thong-bao-item" 
              onmousedown="window.batDauXoaTB('${idTB}')" onmouseup="window.huyXoaTB()" onmouseleave="window.huyXoaTB()"
              ontouchstart="window.batDauXoaTB('${idTB}')" ontouchend="window.huyXoaTB()" ontouchmove="window.huyXoaTB()"
-             style="background: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 5px solid #28a745; cursor: pointer; user-select: none;">
-            <img src="${avatar}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;" />
+             style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; user-select: none;">
+            
+            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
+                <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#004BAd" />
+                </svg>
+                <img src="${avatar}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
+                <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: #00C853; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
+            </div>
+
             <div style="flex: 1; text-align: left;">
-                <span style="font-weight: 900; color: #333; font-size: 15px;">${nguoi_gui}</span>
-                <span style="font-size: 14px; color: #555;"> đã thêm một ảnh mới, gửi cho tất cả bạn bè</span>
-                <div style="font-size: 12px; color: #888; margin-top: 4px; font-weight: bold;">🕒 ${timeStr}</div>
+                <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 3px;">${ten}</div>
+                <div style="font-size: 13px; color: #555; line-height: 1.4;">${noiDung}</div>
+                <div style="font-size: 11px; color: #888; margin-top: 4px;">🕒 ${timeStr}</div>
             </div>
         </div>
     `;
     const container = document.getElementById('list-thong-bao-content');
     if (container.innerText.includes('Không có thông báo')) container.innerHTML = '';
     container.insertAdjacentHTML('afterbegin', tbHTML);
-    window.luuThongBaoLocal();
-    
-    // Bật chấm đỏ ở icon chuông dưới thanh điều hướng
+    window.luuThongBaoLocal(); // LƯU VÀO MÁY NGƯỜI DÙNG
+
     const chamDo = document.getElementById('cham-do-thong-bao');
     if(chamDo) chamDo.style.display = 'block';
 };
@@ -2251,63 +2246,129 @@ window.taiThongBaoLocal = function() {
     }
 };
 
-// 4. BỘ NÃO LẮNG NGHE VÀ RENDER GIAO DIỆN (Thay thế hàm cũ)
+// 2. GỬI TƯƠNG TÁC (BÌNH LUẬN / CẢM XÚC) BẰNG THANH CÓ SẴN
+window.guiTuongTac = function(loai, noiDung) {
+    const user = localStorage.getItem('currentUser');
+    // Nếu chưa đăng nhập, chưa có mạng, hoặc ảnh là của chính mình thì không bắn lên
+    if (!user || !window.db || !window.nguoiDangAnhHienTai) return;
+    if (user === window.nguoiDangAnhHienTai) return; 
+
+    // Bắn tín hiệu tương tác lên Đám mây
+    window.db.ref('tuong_tac_locket/moi_nhat').set({
+        nguoi_gui: user,
+        nguoi_nhan: window.nguoiDangAnhHienTai,
+        loai: loai,
+        noi_dung: noiDung,
+        avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`,
+        thoi_gian: Date.now()
+    });
+};
+
+// Đánh thức thanh Bình Luận tĩnh trên trang
+window.khoiTaoThanhTuongTac = function() {
+    const inputBinhLuan = document.querySelector('#tab-3 input[type="text"]');
+    if (inputBinhLuan) {
+        // Gắn chức năng: Nhấn Enter để gửi Bình luận
+        inputBinhLuan.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim() !== '' && !this.disabled) {
+                window.guiTuongTac('binh_luan', this.value.trim());
+                this.value = ''; // Xóa trắng sau khi gửi
+                // Tạo thông báo nhỏ tạm thời
+                const oldPh = this.placeholder;
+                this.placeholder = "Đã gửi bình luận!";
+                setTimeout(() => { this.placeholder = oldPh; }, 2000);
+            }
+        });
+
+        // Gắn chức năng cho 3 nút cảm xúc
+        const camXucContainer = inputBinhLuan.nextElementSibling;
+        if (camXucContainer && camXucContainer.children.length >= 3) {
+            camXucContainer.children.onclick = function() {
+                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+                window.guiTuongTac('cam_xuc', '❤️');
+            };
+            camXucContainer.children[1].onclick = function() {
+                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+                window.guiTuongTac('cam_xuc', '🔥');
+            };
+            camXucContainer.children[2].onclick = function() {
+                this.style.transform = 'scale(1.5)'; setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+                window.guiTuongTac('cam_xuc', '😢');
+            };
+        }
+    }
+};
+
+// 3. BỘ NÃO LẮNG NGHE LOCKET (Nhận ảnh & Nhận Tương tác)
 window.langNgheLocket = function() {
     if (!window.db) return;
     
+    // A. LẮNG NGHE ẢNH MỚI
     window.db.ref('bang_tin_anh/moi_nhat').on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
 
         const timeStr = window.formatAMPM(data.thoi_gian);
         const currentUser = localStorage.getItem('currentUser');
+        window.nguoiDangAnhHienTai = data.nguoi_gui; // Lưu chủ ảnh lại để lát còn biết gửi bình luận cho ai
         
-        // Ẩn camera đi nhường chỗ cho ảnh
         const cameraFrame = document.getElementById('locket-main-frame');
         if (cameraFrame) cameraFrame.style.display = 'none';
 
-        // Render giao diện chuẩn Locket theo file trang_chu.png
+        // Render Khung ảnh xanh và Lời nhắn cam (Nếu có)
         const postHTML = `
             <div style="margin-bottom: 25px; animation: fadeIn 0.5s;">
-                <!-- Khung ảnh nền xanh lá -->
                 <div style="width: 85%; aspect-ratio: 1; border-radius: 25px; margin: 0 auto 5px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden; background-color: #28a745;">
                     <img src="${data.anh_url}" style="width: 100%; height: 100%; object-fit: cover;" />
-                    
-                    <!-- Avatar đè góc dưới trái -->
                     <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3); object-fit: cover; background: #004BAd; z-index: 2;" />
                     
-                    <!-- Lời nhắn -->
-                    <div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">
-                        ${data.loi_nhan || "Đã gửi một ảnh mới!"}
-                    </div>
+                    ${data.loi_nhan && data.loi_nhan.trim() !== "" ? 
+                    `<div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">
+                        ${data.loi_nhan}
+                    </div>` : ''}
                 </div>
-                
-                <!-- Thời gian tải lên -->
                 <div style="text-align: center; color: #555; font-size: 13px; font-weight: bold; margin-bottom: 10px;">
-                    ${timeStr}
-                </div>
-
-                <!-- Thanh Tương Tác Cảm Xúc -->
-                <div style="width: 85%; margin: 0 auto; background-color: #e0e0e0; border-radius: 25px; display: flex; justify-content: center; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15); gap: 20px;">
-                    <span onclick="window.thaCamXuc(this, 'tim')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none;">🤍</span>
-                    <span onclick="window.thaCamXuc(this, 'lua')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none; filter: grayscale(100%);">🔥</span>
-                    <span onclick="window.thaCamXuc(this, 'buon')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none; filter: grayscale(100%);">😢</span>
+                    🕒 ${timeStr}
                 </div>
             </div>
         `;
         
-        document.getElementById('khu-vuc-feed-locket').innerHTML = postHTML;
+        const feed = document.getElementById('khu-vuc-feed-locket');
+        if(feed) feed.innerHTML = postHTML;
         
-        // Tạo thông báo sang Tab 5 (Nếu người gửi không phải là chính mình)
+        // Gửi thông báo ảnh mới
         if (data.nguoi_gui !== currentUser) {
-            window.themThongBaoLocket(data.nguoi_gui, data.avatar, data.thoi_gian);
+            window.themThongBaoLocket(data.avatar, data.nguoi_gui, "đã đăng một ảnh mới");
+        }
+    });
+
+    // B. LẮNG NGHE TƯƠNG TÁC (BÌNH LUẬN & CẢM XÚC)
+    window.db.ref('tuong_tac_locket/moi_nhat').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const currentUser = localStorage.getItem('currentUser');
+        
+        // NẾU MÌNH CHÍNH LÀ NGƯỜI NHẬN (Ảnh do mình đăng) thì nảy thông báo!
+        if (data.nguoi_nhan === currentUser && data.nguoi_gui !== currentUser) {
+            let noiDungThongBao = "";
+            if (data.loai === 'binh_luan') {
+                noiDungThongBao = `đã bình luận: "${data.noi_dung}"`;
+            } else if (data.loai === 'cam_xuc') {
+                noiDungThongBao = `cảm thấy ${data.noi_dung} về ảnh của bạn`;
+            }
+            window.themThongBaoLocket(data.avatar, data.nguoi_gui, noiDungThongBao);
         }
     });
 };
 
-// Tự động tải lại thông báo đã lưu khi F5
+// KHỞI ĐỘNG HỆ THỐNG
 window.addEventListener('load', () => {
     window.taiThongBaoLocal();
+    window.khoiTaoThanhTuongTac();
+    setTimeout(() => {
+        if (typeof window.langNgheLocket === 'function') window.langNgheLocket();
+    }, 2000);
 });
 
 window.addEventListener('load', () => {

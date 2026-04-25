@@ -2032,12 +2032,16 @@ window.dayAnhLenStorage = function(base64Image) {
     });
 };
                 
-                // GIAI ĐOẠN 3 : GỬI LINK CHO BẠN BÈ
-                window.banTinHieuLocket(downloadURL);
-            });
+    .catch(error => {
+        console.error("Lỗi upload ảnh:", error);
+        if(commentInput) {
+            commentInput.placeholder = "Nói gì đó.....";
+            commentInput.disabled = false;
         }
-    );
+        alert("Lỗi tải ảnh lên đám mây! Hãy thử lại.");
+    });
 };
+
 // Hàm xin quyền và bật Camera
 window.startLiveCamera = async function() {
     const video = document.getElementById('locket-live-video');

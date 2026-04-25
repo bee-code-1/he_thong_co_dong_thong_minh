@@ -2026,6 +2026,7 @@ window.dayAnhLenStorage = function(base64Image) {
                 }
                 
                 // GIAI ĐOẠN 3 : GỬI LINK CHO BẠN BÈ
+                window.banTinHieuLocket(downloadURL);
             });
         }
     );
@@ -2148,6 +2149,65 @@ window.switchTab = function(tabIndex) {
         }
     }
 };
+
+// === HỆ THỐNG PHÁT & NHẬN TÍN HIỆU LOCKET (GIAI ĐOẠN 3) ===
+
+// 1. HÀM PHÁT SÓNG (Gửi Link URL cho tất cả mọi người)
+window.banTinHieuLocket = function(imageUrl) {
+    const user = localStorage.getItem('currentUser');
+    if (!user || !window.db) return;
+
+    // Lấy nội dung bình luận nếu có
+    const commentInput = document.querySelector('input[placeholder="✅ Đã tải xong! Nhập bình luận..."]');
+    const loiNhan = commentInput ? commentInput.value : "";
+
+    // Bắn Link URL và Lời nhắn lên Đỉnh tháp Realtime Database
+    window.db.ref('bang_tin_anh/moi_nhat').set({
+        nguoi_gui: user,
+        anh_url: imageUrl,
+        loi_nhan: loiNhan,
+        thoi_gian: Date.now(),
+        avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`
+    }).then(() => {
+        console.log("Đã phát sóng ảnh thành công toàn server!");
+        // Reset lại ô bình luận
+        if(commentInput) {
+            commentInput.value = "";
+            commentInput.placeholder = "Nói gì đó.....";
+        }
+    }).catch(err => console.error("Lỗi phát sóng: ", err));
+};
+
+// 2. HÀM LẮNG NGHE (
+window.langNgheLocket = function() {
+    if (!window.db) return;
+    
+    window.db.ref('bang_tin_anh/moi_nhat').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const img = document.getElementById('locket-captured-img');
+        const video = document.getElementById('locket-live-video');
+        const btnFlip = document.getElementById('btn-flip-camera');
+
+        if (img) {
+            img.src = data.anh_url;
+            img.style.display = 'block';
+            if(video) video.style.display = 'none';
+            if(btnFlip) btnFlip.style.display = 'none';
+            
+            // THÔNG BÁO ẢNH MỚI
+            console.log("Đã nhận được ảnh mới từ: " + data.nguoi_gui);
+        }
+    });
+};
+
+// 3. TỰ ĐỘNG BẬT RADAR LẮNG NGHE KHI MỞ TRANG
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (typeof window.langNgheLocket === 'function') window.langNgheLocket();
+    }, 2000);
+});
     
 </script>
 </body>

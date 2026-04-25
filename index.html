@@ -499,132 +499,10 @@
         <h2 style="margin: 0; font-size: 20px; font-weight: 800;">one connect</h2>
     </div>
     
-    <!-- Khu vực danh sách bạn bè (Có thanh cuộn dọc mượt mà) -->
-    <div style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scrollbar-width: none; -ms-overflow-style: none;">
-        
-        <!-- NGƯỜI BẠN 1 (Mở mẫu sẵn để bạn xem thiết kế giống connect.png) -->
-        <div class="friend-connect-item" style="background: #d5d5d5; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            <!-- Thanh thông tin tĩnh (Bấm để mở/đóng) -->
-            <div onclick="window.toggleConnectExpand(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                <div style="position: relative;">
-                    <img src="https://ui-avatars.com/api/?name=Lan&background=28a745&color=fff" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                    <!-- Chấm xanh Online -->
-                    <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #00d26a; border-radius: 50%; border: 2px solid white;"></div>
-                </div>
-                <div style="flex: 1; text-align: left;">
-                    <div style="font-weight: 800; font-size: 17px; color: #333;">Lan Anh</div>
-                    <div style="font-size: 13px; color: #666; font-weight: 600;">hoạt động 2 phút trước</div>
-                </div>
-                <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); transform: rotate(180deg);">▼</div>
-            </div>
-
-            <!-- Khối nội dung bung ra (Đã chuẩn bị ID để đổ dữ liệu thật) -->
-            <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-                <div style="padding: 0 20px 20px;">
-                    <!-- Mảnh đất trống cho Bản đồ Mini thật -->
-                    <div id="minimap-lananh" style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); z-index: 1;">
-                        <!-- JS sẽ đổ bản đồ Leaflet vào đây -->
-                    </div>
-                    
-                    <!-- Bảng nhỏ hiển thị khoảng cách thật -->
-                    <div style="margin-top: 15px; background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        bạn cách <span style="color: #004BAd;">Lan Anh</span> <span id="khoang-cach-lananh" style="color: #e74c3c;">đang quét radar...</span>
-                    </div>
-                </div>
-            </div>
-
-        <!-- NGƯỜI BẠN 2 (Trạng thái Đóng) -->
-        <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            <div onclick="window.toggleConnectExpand(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                <div style="position: relative;">
-                    <img src="https://ui-avatars.com/api/?name=Hiep&background=17a2b8&color=fff" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                    <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #00d26a; border-radius: 50%; border: 2px solid white;"></div>
-                </div>
-                <div style="flex: 1; text-align: left;">
-                    <div style="font-weight: 800; font-size: 17px; color: #333;">Hiệp (Tui)</div>
-                    <div style="font-size: 13px; color: #666; font-weight: 600;">hoạt động 12 phút trước</div>
-                </div>
-                <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
-            </div>
-            <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-                <div style="padding: 0 20px 20px;">
-                    <div style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; position: relative; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
-                        <svg width="100%" height="100%" style="position: absolute; top:0; left:0;">
-                            <polyline points="80,180 80,80 200,80" style="fill:none; stroke:#2196F3; stroke-width:8; stroke-linejoin:round; stroke-linecap:round;" />
-                        </svg>
-                        <div style="position: absolute; bottom: 70px; left: 65px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📍</div>
-                        <div style="position: absolute; top: 55px; right: 45px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📌</div>
-                    </div>
-                    <div style="margin-top: 15px; background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                        bạn cách <span style="color: #004BAd;">Hiệp</span> 5.8 km
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NGƯỜI BẠN 3 (Trạng thái Offline - Khung màu xám mờ) -->
-        <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            <div onclick="window.toggleConnectExpand(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                <div style="position: relative;">
-                    <img src="https://ui-avatars.com/api/?name=Khoa&background=6c757d&color=fff" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; opacity: 0.6; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                    <!-- Chấm xám báo hiệu offline -->
-                    <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #999; border-radius: 50%; border: 2px solid white;"></div>
-                </div>
-                <div style="flex: 1; text-align: left;">
-                    <div style="font-weight: 800; font-size: 17px; color: #333; opacity: 0.7;">Khoa</div>
-                    <div style="font-size: 13px; color: #666; font-weight: 600; opacity: 0.7;">offline 2 giờ trước</div>
-                </div>
-                <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
-            </div>
-            <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-                <div style="padding: 0 20px 20px;">
-                    <div style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; position: relative; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
-                        <svg width="100%" height="100%" style="position: absolute; top:0; left:0;">
-                            <polyline points="50,50 150,150 250,50" style="fill:none; stroke:#2196F3; stroke-width:8; stroke-linejoin:round; stroke-linecap:round;" />
-                        </svg>
-                        <div style="position: absolute; top: 25px; left: 35px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📍</div>
-                        <div style="position: absolute; top: 25px; right: 25px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📌</div>
-                    </div>
-                    <div style="margin-top: 15px; background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                        bạn cách <span style="color: #004BAd;">Khoa</span> 12.4 km
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NGƯỜI BẠN 4 (Thêm để danh sách dài ra, tạo thanh trượt) -->
-        <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            <div onclick="window.toggleConnectExpand(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                <div style="position: relative;">
-                    <img src="https://ui-avatars.com/api/?name=Minh&background=fd7e14&color=fff" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                    <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #00d26a; border-radius: 50%; border: 2px solid white;"></div>
-                </div>
-                <div style="flex: 1; text-align: left;">
-                    <div style="font-weight: 800; font-size: 17px; color: #333;">Minh</div>
-                    <div style="font-size: 13px; color: #666; font-weight: 600;">hoạt động 1 phút trước</div>
-                </div>
-                <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
-            </div>
-            <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-                <div style="padding: 0 20px 20px;">
-                    <div style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; position: relative; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
-                        <svg width="100%" height="100%" style="position: absolute; top:0; left:0;">
-                            <polyline points="150,250 150,150 50,50" style="fill:none; stroke:#2196F3; stroke-width:8; stroke-linejoin:round; stroke-linecap:round;" />
-                        </svg>
-                        <div style="position: absolute; bottom: 15px; left: 135px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📍</div>
-                        <div style="position: absolute; top: 25px; left: 35px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📌</div>
-                    </div>
-                    <div style="margin-top: 15px; background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                        bạn cách <span style="color: #004BAd;">Minh</span> 0.8 km
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Khoảng trống tạo không gian cuộn ở cuối trang -->
-        <div style="height: 30px; flex-shrink: 0;"></div>
+    <!-- Khu vực danh sách bạn bè (Sẽ tự động lấy từ Firebase) -->
+    <div id="danh-sach-ban-be-that" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scrollbar-width: none; -ms-overflow-style: none;">
+        <!-- Javascript sẽ đổ code HTML bạn bè vào đây -->
     </div>
-</div>
     
 <script>
     //  KHỞI TẠO BẢN ĐỒ 
@@ -1849,13 +1727,16 @@ window.addEventListener('load', function() {
 window.openOneConnect = function(btnElement) {
     const screen = document.getElementById('one-connect-screen');
     
-    // 1. Dùng radar dò tọa độ chính xác của nút bấm trên màn hình điện thoại
+    // 1. Dùng radar dò tọa độ chính xác của nút bấm
     const rect = btnElement.getBoundingClientRect();
     const originX = rect.left + rect.width / 2;
     const originY = rect.top + rect.height / 2;
 
-    // 2. Gán tâm bung nở vào chính giữa cái nút đó
+    // 2. Gán tâm bung nở
     screen.style.transformOrigin = `${originX}px ${originY}px`;
+
+    // NGAY LÚC BẤM NÚT, TỰ ĐỘNG GỌI FIREBASE QUÉT BẠN BÈ THẬT
+    window.fetchRealFriends();
 
     // 3. Bóp cò cho phình to ra
     screen.classList.add('active');
@@ -1923,52 +1804,116 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
 };    
     
 // === LOGIC ACCORDION & UX CHO ONE CONNECT ===
-window.toggleConnectExpand = function(element) {
+window.toggleConnectExpandReal = function(element) {
     const parentItem = element.closest('.friend-connect-item');
     const expandedContent = parentItem.querySelector('.connect-expanded-content');
     const icon = element.querySelector('.expand-icon');
     
-    // 1. TẠO SỰ TẬP TRUNG : Thu hồi đóng tất cả các thẻ khác đang mở
+    // 1. Đóng toàn bộ các thẻ khác đang mở
     document.querySelectorAll('.friend-connect-item').forEach(item => {
         if (item !== parentItem) {
-            const content = item.querySelector('.connect-expanded-content');
-            const otherIcon = item.querySelector('.expand-icon');
-            content.style.maxHeight = '0';
-            content.style.opacity = '0';
-            otherIcon.style.transform = 'rotate(0deg)';
+            item.querySelector('.connect-expanded-content').style.maxHeight = '0';
+            item.querySelector('.connect-expanded-content').style.opacity = '0';
+            item.querySelector('.expand-icon').style.transform = 'rotate(0deg)';
             item.style.backgroundColor = '#e0e0e0';
         }
     });
 
-    // 2. XỬ LÝ THẺ ĐƯỢC CHẠM VÀO : đảo ngược trạng thái animation
+    // 2. Xử lý mở/đóng thẻ vừa bấm
     if (expandedContent.style.maxHeight && expandedContent.style.maxHeight !== '0px') {
-        // Nếu thẻ đang mở -> Bóp cò thu lại
         expandedContent.style.maxHeight = '0';
         expandedContent.style.opacity = '0';
         icon.style.transform = 'rotate(0deg)';
         parentItem.style.backgroundColor = '#e0e0e0';
     } else {
-        // Nếu thẻ đang đóng -> Bung thả nội dung xuống 
-        expandedContent.style.maxHeight = '500px'; // Chiều cao tối đa chứa bản đồ
+        expandedContent.style.maxHeight = '500px';
         expandedContent.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
-        parentItem.style.backgroundColor = '#d5d5d5'; 
-        // BÓP CÒ: Kích hoạt tải dữ liệu bản đồ thật (Khi mở thẻ của Lan Anh)
-        if (parentItem.innerHTML.includes('Lan Anh')) {
-            window.loadRealConnectMap(
-                'minimap-lananh',            // ID thẻ div bản đồ
-                'khoang-cach-lananh',        // ID thẻ chữ hiển thị km
-                'Lan Anh',                   // Tên bạn
-                21.033333, 105.811111,       // Tọa độ thật của bạn bè (Giả lập)
-                'https://ui-avatars.com/api/?name=Lan&background=28a745&color=fff', // Link ảnh Avatar
-                '#e74c3c'                    // Màu viền giọt nước (Đỏ)
-            );
-        }        
-        // 3. AUTO-SCROLL Đẩy thẻ vừa mở vào chính giữa màn hình
+        parentItem.style.backgroundColor = '#d5d5d5';
+        
         setTimeout(() => {
             parentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
+
+        // 3. RÚT TỌA ĐỘ THẬT TỪ THẺ HTML ĐỂ NẠP VÀO OSRM VÀ LEAFLET
+        const fName = parentItem.getAttribute('data-name');
+        const fLat = parseFloat(parentItem.getAttribute('data-lat'));
+        const fLng = parseFloat(parentItem.getAttribute('data-lng'));
+        const fAvatar = parentItem.getAttribute('data-avatar');
+        const fMapId = parentItem.getAttribute('data-mapid');
+        const fDistId = parentItem.getAttribute('data-distid');
+
+        // Gọi hàm vẽ bản đồ thật
+        window.loadRealConnectMap(fMapId, fDistId, fName, fLat, fLng, fAvatar, '#e74c3c');
     }
+};
+
+// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT TỪ FIREBASE ===
+window.fetchRealFriends = function() {
+    const container = document.getElementById('danh-sach-ban-be-that');
+    container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
+
+    // Gọi vào Node chứa tọa độ của mọi người trên Firebase
+    if (!window.db) {
+        container.innerHTML = '<div style="text-align: center; color: #e74c3c; margin-top: 50px;">Chưa kết nối Máy chủ Firebase.</div>';
+        return;
+    }
+
+    // Quét dữ liệu từ bảng vi_tri_hien_tai
+    window.db.ref('vi_tri_hien_tai').once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+            container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai bật chia sẻ vị trí.</div>';
+            return;
+        }
+
+        let html = '';
+        // Lặp qua từng người trong Database
+        for (let userId in data) {
+            const user = data[userId];
+            
+            // BỎ QUA NẾU ĐÓ LÀ CHÍNH MÌNH (Lọc theo tên đăng nhập hiện tại)
+            const currentUsername = localStorage.getItem('gis_username');
+            if (userId === currentUsername) continue; 
+
+            const lat = user.lat;
+            const lng = user.lng;
+            // Giả lập avatar nếu người dùng chưa có ảnh
+            const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
+            const mapId = `minimap-${userId}`;
+            const distId = `khoang-cach-${userId}`;
+
+            // Sinh code HTML tự động cho từng người bạn thật
+            html += `
+            <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-avatar="${avatar}" data-mapid="${mapId}" data-distid="${distId}">
+                
+                <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
+                    <div style="position: relative;">
+                        <img src="${avatar}" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
+                        <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: #00d26a; border-radius: 50%; border: 2px solid white;"></div>
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-weight: 800; font-size: 17px; color: #333;">${userId}</div>
+                        <div style="font-size: 13px; color: #666; font-weight: 600;">hoạt động gần đây</div>
+                    </div>
+                    <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
+                </div>
+
+                <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
+                    <div style="padding: 0 20px 20px;">
+                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); z-index: 1;"></div>
+                        <div style="margin-top: 15px; background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
+                            bạn cách <span style="color: #004BAd;">${userId}</span> <span id="${distId}" style="color: #e74c3c;">đang tính toán OSRM...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+        
+        html += '<div style="height: 30px; flex-shrink: 0;"></div>'; 
+        container.innerHTML = html; 
+    });
 };
     
 </script>

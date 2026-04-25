@@ -102,6 +102,31 @@
     border-radius: 0;
     pointer-events: auto;
 }
+         
+/* GIAO DIỆN ICON GIỌT NƯỚC CHỨA AVATAR */
+.custom-waterdrop-icon {
+    background: transparent;
+    border: none;
+}
+.water-drop-marker {
+    width: 45px;
+    height: 45px;
+    border-radius: 50% 50% 50% 0; /* Tạo hình giọt nước nhọn ở đáy */
+    transform: rotate(-45deg); /* Xoay mũi nhọn hướng xuống dưới */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #ffffff; /* Viền trắng nổi bật */
+    box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+.water-drop-marker img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: rotate(45deg); /* Xoay ngược ảnh lại cho thẳng */
+}
+         
     </style>
 </head>
 <body>
@@ -493,31 +518,20 @@
                 <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); transform: rotate(180deg);">▼</div>
             </div>
 
-            <!-- Khối nội dung bung ra (Bản đồ + Khoảng cách) -->
-            <div class="connect-expanded-content" style="max-height: 500px; opacity: 1; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
+            <!-- Khối nội dung bung ra (Đã chuẩn bị ID để đổ dữ liệu thật) -->
+            <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
                 <div style="padding: 0 20px 20px;">
-                    <!-- Bản đồ mini giả lập (Thiết kế dựa trên connect.png) -->
-                    <div style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; position: relative; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
-                        <!-- Các vạch đường xám giả lập Radar -->
-                        <div style="position: absolute; top: 40%; left: 10%; width: 80%; height: 8px; background: #bbb; border-radius: 4px;"></div>
-                        <div style="position: absolute; top: 70%; left: 10%; width: 50%; height: 8px; background: #bbb; border-radius: 4px;"></div>
-                        <div style="position: absolute; top: 50%; right: 20%; width: 8px; height: 30%; background: #bbb; border-radius: 4px;"></div>
-                        
-                        <!-- Tuyến đường kết nối 2 người -->
-                        <svg width="100%" height="100%" style="position: absolute; top:0; left:0;">
-                            <polyline points="50,40 100,40 100,100 60,100 60,220 200,220" style="fill:none; stroke:#2196F3; stroke-width:8; stroke-linejoin:round; stroke-linecap:round;" />
-                        </svg>
-                        <div style="position: absolute; top: 15px; left: 35px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📍</div>
-                        <div style="position: absolute; bottom: 35px; right: 40px; font-size: 28px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4));">📌</div>
+                    <!-- Mảnh đất trống cho Bản đồ Mini thật -->
+                    <div id="minimap-lananh" style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); z-index: 1;">
+                        <!-- JS sẽ đổ bản đồ Leaflet vào đây -->
                     </div>
                     
-                    <!-- Khối thông báo khoảng cách -->
-                    <div style="margin-top: 15px; background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                        bạn cách <span style="color: #004BAd;">Lan Anh</span> 1.2 km
+                    <!-- Bảng nhỏ hiển thị khoảng cách thật -->
+                    <div style="margin-top: 15px; background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        bạn cách <span style="color: #004BAd;">Lan Anh</span> <span id="khoang-cach-lananh" style="color: #e74c3c;">đang quét radar...</span>
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- NGƯỜI BẠN 2 (Trạng thái Đóng) -->
         <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -1852,7 +1866,63 @@ window.closeOneConnect = function() {
     screen.classList.remove('active');
 };
 
-// === LOGIC ACCORDION UX CHO ONE CONNECT ===
+// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
+window.miniMaps = {}; // Biến lưu trữ các bản đồ mini để tránh tải lại nhiều lần
+
+window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
+    // 1. Tọa độ giả lập của bạn (Tui) - Sau này sẽ lấy từ GPS thật
+    const myLat = 21.028511; 
+    const myLng = 105.804817;
+    const myAvatar = "https://ui-avatars.com/api/?name=Hiep&background=17a2b8&color=fff";
+    const myColor = "#2196F3"; 
+
+    if (!window.miniMaps[mapId]) {
+        // Khởi tạo bản đồ mini
+        const mMap = L.map(mapId, { zoomControl: false, attributionControl: false });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mMap);
+        window.miniMaps[mapId] = mMap;
+
+        // Hàm tạo icon giọt nước chứa avt
+        const createDropIcon = (avatar, color) => {
+            return L.divIcon({
+                className: 'custom-waterdrop-icon',
+                html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
+                iconSize: [1],
+                iconAnchor: [22.5, 45] 
+            });
+        };
+
+        // Gắn 2 icon location lên bản đồ
+        L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
+        L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
+
+        // 2. GỌI API OSRM ĐỂ TÌM ĐƯỜNG VÀ TÍNH KHOẢNG CÁCH THẬT
+        fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?geometries=geojson`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.routes && data.routes) {
+                    // Vẽ tuyến đường màu xanh 
+                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[2], coord]);
+                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                    
+                    // Căn chỉnh bản đồ tự động zoom để nhìn thấy cả 2 người
+                    mMap.fitBounds(polyline.getBounds(), { padding: [3] });
+
+                    // số liệu khoảng cách thực tế 
+                    const distanceKm = (data.routes.distance / 1000).toFixed(1);
+                    document.getElementById(distId).innerHTML = `${distanceKm} km`;
+                }
+            })
+            .catch(err => console.error("Lỗi OSRM:", err));
+    }
+    setTimeout(() => {
+        if(window.miniMaps[mapId]) {
+            window.miniMaps[mapId].invalidateSize();
+        }
+    }, 400);
+};    
+    
+// === LOGIC ACCORDION & UX CHO ONE CONNECT ===
 window.toggleConnectExpand = function(element) {
     const parentItem = element.closest('.friend-connect-item');
     const expandedContent = parentItem.querySelector('.connect-expanded-content');
@@ -1883,7 +1953,17 @@ window.toggleConnectExpand = function(element) {
         expandedContent.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
         parentItem.style.backgroundColor = '#d5d5d5'; 
-        
+        // BÓP CÒ: Kích hoạt tải dữ liệu bản đồ thật (Khi mở thẻ của Lan Anh)
+        if (parentItem.innerHTML.includes('Lan Anh')) {
+            window.loadRealConnectMap(
+                'minimap-lananh',            // ID thẻ div bản đồ
+                'khoang-cach-lananh',        // ID thẻ chữ hiển thị km
+                'Lan Anh',                   // Tên bạn
+                21.033333, 105.811111,       // Tọa độ thật của bạn bè (Giả lập)
+                'https://ui-avatars.com/api/?name=Lan&background=28a745&color=fff', // Link ảnh Avatar
+                '#e74c3c'                    // Màu viền giọt nước (Đỏ)
+            );
+        }        
         // 3. AUTO-SCROLL Đẩy thẻ vừa mở vào chính giữa màn hình
         setTimeout(() => {
             parentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -1759,6 +1759,8 @@ window.miniMaps = {};
 
 // === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
 window.miniMaps = {};
+// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
+window.miniMaps = {};
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
     const currentUser = localStorage.getItem('currentUser');
     let myLat, myLng;
@@ -1776,7 +1778,7 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                 return L.divIcon({
                     className: 'custom-waterdrop-icon',
                     html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                    iconSize: [2],
+                    iconSize: [1],
                     iconAnchor: [22.5, 45]
                 });
             };
@@ -1789,9 +1791,9 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             .then(res => res.json())
             .then(data => {
                 if(data.routes && data.routes.length > 0) {
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[3], coord]);
+                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[2], coord]);
                     const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: [4] });
+                    mMap.fitBounds(polyline.getBounds(), { padding: [3] });
                     
                     const distanceKm = (data.routes.distance / 1000).toFixed(1);
                     document.getElementById(distId).innerHTML = `${distanceKm} km`;
@@ -2218,6 +2220,7 @@ window.langNgheLocket = function() {
                     </button>
                 </div>`;
             } else {
+                // NẾU LÀ BÀI BẠN BÈ -> HIỆN TƯƠNG TÁC
                 interactionBar = `
                 <div style="width: 85%; margin: 10px auto 0; background-color: #e0e0e0; border-radius: 20px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15); pointer-events: auto;">
                     <input type="text" placeholder="Viết bình luận..." 
@@ -2269,7 +2272,6 @@ window.langNgheLocket = function() {
         }
     });
 };
-
 // === CƠ CHẾ POPUP XÓA BÀI (CHUẨN 100%) ===
 
 // Hàm 1: Gọi popup hiện lên trực tiếp khi bấm nút Xóa

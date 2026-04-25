@@ -1754,11 +1754,14 @@ window.closeOneConnect = function() {
 // === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
 window.miniMaps = {}; // Biến lưu trữ các bản đồ mini để tránh tải lại nhiều lần
 
+// === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
+window.miniMaps = {}; 
+
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
     const currentUser = localStorage.getItem('currentUser');
     let myLat, myLng;
 
-    // 💡 KHỐI LỆNH 1: HÀM THỰC THI VẼ (Sẽ được gọi sau khi chốt được tọa độ)
+    // KHỐI LỆNH 1: THỰC THI VẼ
     const thucHienVeBanDo = () => {
         const myAvatar = localStorage.getItem("avatar_" + currentUser) || `https://ui-avatars.com/api/?name=${currentUser}&background=17a2b8&color=fff`;
         const myColor = "#2196F3";
@@ -1773,68 +1776,61 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                 return L.divIcon({
                     className: 'custom-waterdrop-icon',
                     html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                    iconSize: [2],
+                    iconSize: [6],
                     iconAnchor: [22.5, 45]
                 });
             };
 
-            // Gắn 2 marker lên bản đồ
+            // Gắn 2 marker lên bản đồ mini
             L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
             L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
 
-            // GỌI OSRM ĐỂ TÍNH KHOẢNG CÁCH VÀ VẼ ĐƯỜNG
-            fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?geometries=geojson`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.routes && data.routes) {
-                        // Vá lỗi lấy tọa độ vẽ đường chuẩn xác của OSRM (Lng, Lat) sang Leaflet (Lat, Lng)
-                        const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[3], coord]);
-                        const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                        
-                        mMap.fitBounds(polyline.getBounds(), { padding: [4] });
-
-                        const distanceKm = (data.routes.distance / 1000).toFixed(1);
-                        document.getElementById(distId).innerHTML = `${distanceKm} km`;
-                    }
-                })
-                .catch(err => {
-                    console.error("Lỗi OSRM:", err);
-                    document.getElementById(distId).innerHTML = "Lỗi tuyến đường";
-                });
+            // GỌI OSRM ĐỂ TÍNH KHOẢNG CÁCH VÀ VẼ ĐƯỜNG (ĐÃ FIX LỖI CÚ PHÁP)
+            fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?overview=full&geometries=geojson`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.routes && data.routes.length > 0) {
+                    // FIX LỖI TỌA ĐỘ: Đảo ngược từ [Lng, Lat] của GeoJSON sang [Lat, Lng] của Leaflet
+                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[7], coord]);
+                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                    mMap.fitBounds(polyline.getBounds(), { padding: [8] }); // Căn giữa 2 điểm
+                    
+                    // Hiển thị số km chính xác
+                    const distanceKm = (data.routes.distance / 1000).toFixed(1);
+                    document.getElementById(distId).innerHTML = `${distanceKm} km`;
+                } else {
+                    document.getElementById(distId).innerHTML = "Không tìm thấy đường";
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi OSRM:", err);
+                document.getElementById(distId).innerHTML = "Lỗi tuyến đường";
+            });
         }
 
-        // Fix lỗi màn hình xám của Leaflet khi mở Accordion
+        // Fix lỗi màn hình xám của Leaflet khi mở thẻ Accordion bị ẩn
         setTimeout(() => {
             if(window.miniMaps[mapId]) window.miniMaps[mapId].invalidateSize();
         }, 400);
     };
 
-    // 💡 KHỐI LỆNH 2: TÌM TỌA ĐỘ BẢN THÂN TRƯỚC KHI VẼ
+    // KHỐI LỆNH 2: TÌM TỌA ĐỘ BẢN THÂN
     if (typeof latestLatLng !== 'undefined' && latestLatLng !== null) {
-        // Ưu tiên 1: Lấy GPS trực tiếp nếu đang di chuyển
+        // Có GPS thật -> Lấy luôn
         myLat = latestLatLng.lat;
         myLng = latestLatLng.lng;
         thucHienVeBanDo();
-    } else {
-        // Ưu tiên 2: Nếu không có GPS, tìm vị trí cuối cùng trên Đám mây
-        if (window.db && currentUser) {
-            window.db.ref('nguoi_dung/' + currentUser).once('value').then(snap => {
-                const myData = snap.val();
-                if (myData && myData.toa_do_lat && myData.toa_do_lng) {
-                    myLat = myData.toa_do_lat;
-                    myLng = myData.toa_do_lng;
-                } else {
-                    // Ưu tiên 3: Nếu là tài khoản mới tinh chưa từng có GPS -> Mặc định HUS
-                    myLat = 21.028511;
-                    myLng = 105.804817;
-                }
-                thucHienVeBanDo();
-            });
-        } else {
-            myLat = 21.028511;
-            myLng = 105.804817;
+    } else if (window.db && currentUser) {
+        // Không có GPS -> Móc từ Firebase (vị trí cuối)
+        window.db.ref('nguoi_dung/' + currentUser).once('value').then(snap => {
+            const myData = snap.val();
+            if (myData && myData.toa_do_lat && myData.toa_do_lng) {
+                myLat = myData.toa_do_lat; myLng = myData.toa_do_lng;
+            } else {
+                myLat = 21.028511; myLng = 105.804817; // Mặc định HUS
+            }
             thucHienVeBanDo();
-        }
+        });
     }
 };    
     
@@ -1883,31 +1879,24 @@ window.toggleConnectExpandReal = function(element) {
     }
 };
 
-// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LỊCH SỬ OFFLINE) ===
+// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
     container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
 
-    if (!window.db) {
-        container.innerHTML = '<div style="text-align: center; color: #e74c3c; margin-top: 50px;">Chưa kết nối Máy chủ Firebase.</div>';
-        return;
-    }
+    if (!window.db) return;
 
     window.db.ref('vi_tri_hien_tai').once('value').then((snapshot) => {
         const data = snapshot.val();
-        if (!data) {
-            container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>';
-            return;
-        }
-
+        if (!data) { container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>'; return; }
+        
         let html = '';
-        const now = Date.now(); // Lấy thời gian hiện tại của máy bạn
+        const now = Date.now(); 
+        const currentUsername = localStorage.getItem('currentUser'); // Fix lỗi sai tên biến lưu LocalStorage
 
         for (let userId in data) {
             const user = data[userId];
-            
-            const currentUsername = localStorage.getItem('gis_username');
-            if (userId === currentUsername) continue; 
+            if (userId === currentUsername) continue; // Bỏ qua bản thân
 
             const lat = user.lat;
             const lng = user.lng;
@@ -1915,65 +1904,52 @@ window.fetchRealFriends = function() {
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
 
-            // === AI XỬ LÝ THỜI GIAN ONLINE / OFFLINE ===
-            // Lấy thời gian cập nhật cuối cùng, nếu không có thì mặc định là đang online
-            const lastUpdate = user.thoi_gian_cap_nhat || user.thoi_gian || now; 
-            const diffMinutes = Math.floor((now - lastUpdate) / 60000); // Đổi ra phút
-
+            // Xử lý Trạng thái Online / Offline
+            const lastUpdate = user.thoi_gian_cap_nhat || user.thoi_gian || now;
+            const diffMinutes = Math.floor((now - lastUpdate) / 60000); 
+            
             let statusText = "hoạt động gần đây";
-            let dotColor = "#00d26a"; // Màu xanh lá (Online)
-            let opacityStyle = "1";   // Sáng rõ
-            let textOpacity = "1";
-
-            // Nếu quá 5 phút không cập nhật GPS -> Chuyển sang chế độ Offline (Lịch sử)
+            let dotColor = "#28a745"; // Xanh lá = Online
+            
             if (diffMinutes > 5) {
-                dotColor = "#999"; // Màu xám (Offline)
-                opacityStyle = "0.6"; // Làm mờ ảnh đại diện đi
-                textOpacity = "0.7";
-                
-                if (diffMinutes < 60) {
-                    statusText = `offline ${diffMinutes} phút trước`;
-                } else {
-                    const diffHours = Math.floor(diffMinutes / 60);
-                    const diffDays = Math.floor(diffHours / 24);
-                    if (diffDays > 0) {
-                         statusText = `offline ${diffDays} ngày trước`;
-                    } else {
-                         statusText = `offline ${diffHours} giờ trước`;
-                    }
-                }
+                dotColor = "#dc3545"; // Đỏ = Offline
+                if (diffMinutes < 60) statusText = `hoạt động ${diffMinutes} phút trước`;
+                else statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
             }
 
-            // Sinh code HTML tự động với trạng thái mờ/sáng tương ứng
+            // GIAO DIỆN GIỐNG CONNECT.PNG
             html += `
-            <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+            <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
                  data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-avatar="${avatar}" data-mapid="${mapId}" data-distid="${distId}">
                 
+                <!-- Bấm vào thanh này sẽ kích hoạt hàm toggleConnectExpandReal để thả bản đồ xuống -->
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                    <div style="position: relative; opacity: ${opacityStyle};">
-                        <img src="${avatar}" style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
-                        <div style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white;"></div>
+                    <!-- Vòng tròn trạng thái (Xanh/Đỏ) -->
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background-color: ${dotColor}; border: 3px solid #333; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
+                    
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
+                        <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>
                     </div>
-                    <div style="flex: 1; text-align: left; opacity: ${textOpacity};">
-                        <div style="font-weight: 800; font-size: 17px; color: #333;">${userId}</div>
-                        <div style="font-size: 13px; color: #666; font-weight: 600;">${statusText}</div>
-                    </div>
-                    <div class="expand-icon" style="font-size: 16px; color: #777; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">▼</div>
+                    <div class="expand-icon" style="font-size: 20px; font-weight: bold; color: #333; transition: transform 0.4s ease;">▼</div>
                 </div>
 
-                <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-                    <div style="padding: 0 20px 20px;">
-                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 15px; border: 3px solid #bbb; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); z-index: 1;"></div>
-                        <div style="margin-top: 15px; background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: #555; border: 2px solid #ccc;">
-                            bạn cách vị trí cuối của <span style="color: #004BAd;">${userId}</span> <span id="${distId}" style="color: #e74c3c;">đang tính toán...</span>
+                <!-- Thẻ mở rộng chứa Bản đồ (Ban đầu ẩn chiều cao = 0) -->
+                <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; background-color: #fcdab0;">
+                    <div style="padding: 15px;">
+                        <!-- KHUNG BẢN ĐỒ MINI -->
+                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
+                        
+                        <!-- KHUNG HIỂN THỊ KHOẢNG CÁCH -->
+                        <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                            bạn cách ${userId} <span id="${distId}">đang tính...</span>
                         </div>
                     </div>
                 </div>
             </div>`;
         }
         
-        html += '<div style="height: 30px; flex-shrink: 0;"></div>'; 
-        container.innerHTML = html; 
+        container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Không có ai quanh đây...</div>';
     });
 };
 

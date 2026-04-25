@@ -887,7 +887,8 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
 <script>
 // === 1. FIREBASE CONFIG CHUẨN ===
 const firebaseConfig = {
-    databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/"
+    databaseURL: "https://he-thong-co-dong-zz-default-rtdb.firebaseio.com/",
+    storageBucket: "he-thong-co-dong-zz.appspot.com"
 };
 
 try {
@@ -895,7 +896,8 @@ try {
         firebase.initializeApp(firebaseConfig);
     }
     window.db = firebase.database();
-    console.log("Đã cắm điện Firebase thành công!");
+    window.storage = firebase.storage(); 
+    console.log("Đã cắm điện Firebase và Nhà kho thành công!");
 } catch(e) { 
     console.error("Lỗi Firebase:", e); 
 }
@@ -977,7 +979,7 @@ window.hienThiRecap = function() {
     if(document.getElementById('recap-calo') && document.getElementById('cal-display')) 
         document.getElementById('recap-calo').innerText = document.getElementById('cal-display').innerText;
 
-    // ⚡ TÍNH VẬN TỐC TRUNG BÌNH (KM/H)
+    //  TÍNH VẬN TỐC TRUNG BÌNH km/h
     let speedKmH = 0;
     if (elapsedSeconds > 0 && totalDistanceMeter > 0) {
         speedKmH = (totalDistanceMeter / 1000) / (elapsedSeconds / 3600);
@@ -989,11 +991,11 @@ window.hienThiRecap = function() {
     if(rModal) rModal.style.display = 'flex';
 };
 
-// === HÀM LƯU TIẾN TRÌNH (TÍCH HỢP LƯU FIREBASE & VẼ TAB 2) ===
+// === HÀM LƯU TIẾN TRÌNH  ===
 window.luuTienTrinh = function() {
     let username = localStorage.getItem('currentUser');
     
-    // 1. TÍNH TOÁN THỜI GIAN BẮT ĐẦU & KẾT THÚC CỰC CHUẨN
+    // 1. TÍNH TOÁN THỜI GIAN BẮT ĐẦU & KẾT THÚC 
     const endDateTime = new Date(); 
     const startDateTime = new Date(endDateTime.getTime() - (elapsedSeconds * 1000)); 
     
@@ -1022,11 +1024,11 @@ window.luuTienTrinh = function() {
     };
 
     if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
-        // TẠO KEY (ID) MỚI TRÊN FIREBASE TRƯỚC KHI LƯU
+        // TẠO ID MỚI TRÊN FIREBASE TRƯỚC KHI LƯU
         const newRecordRef = window.db.ref('tien_trinh_tap_luyen/' + username).push();
         newRecordRef.set(recordData).then(() => {
             alert("Đã lưu tiến trình thành công vào hồ sơ!");
-            // Truyền luôn cái Key ID đó vào để vẽ thẻ
+            // Truyền ID đó vào để vẽ thẻ
             window.veTheTienTrinh(newRecordRef.key, recordData); 
         }).catch(err => console.error("Lỗi lưu tiến trình:", err));
     }
@@ -1981,7 +1983,53 @@ window.fetchRealFriends = function() {
 // === HỆ THỐNG WEBRTC CAMERA (CHUẨN LOCKET) ===
 let currentStream = null;
 let facingMode = "user"; // Mặc định là cam trước (user). Cam sau là 'environment'
+// === ĐƯỜNG ỐNG BƠM ẢNH LÊN FIREBASE STORAGE ===
+window.dayAnhLenStorage = function(base64Image) {
+    const user = localStorage.getItem('currentUser');
+    if (!user) return alert("Vui lòng đăng nhập để gửi ảnh!");
 
+    console.log("Đang nén và đẩy ảnh lên đám mây...");
+    // Đổi trạng thái khung bình luận để báo hiệu cho người dùng
+    const commentInput = document.querySelector('input[placeholder="Nói gì đó....."]');
+    if(commentInput) {
+        commentInput.placeholder = "⏳ Đang tải ảnh lên...";
+        commentInput.disabled = true;
+    }
+
+    // 1. Tạo tên file độc nhất không bao giờ trùng
+    const fileName = `locket_images/${user}_${Date.now()}.jpg`;
+    
+    // 2. Mở cửa Nhà kho Storage
+    const storageRef = window.storage.ref().child(fileName);
+
+    // 3. Bơm chuỗi ảnh (Base64) khổng lồ lên kho
+    const uploadTask = storageRef.putString(base64Image, 'data_url');
+
+    uploadTask.on('state_changed',
+        (snapshot) => { /* Chỗ này có thể làm thanh phần trăm tải sau này */ },
+        (error) => {
+            console.error("Lỗi upload Storage:", error);
+            if(commentInput) {
+                commentInput.placeholder = "Nói gì đó....";
+                commentInput.disabled = false;
+            }
+            alert("Lỗi tải ảnh lên đám mây ");
+        },
+        () => {
+            // 4. THÀNH CÔNG: Lấy đường link URL siêu ngắn mang về
+            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                console.log("Đã cất kho xong! Lấy được Link URL:", downloadURL);
+                
+                if(commentInput) {
+                    commentInput.placeholder = "✅ Đã tải xong! Nhập bình luận...";
+                    commentInput.disabled = false;
+                }
+                
+                // GIAI ĐOẠN 3 : GỬI LINK CHO BẠN BÈ
+            });
+        }
+    );
+};
 // Hàm xin quyền và bật Camera
 window.startLiveCamera = async function() {
     const video = document.getElementById('locket-live-video');
@@ -2027,37 +2075,32 @@ window.chupAnhLocket = function() {
     const btnFlip = document.getElementById('btn-flip-camera');
 
     if (!currentStream) {
-        // Nếu camera đang tắt (người dùng vừa tải ảnh từ máy lên xong), thì bật lại camera
         window.startLiveCamera();
         return;
     }
 
-    // Cắt khung hình hiện tại từ Video dán sang Canvas
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     
-    // Xử lý vụ lật gương (nếu là cam trước thì ảnh chụp ra cũng phải lật lại cho đúng)
     if (facingMode === "user") {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
     }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Biến Canvas thành ảnh
     const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
     
-    // Hiện ảnh vừa chụp, tắt video đi để đóng băng khoảnh khắc
     img.src = imageDataURL;
     img.style.display = 'block';
     video.style.display = 'none';
     btnFlip.style.display = 'none';
 
-    // Tắt hẳn đèn Camera cho đỡ tốn pin
     currentStream.getTracks().forEach(track => track.stop());
     currentStream = null;
 
-    console.log("Đã chụp ảnh xong! Chuẩn bị quy trình gửi Firebase Storage...");
+    // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH VỪA CHỤP LÊN MÂY
+    window.dayAnhLenStorage(imageDataURL);
 };
 
 // Hàm Tải ảnh từ thư viện máy (Nút trái)
@@ -2071,21 +2114,21 @@ window.xuLyTaiAnh = function(event) {
         const video = document.getElementById('locket-live-video');
         const btnFlip = document.getElementById('btn-flip-camera');
 
-        // Hiện ảnh tải lên, tắt Kính ngắm
         img.src = e.target.result;
         img.style.display = 'block';
         video.style.display = 'none';
         btnFlip.style.display = 'none';
 
-        // Tắt camera nếu đang bật
         if (currentStream) {
             currentStream.getTracks().forEach(track => track.stop());
             currentStream = null;
         }
+
+        // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH VỪA CHỌN LÊN MÂY
+        window.dayAnhLenStorage(e.target.result);
     };
     reader.readAsDataURL(file);
 };
-
 // TÍCH HỢP UX: Tự động bật Camera khi người dùng vuốt sang Tab 3 (Trang chủ)
 const oldSwitchTab = window.switchTab;
 window.switchTab = function(tabIndex) {

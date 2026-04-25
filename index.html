@@ -76,6 +76,32 @@
         
         .user-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid #ff0000; transform-origin: 50% 50%; will-change: transform; }
         .leaflet-control-attribution { display: none; }
+/* HIỆU ỨNG MỞ CHO ONE CONNECT */
+#one-connect-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: #fff1e6; 
+    z-index: 4000; /* Nổi lên trên cùng mọi thứ */
+    
+    /* Trạng thái tắt: Thu nhỏ bằng 0, mờ đi và bo tròn như cái icon */
+    transform: scale(0);
+    opacity: 0;
+    border-radius: 100px;
+    
+    /* Hiệu ứng nảy  */
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.4, 1.2), opacity 0.3s ease, border-radius 0.4s ease;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+#one-connect-screen.active {
+    /* Trạng thái bật: Phình to lấp đầy màn hình, góc vuông vức */
+    transform: scale(1);
+    opacity: 1;
+    border-radius: 0;
+    pointer-events: auto;
+}
     </style>
 </head>
 <body>
@@ -131,10 +157,10 @@
         <!-- Hàng 1: Các Widget Môi trường  -->
         <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
             <div id="widget-thoi-tiet" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                ⏳ Đang đo...
+                 Đang đo...
             </div>
             <div id="widget-bui-min" style="background: rgba(255, 255, 255, 0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                ⏳ Chờ GPS...
+                 Chờ GPS...
             </div>
         </div>
 
@@ -219,7 +245,7 @@
                     <div style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid white;"></div>
                 </div>
 
-                <div style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="One Connect">🗺️</div>
+                <div onclick="window.openOneConnect(this)" style="width: 60px; height: 60px; background-color: white; border-radius: 15px; border: 3px solid #777; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" title="One Connect">🗺️</div>
             </div>
         </div>
     </div>
@@ -433,10 +459,32 @@
         </button>
         
         <button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            ĐĂNG XUẤT để cmmd
+            ĐĂNG XUẤT mmd
         </button>
     </div>
 </div>
+</div>
+    
+<!-- MÀN HÌNH ONE CONNECT bung nở từ nút 🗺️) -->
+<div id="one-connect-screen">
+    <!-- Thanh điều hướng trên cùng có nút Back -->
+    <div style="padding: 15px 20px; background: #004BAd; color: white; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); padding-top: 25px;">
+        <!-- Nút Back đảo ngược hiệu ứng -->
+        <button onclick="window.closeOneConnect()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; margin-right: 15px; padding: 0; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'">⬅</button>
+        <h2 style="margin: 0; font-size: 20px;">One Connect</h2>
+    </div>
+    
+    <!-- Nội dung chính ( danh sách bạn bè ) -->
+    <div style="padding: 30px 20px; text-align: center;">
+        <div style="font-size: 60px; margin-bottom: 20px;">🗺️</div>
+        <h3 style="color: #333; margin-bottom: 10px;">Sẵn sàng kết nối</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">Chọn một người bạn để AI quét trên Firebase và vẽ đường dẫn ngắn nhất (km) đến vị trí của họ.</p>
+        
+        <!-- Khối Placeholder chờ dữ liệu -->
+        <div style="margin-top: 30px; background: rgba(0,0,0,0.05); padding: 20px; border-radius: 15px; border: 2px dashed #bbb; color: #888;">
+            Đang tải dữ liệu radar...
+        </div>
+    </div>
 </div>
     
 <script>
@@ -1541,10 +1589,10 @@ window.veBangTinCongDong = function(allUsers) {
                     <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
                 </svg>
                 
-                <!-- ẢNH AVATAR (Đã tinh chỉnh kích thước và vị trí) -->
+                <!-- ẢNH AVATAR  -->
                 <img src="${avatarUrl}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
                 
-                <!-- CHẤM TRẠNG THÁI (Đã dời ra góc dưới bên phải một chút cho đỡ lẹm) -->
+                <!-- CHẤM TRẠNG THÁI  -->
                 <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
             </div>
 
@@ -1656,7 +1704,30 @@ window.addEventListener('load', function() {
     setTimeout(() => {
         if(localStorage.getItem('currentUser')) window.taiDuLieuCongDong();
     }, 1500);
-});    
+});
+
+// === HIỆU ỨNG BUNG NỞ MÀN HÌNH ONE CONNECT ===
+window.openOneConnect = function(btnElement) {
+    const screen = document.getElementById('one-connect-screen');
+    
+    // 1. Dùng radar dò tọa độ chính xác của nút bấm trên màn hình điện thoại
+    const rect = btnElement.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+
+    // 2. Gán tâm bung nở vào chính giữa cái nút đó
+    screen.style.transformOrigin = `${originX}px ${originY}px`;
+
+    // 3. Bóp cò cho phình to ra
+    screen.classList.add('active');
+};
+
+window.closeOneConnect = function() {
+    const screen = document.getElementById('one-connect-screen');
+    // Rút lệnh, tự động đảo ngược thu bé lại chui tọt vào cái nút
+    screen.classList.remove('active');
+};
+    
 </script>
 </body>
 </html>

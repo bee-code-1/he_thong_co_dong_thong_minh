@@ -2122,11 +2122,12 @@ window.switchTab = function(tabIndex) {
     }
 };
 
-// === HỆ THỐNG THÔNG BÁO BẠN BÈ (ĐÃ FIX LỖI TRẮNG) ===
+// === HỆ THỐNG THÔNG BÁO & TƯƠNG TÁC (BẢN FULL MẠNG XÃ HỘI) ===
 let isFirstLoadFeed = true;
+let isFirstLoadTuongTac = true;
 let timerXoaTB = null;
 
-// Hàm Nhấn giữ để xóa thông báo
+// 1. QUẢN LÝ THÔNG BÁO (Nhấn giữ xóa, Lưu Local)
 window.batDauXoaTB = function(idTB) {
     timerXoaTB = setTimeout(() => {
         if(confirm("Xóa thông báo này khỏi máy?")) {
@@ -2136,9 +2137,7 @@ window.batDauXoaTB = function(idTB) {
         }
     }, 1000); 
 };
-window.huyXoaTB = function() {
-    if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; }
-};
+window.huyXoaTB = function() { if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; } };
 
 window.luuThongBaoLocal = function() {
     const container = document.getElementById('list-thong-bao-content');
@@ -2148,12 +2147,9 @@ window.luuThongBaoLocal = function() {
 window.taiThongBaoLocal = function() {
     const savedData = localStorage.getItem('locket_notifications');
     const container = document.getElementById('list-thong-bao-content');
-    if (savedData && savedData.trim() !== '' && container) {
-        container.innerHTML = savedData;
-    }
+    if (savedData && savedData.trim() !== '' && container) container.innerHTML = savedData;
 };
 
-// Cỗ máy in thông báo bị mất nay đã trở lại
 window.themThongBaoLocket = function(avatar, ten, noiDung) {
     const date = new Date();
     let hours = date.getHours(); let minutes = date.getMinutes();
@@ -2163,7 +2159,6 @@ window.themThongBaoLocket = function(avatar, ten, noiDung) {
     const timeStr = hours + ':' + minutes + ' ' + ampm;
 
     const idTB = 'tb_' + Date.now() + Math.floor(Math.random()*1000);
-    
     const tbHTML = `
         <div id="${idTB}" class="thong-bao-item" 
              onmousedown="window.batDauXoaTB('${idTB}')" onmouseup="window.huyXoaTB()" onmouseleave="window.huyXoaTB()"
@@ -2191,10 +2186,35 @@ window.themThongBaoLocket = function(avatar, ten, noiDung) {
     if(chamDo) chamDo.style.display = 'block';
 };
 
-// 4. LẮNG NGHE & RENDER FEED (SCROLL SNAP)
+// 2. GỬI TƯƠNG TÁC (Đẩy lên Đám mây)
+window.guiTuongTac = function(loai, noiDung, nguoiNhan, inputElement) {
+    const user = localStorage.getItem('currentUser');
+    if (!user || !window.db || !nguoiNhan) return;
+    
+    // Đẩy tín hiệu lên Firebase
+    window.db.ref('tuong_tac_locket/moi_nhat').set({
+        nguoi_gui: user,
+        nguoi_nhan: nguoiNhan,
+        loai: loai,
+        noi_dung: noiDung,
+        avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`,
+        thoi_gian: Date.now()
+    });
+
+    // UX: Biến đổi ô nhập chữ tạm thời nếu là Bình luận
+    if (inputElement && loai === 'binh_luan') {
+        inputElement.value = '';
+        const oldPh = inputElement.placeholder;
+        inputElement.placeholder = "✅ Đã gửi bình luận!";
+        setTimeout(() => { inputElement.placeholder = oldPh; }, 2000);
+    }
+};
+
+// 3. LẮNG NGHE FEED & LẮNG NGHE TƯƠNG TÁC
 window.langNgheLocket = function() {
     if (!window.db) return;
     
+    // A. Lắng nghe bài đăng mới & Render Thanh Tương Tác
     window.db.ref('bang_tin_tong_hop').limitToLast(30).on('value', (snapshot) => {
         const feedContainer = document.getElementById('khu-vuc-feed-locket');
         if (!feedContainer) return;
@@ -2202,11 +2222,9 @@ window.langNgheLocket = function() {
         
         const currentUser = localStorage.getItem('currentUser');
         let posts = [];
-        snapshot.forEach(child => {
-            posts.push({ key: child.key, ...child.val() });
-        });
+        snapshot.forEach(child => { posts.push({ key: child.key, ...child.val() }); });
         
-        // KIỂM TRA BÀI MỚI ĐỂ BẬT THÔNG BÁO (Lọc lần tải trang đầu tiên)
+        // Cảnh báo có Bài mới cho máy khác
         if (posts.length > 0 && !isFirstLoadFeed) {
             const baiMoiNhat = posts[posts.length - 1]; 
             if (baiMoiNhat.nguoi_gui !== currentUser) {
@@ -2218,32 +2236,45 @@ window.langNgheLocket = function() {
 
         posts.reverse().forEach(data => {
             let timeDate = new Date(data.thoi_gian);
-            let hours = timeDate.getHours();
-            let minutes = timeDate.getMinutes();
+            let hours = timeDate.getHours(); let minutes = timeDate.getMinutes();
             let ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12; hours = hours ? hours : 12; 
             minutes = minutes < 10 ? '0' + minutes : minutes;
             let timeStr = hours + ':' + minutes + ' ' + ampm;
             
             let touchEvents = '';
+            let interactionBar = '';
+
+            // Nếu là bài CỦA MÌNH -> Cho phép Xóa, KHÔNG hiển thị thanh tương tác
             if (data.nguoi_gui === currentUser) {
                 touchEvents = `onmousedown="window.batDauXoaBai('${data.key}')" onmouseup="window.huyXoaBai()" onmouseleave="window.huyXoaBai()" ontouchstart="window.batDauXoaBai('${data.key}')" ontouchend="window.huyXoaBai()" ontouchmove="window.huyXoaBai()"`;
+            } else {
+                // Nếu là bài BẠN BÈ -> Hiện thanh Tương tác động
+                interactionBar = `
+                <div style="width: 85%; margin: 10px auto 0; background-color: #e0e0e0; border-radius: 20px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                    <input type="text" placeholder="Viết bình luận..." 
+                           onkeypress="if(event.key === 'Enter' && this.value.trim() !== '') { window.guiTuongTac('binh_luan', this.value.trim(), '${data.nguoi_gui}', this); }"
+                           style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 10px;">
+                    <div style="display: flex; gap: 10px; font-size: 20px; cursor: pointer; flex-shrink: 0;">
+                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '❤️', '${data.nguoi_gui}');" style="transition: 0.2s; user-select: none;">❤️</span>
+                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '🔥', '${data.nguoi_gui}');" style="transition: 0.2s; user-select: none;">🔥</span>
+                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '😢', '${data.nguoi_gui}');" style="transition: 0.2s; user-select: none;">😢</span>
+                    </div>
+                </div>`;
             }
 
-            let innerContent = '';
-            if (data.loai === 'text') {
-                innerContent = `<div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #222; font-size: 22px; font-weight: 900; text-align: center; padding: 20px; box-sizing: border-box; word-wrap: break-word;">${data.noi_dung}</div>`;
-            } else {
-                innerContent = `<img src="${data.noi_dung}" style="width: 100%; height: 100%; object-fit: cover;" />`;
-            }
+            let innerContent = data.loai === 'text' 
+                ? `<div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #222; font-size: 22px; font-weight: 900; text-align: center; padding: 20px; box-sizing: border-box; word-wrap: break-word;">${data.noi_dung}</div>`
+                : `<img src="${data.noi_dung}" style="width: 100%; height: 100%; object-fit: cover;" />`;
 
             let postHTML = `
-            <div class="snap-item">
+            <div class="snap-item" style="margin-bottom: 20px;">
                 <div ${touchEvents} style="width: 85%; aspect-ratio: 1; border-radius: 25px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden; background-color: #28a745; cursor: pointer;">
                     ${innerContent}
-                    <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; object-fit: cover; z-index: 2;" />
+                    <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; object-fit: cover; z-index: 2; background: white;" />
                     ${data.loi_nhan ? `<div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background: #fd7e14; border-radius: 12px; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">${data.loi_nhan}</div>` : ''}
                 </div>
+                ${interactionBar}
                 <div style="text-align: center; color: #555; font-size: 13px; font-weight: bold; margin-top: 10px;">
                     ${data.nguoi_gui} • 🕒 ${timeStr}
                 </div>
@@ -2252,9 +2283,26 @@ window.langNgheLocket = function() {
             feedContainer.insertAdjacentHTML('beforeend', postHTML);
         });
     });
+
+    // B. Lắng nghe Tương tác (Bình luận / Cảm xúc) để Nảy Thông Báo
+    window.db.ref('tuong_tac_locket/moi_nhat').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        if (isFirstLoadTuongTac) { isFirstLoadTuongTac = false; return; }
+
+        const currentUser = localStorage.getItem('currentUser');
+        // NẾU MÌNH LÀ NGƯỜI NHẬN TƯƠNG TÁC TỪ NGƯỜI KHÁC
+        if (data.nguoi_nhan === currentUser && data.nguoi_gui !== currentUser) {
+            let noiDungThongBao = data.loai === 'binh_luan' 
+                ? `đã bình luận: "${data.noi_dung}"` 
+                : `cảm thấy ${data.noi_dung} về bài đăng của bạn`;
+            window.themThongBaoLocket(data.avatar, data.nguoi_gui, noiDungThongBao);
+        }
+    });
 };
 
-// 5. CƠ CHẾ POPUP XÓA BÀI
+// 4. CƠ CHẾ POPUP XÓA BÀI
 window.batDauXoaBai = function(key) {
     longPressTimer = setTimeout(() => {
         idBaiCanXoa = key;
@@ -2282,13 +2330,13 @@ window.xacNhanXoaVinhVien = function() {
     }
 };
 
-// 6. KHỞI ĐỘNG HỆ THỐNG KHI F5
+// 5. KHỞI ĐỘNG HỆ THỐNG KHI F5
 window.addEventListener('load', () => { 
-    window.taiThongBaoLocal(); // Lấy thông báo cũ lưu trong máy ra
+    window.taiThongBaoLocal(); 
     setTimeout(() => { 
         if (typeof window.langNgheLocket === 'function') window.langNgheLocket(); 
     }, 2000); 
-});
+})
     
 </script>
 </body>

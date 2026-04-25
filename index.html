@@ -810,7 +810,18 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
     const lastPoint = pathLatLngs[pathLatLngs.length - 1];
     const dist2D = map.distance(lastPoint, currentLatLng);
 
-    // 1. BỘ ĐẾM SIÊU NHẠY: Cứ nhích > 2 mét là nhảy số luôn (Chống lag sân nhà)
+    // 🛑 BỘ LỌC CHỐNG TRÔI GPS ĐỘT NGỘT (MULTIPATH FILTER)
+    const timeDiff = (currentTimestamp - lastTimestamp) / 1000; // Số giây trôi qua
+    const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0; // Vận tốc: mét/giây
+
+    // Vận động viên chạy bộ nhanh nhất cũng chỉ 10-12m/s. 
+    // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> HỦY BỎ NGAY LẬP TỨC
+    if (currentSpeed > 12) {
+        console.warn("Đã chặn 1 điểm GPS nhiễu! Trôi xa: " + dist2D.toFixed(1) + "m");
+        return; // Đóng sập hàm lại, không cộng số liệu, không vẽ đường ngoằn ngoèo!
+    }
+
+    // 1. BỘ ĐẾM SIÊU NHẠY: Nhích > 2 mét (và tốc độ người thường) thì nhảy số
     if (dist2D > 2) {
         totalDistanceMeter += dist2D;
         let canNang = parseFloat(userWeight) || 65;
@@ -831,8 +842,8 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
             window.db.ref('lich_su_di_chuyen/' + currentUser).push({ lat: currentLatLng.lat, lng: currentLatLng.lng, thoi_gian: currentTimestamp });
         }
 
-        // 2. GỌI API ĐỘ CAO NGẦM (Chạy ngầm phía sau, không làm kẹt giao diện)
-        if (dist2D > 10) { 
+        // 2. GỌI API ĐỘ CAO NGẦM
+        if (dist2D > 10) {
             fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${currentLatLng.lat},${currentLatLng.lng}`)
             .then(res => res.json())
             .then(apiData => {

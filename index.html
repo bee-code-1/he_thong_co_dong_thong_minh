@@ -1981,8 +1981,8 @@ window.fetchRealFriends = function() {
 
 // === HỆ THỐNG WEBRTC CAMERA (CHUẨN LOCKET) ===
 let currentStream = null;
-let facingMode = "user"; 
-    
+let facingMode = "user";
+
 // === ĐƯỜNG ỐNG BƠM ẢNH LÊN IMGBB (LÁCH LUẬT FIREBASE) ===
 window.dayAnhLenStorage = function(base64Image) {
     const user = localStorage.getItem('currentUser');
@@ -1991,7 +1991,7 @@ window.dayAnhLenStorage = function(base64Image) {
     console.log("Đang nén và đẩy ảnh lên đám mây ImgBB...");
     const commentInput = document.querySelector('input[placeholder="Nói gì đó....."]');
     if(commentInput) {
-        commentInput.placeholder = " Đang tải ảnh lên...";
+        commentInput.placeholder = "⏳ Đang tải ảnh lên...";
         commentInput.disabled = true;
     }
 
@@ -2011,7 +2011,7 @@ window.dayAnhLenStorage = function(base64Image) {
             console.log("Đã cất kho xong! Lấy được Link URL:", downloadURL);
             
             if(commentInput) {
-                commentInput.placeholder = " Đã tải xong! Nhập bình luận...";
+                commentInput.placeholder = "✅ Đã tải xong! Nhập bình luận...";
                 commentInput.disabled = false;
             }
             
@@ -2031,41 +2031,26 @@ window.dayAnhLenStorage = function(base64Image) {
         alert("Lỗi tải ảnh lên đám mây! Hãy thử lại.");
     });
 };
-                
-    .catch(error => {
-        console.error("Lỗi upload ảnh:", error);
-        if(commentInput) {
-            commentInput.placeholder = "Nói gì đó.....";
-            commentInput.disabled = false;
-        }
-        alert("Lỗi tải ảnh lên đám mây! Hãy thử lại.");
-    });
-};
 
 // Hàm xin quyền và bật Camera
 window.startLiveCamera = async function() {
     const video = document.getElementById('locket-live-video');
     const img = document.getElementById('locket-captured-img');
     const btnFlip = document.getElementById('btn-flip-camera');
-    
-    // Tắt ảnh đã chụp đi (nếu có), bật lại Kính ngắm
+
     if(img) img.style.display = 'none';
     if(video) video.style.display = 'block';
     if(btnFlip) btnFlip.style.display = 'flex';
 
-    // Tắt luồng camera cũ (nếu đang lật cam)
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
     }
-
     try {
         currentStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } },
             audio: false
         });
         video.srcObject = currentStream;
-        
-        // Lật gương (Mirror) nếu là cam trước
         video.style.transform = facingMode === "user" ? "scaleX(-1)" : "scaleX(1)";
     } catch (err) {
         console.error("Lỗi bật Camera: ", err);
@@ -2111,11 +2096,11 @@ window.chupAnhLocket = function() {
     currentStream.getTracks().forEach(track => track.stop());
     currentStream = null;
 
-    // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH VỪA CHỤP LÊN MÂY
+    // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH LÊN MÂY
     window.dayAnhLenStorage(imageDataURL);
 };
 
-// Hàm Tải ảnh từ thư viện máy (Nút trái)
+// Hàm Tải ảnh từ máy (Nút trái)
 window.xuLyTaiAnh = function(event) {
     const file = event.target.files;
     if (!file) return;
@@ -2136,24 +2121,22 @@ window.xuLyTaiAnh = function(event) {
             currentStream = null;
         }
 
-        // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH VỪA CHỌN LÊN MÂY
+        // 🚀 GỌI ĐƯỜNG ỐNG ĐẨY ẢNH LÊN MÂY
         window.dayAnhLenStorage(e.target.result);
     };
     reader.readAsDataURL(file);
 };
-// TÍCH HỢP UX: Tự động bật Camera khi người dùng vuốt sang Tab 3 (Trang chủ)
+
+// TÍCH HỢP UX: Bật Camera khi vào Trang chủ
 const oldSwitchTab = window.switchTab;
 window.switchTab = function(tabIndex) {
     if(typeof oldSwitchTab === 'function') oldSwitchTab(tabIndex);
-    
     if (tabIndex === 3) {
-        // Vào Trang chủ và Tự bật Camera 
         const img = document.getElementById('locket-captured-img');
         if (img && (img.style.display === 'none' || img.src === '')) {
             window.startLiveCamera();
         }
     } else {
-        // Rời khỏi Trang chủ 
         if (currentStream) {
             currentStream.getTracks().forEach(track => track.stop());
             currentStream = null;
@@ -2162,17 +2145,13 @@ window.switchTab = function(tabIndex) {
 };
 
 // === HỆ THỐNG PHÁT & NHẬN TÍN HIỆU LOCKET (GIAI ĐOẠN 3) ===
-
-// 1. HÀM PHÁT SÓNG (Gửi Link URL cho tất cả mọi người)
 window.banTinHieuLocket = function(imageUrl) {
     const user = localStorage.getItem('currentUser');
     if (!user || !window.db) return;
 
-    // Lấy nội dung bình luận nếu có
     const commentInput = document.querySelector('input[placeholder="✅ Đã tải xong! Nhập bình luận..."]');
     const loiNhan = commentInput ? commentInput.value : "";
 
-    // Bắn Link URL và Lời nhắn lên Đỉnh tháp Realtime Database
     window.db.ref('bang_tin_anh/moi_nhat').set({
         nguoi_gui: user,
         anh_url: imageUrl,
@@ -2181,7 +2160,6 @@ window.banTinHieuLocket = function(imageUrl) {
         avatar: localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`
     }).then(() => {
         console.log("Đã phát sóng ảnh thành công toàn server!");
-        // Reset lại ô bình luận
         if(commentInput) {
             commentInput.value = "";
             commentInput.placeholder = "Nói gì đó.....";
@@ -2189,7 +2167,6 @@ window.banTinHieuLocket = function(imageUrl) {
     }).catch(err => console.error("Lỗi phát sóng: ", err));
 };
 
-// 2. HÀM LẮNG NGHE (
 window.langNgheLocket = function() {
     if (!window.db) return;
     
@@ -2207,13 +2184,11 @@ window.langNgheLocket = function() {
             if(video) video.style.display = 'none';
             if(btnFlip) btnFlip.style.display = 'none';
             
-            // THÔNG BÁO ẢNH MỚI
             console.log("Đã nhận được ảnh mới từ: " + data.nguoi_gui);
         }
     });
 };
 
-// 3. TỰ ĐỘNG BẬT RADAR LẮNG NGHE KHI MỞ TRANG
 window.addEventListener('load', () => {
     setTimeout(() => {
         if (typeof window.langNgheLocket === 'function') window.langNgheLocket();

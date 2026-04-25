@@ -246,6 +246,9 @@
 
         <!-- 🌟 KHU VỰC DƯỚI CÙNG: ẢNH + BÌNH LUẬN + CAMERA -->
         <div style="padding-bottom: 95px;"> <!-- Chừa khoảng trống 95px cho thanh điều hướng đáy -->
+           
+            <!-- KHU VỰC FEED HIỂN THỊ ẢNH NHẬN ĐƯỢC TỪ BẠN BÈ -->
+<div id="khu-vuc-feed-locket"></div>
             
 <!-- 1. KHUNG KÍNH NGẮM LOCKET (LIVE CAMERA) -->
 <div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; margin: 0 auto 15px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
@@ -2167,6 +2170,88 @@ window.banTinHieuLocket = function(imageUrl) {
     }).catch(err => console.error("Lỗi phát sóng: ", err));
 };
 
+// === BỘ CÔNG CỤ XỬ LÝ GIAO DIỆN LOCKET MỚI ===
+
+// 1. Hàm chuyển đổi Timestamp thành định dạng 00:00 AM/PM
+window.formatAMPM = function(timestamp) {
+    let date = new Date(timestamp);
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; 
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    return hours + ':' + minutes + ' ' + ampm;
+};
+
+// 2. Hàm Thả Cảm Xúc (Đổi màu & Phóng to)
+window.thaCamXuc = function(element, type) {
+    element.style.transform = 'scale(1.5)';
+    setTimeout(() => { element.style.transform = 'scale(1)'; }, 200);
+    
+    if (type === 'tim') {
+        element.innerText = element.innerText === '🤍' ? '❤️' : '🤍';
+    } else if (type === 'lua') {
+        element.style.filter = element.style.filter === 'grayscale(100%)' ? 'none' : 'grayscale(100%)';
+    } else if (type === 'buon') {
+        element.style.filter = element.style.filter === 'grayscale(100%)' ? 'none' : 'grayscale(100%)';
+    }
+};
+
+// 3. Hệ Thống Quản Lý Thông Báo (Có Nhấn Giữ & Lưu LocalStorage)
+let timerXoaTB = null;
+window.batDauXoaTB = function(idTB) {
+    timerXoaTB = setTimeout(() => {
+        if(confirm("Xóa thông báo này?")) {
+            document.getElementById(idTB).remove();
+            window.luuThongBaoLocal();
+        }
+    }, 1000); // Nhấn giữ 1 giây sẽ hỏi xóa
+};
+window.huyXoaTB = function() {
+    if (timerXoaTB) { clearTimeout(timerXoaTB); timerXoaTB = null; }
+};
+
+window.themThongBaoLocket = function(nguoi_gui, avatar, thoi_gian) {
+    const timeStr = window.formatAMPM(thoi_gian);
+    const idTB = 'tb_' + thoi_gian;
+    const tbHTML = `
+        <div id="${idTB}" class="thong-bao-item" 
+             onmousedown="window.batDauXoaTB('${idTB}')" onmouseup="window.huyXoaTB()" onmouseleave="window.huyXoaTB()"
+             ontouchstart="window.batDauXoaTB('${idTB}')" ontouchend="window.huyXoaTB()" ontouchmove="window.huyXoaTB()"
+             style="background: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 5px solid #28a745; cursor: pointer; user-select: none;">
+            <img src="${avatar}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;" />
+            <div style="flex: 1; text-align: left;">
+                <span style="font-weight: 900; color: #333; font-size: 15px;">${nguoi_gui}</span>
+                <span style="font-size: 14px; color: #555;"> đã thêm một ảnh mới, gửi cho tất cả bạn bè</span>
+                <div style="font-size: 12px; color: #888; margin-top: 4px; font-weight: bold;">🕒 ${timeStr}</div>
+            </div>
+        </div>
+    `;
+    const container = document.getElementById('list-thong-bao-content');
+    if (container.innerText.includes('Không có thông báo')) container.innerHTML = '';
+    container.insertAdjacentHTML('afterbegin', tbHTML);
+    window.luuThongBaoLocal();
+    
+    // Bật chấm đỏ ở icon chuông dưới thanh điều hướng
+    const chamDo = document.getElementById('cham-do-thong-bao');
+    if(chamDo) chamDo.style.display = 'block';
+};
+
+window.luuThongBaoLocal = function() {
+    const container = document.getElementById('list-thong-bao-content');
+    localStorage.setItem('locket_notifications', container.innerHTML);
+};
+
+window.taiThongBaoLocal = function() {
+    const savedData = localStorage.getItem('locket_notifications');
+    const container = document.getElementById('list-thong-bao-content');
+    if (savedData && savedData.trim() !== '') {
+        container.innerHTML = savedData;
+    }
+};
+
+// 4. BỘ NÃO LẮNG NGHE VÀ RENDER GIAO DIỆN (Thay thế hàm cũ)
 window.langNgheLocket = function() {
     if (!window.db) return;
     
@@ -2174,20 +2259,56 @@ window.langNgheLocket = function() {
         const data = snapshot.val();
         if (!data) return;
 
-        const img = document.getElementById('locket-captured-img');
-        const video = document.getElementById('locket-live-video');
-        const btnFlip = document.getElementById('btn-flip-camera');
+        const timeStr = window.formatAMPM(data.thoi_gian);
+        const currentUser = localStorage.getItem('currentUser');
+        
+        // Ẩn camera đi nhường chỗ cho ảnh
+        const cameraFrame = document.getElementById('locket-main-frame');
+        if (cameraFrame) cameraFrame.style.display = 'none';
 
-        if (img) {
-            img.src = data.anh_url;
-            img.style.display = 'block';
-            if(video) video.style.display = 'none';
-            if(btnFlip) btnFlip.style.display = 'none';
-            
-            console.log("Đã nhận được ảnh mới từ: " + data.nguoi_gui);
+        // Render giao diện chuẩn Locket theo file trang_chu.png
+        const postHTML = `
+            <div style="margin-bottom: 25px; animation: fadeIn 0.5s;">
+                <!-- Khung ảnh nền xanh lá -->
+                <div style="width: 85%; aspect-ratio: 1; border-radius: 25px; margin: 0 auto 5px; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden; background-color: #28a745;">
+                    <img src="${data.anh_url}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    
+                    <!-- Avatar đè góc dưới trái -->
+                    <img src="${data.avatar}" style="position: absolute; bottom: 10px; left: 10px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #777; box-shadow: 0 4px 6px rgba(0,0,0,0.3); object-fit: cover; background: #004BAd; z-index: 2;" />
+                    
+                    <!-- Lời nhắn -->
+                    <div style="position: absolute; bottom: 15px; left: 75px; right: 15px; background-color: #fd7e14; border-radius: 12px; border: 2px solid #777; padding: 8px 10px; color: white; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 2;">
+                        ${data.loi_nhan || "Đã gửi một ảnh mới!"}
+                    </div>
+                </div>
+                
+                <!-- Thời gian tải lên -->
+                <div style="text-align: center; color: #555; font-size: 13px; font-weight: bold; margin-bottom: 10px;">
+                    ${timeStr}
+                </div>
+
+                <!-- Thanh Tương Tác Cảm Xúc -->
+                <div style="width: 85%; margin: 0 auto; background-color: #e0e0e0; border-radius: 25px; display: flex; justify-content: center; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15); gap: 20px;">
+                    <span onclick="window.thaCamXuc(this, 'tim')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none;">🤍</span>
+                    <span onclick="window.thaCamXuc(this, 'lua')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none; filter: grayscale(100%);">🔥</span>
+                    <span onclick="window.thaCamXuc(this, 'buon')" style="font-size: 26px; cursor: pointer; transition: 0.2s; user-select: none; filter: grayscale(100%);">😢</span>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('khu-vuc-feed-locket').innerHTML = postHTML;
+        
+        // Tạo thông báo sang Tab 5 (Nếu người gửi không phải là chính mình)
+        if (data.nguoi_gui !== currentUser) {
+            window.themThongBaoLocket(data.nguoi_gui, data.avatar, data.thoi_gian);
         }
     });
 };
+
+// Tự động tải lại thông báo đã lưu khi F5
+window.addEventListener('load', () => {
+    window.taiThongBaoLocal();
+});
 
 window.addEventListener('load', () => {
     setTimeout(() => {

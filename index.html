@@ -1839,8 +1839,14 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
         const myAvatar = localStorage.getItem("avatar_" + currentUser) || `https://ui-avatars.com/api/?name=${currentUser}&background=17a2b8&color=fff`;
         const myColor = "#2196F3";
 
-        if (!window.miniMaps[mapId]) {
-            const mMap = L.map(mapId, { zoomControl: false, attributionControl: false });
+      if (!window.miniMaps[mapId]) {
+            const mMap = L.map(mapId, { 
+                zoomControl: false, 
+                attributionControl: false,
+                dragging: false,       // Trả lại sự kiện vuốt trang cho điện thoại
+                touchZoom: false,      // Không cho zoom bằng 2 ngón tay
+                scrollWheelZoom: false // Không cho cuộn chuột
+            });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mMap);
             window.miniMaps[mapId] = mMap;
 
@@ -1901,38 +1907,40 @@ window.toggleConnectExpandReal = function(element) {
     const expandedContent = parentItem.querySelector('.connect-expanded-content');
     const icon = element.querySelector('.expand-icon');
 
-    document.querySelectorAll('.friend-connect-item').forEach(item => {
-        if (item !== parentItem) {
-            item.querySelector('.connect-expanded-content').style.maxHeight = '0';
-            item.querySelector('.connect-expanded-content').style.opacity = '0';
-            item.querySelector('.expand-icon').style.transform = 'rotate(0deg)';
-            item.style.backgroundColor = '#e0e0e0';
-        }
-    });
+    // ĐÃ XÓA KHỐI LỆNH ĐÓNG CÁC THẺ KHÁC -> CÁC THẺ SẼ NỐI ĐUÔI NHAU!
 
     if (expandedContent.style.maxHeight && expandedContent.style.maxHeight !== '0px') {
+        // Nếu đang mở -> Đóng lại
         expandedContent.style.maxHeight = '0';
         expandedContent.style.opacity = '0';
         icon.style.transform = 'rotate(0deg)';
         parentItem.style.backgroundColor = '#e0e0e0';
     } else {
+        // Nếu đang đóng -> Mở ra
         expandedContent.style.maxHeight = '800px'; 
         expandedContent.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
         parentItem.style.backgroundColor = '#d5d5d5';
-        setTimeout(() => { parentItem.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+        
+        // Cuộn thẻ mượt mà (dùng nearest để vuốt nhiều người không bị giật)
+        setTimeout(() => { 
+            parentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
+        }, 300);
 
-        const fName = parentItem.getAttribute('data-name');
-        const fLat = parseFloat(parentItem.getAttribute('data-lat'));
-        const fLng = parseFloat(parentItem.getAttribute('data-lng'));
-        const fMapId = parentItem.getAttribute('data-mapid');
-        const fDistId = parentItem.getAttribute('data-distid');
-        const fAvatar = window.mapAvatars[fName];
+        // KIỂM TRA XEM NGƯỜI NÀY CÓ TỌA ĐỘ KHÔNG MỚI VẼ BẢN ĐỒ
+        const hasLoc = parentItem.getAttribute('data-hasloc') === 'true';
+        if (hasLoc) {
+            const fName = parentItem.getAttribute('data-name');
+            const fLat = parseFloat(parentItem.getAttribute('data-lat'));
+            const fLng = parseFloat(parentItem.getAttribute('data-lng'));
+            const fMapId = parentItem.getAttribute('data-mapid');
+            const fDistId = parentItem.getAttribute('data-distid');
+            const fAvatar = window.mapAvatars[fName];
 
-        window.loadRealConnectMap(fMapId, fDistId, fName, fLat, fLng, fAvatar, '#e74c3c');
+            window.loadRealConnectMap(fMapId, fDistId, fName, fLat, fLng, fAvatar, '#e74c3c');
+        }
     }
 };
-
 // === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LƯU VẾT THỜI GIAN) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');

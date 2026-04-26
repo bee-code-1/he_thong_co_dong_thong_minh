@@ -258,7 +258,7 @@
                 <div id="locket-main-frame" style="width: 85%; aspect-ratio: 1; background-color: #000; border-radius: 25px; border: 3px solid #777; position: relative; box-shadow: 0 8px 15px rgba(0,0,0,0.2); overflow: hidden;">
                     
                     <!-- Lớp Camera Live -->
-                    <video id="locket-live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <video id="locket-live-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
                     <div id="btn-flip-camera" onclick="window.flipCamera()" style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;">🔄</div>
                     
                     <!-- Lớp Soạn Ghi Chú -->
@@ -1800,6 +1800,8 @@ window.closeOneConnect = function() {
 
 // === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
 window.miniMaps = {};
+window.mapAvatars = {}; // FIX: Dùng biến toàn cục lưu Avatar để không làm sập thẻ HTML
+
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
     const currentUser = localStorage.getItem('currentUser');
     let myLat, myLng;
@@ -1817,7 +1819,7 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                 return L.divIcon({
                     className: 'custom-waterdrop-icon',
                     html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                    iconSize: [1], /* TỚ ĐÃ ĐIỀN CHÍNH XÁC KÍCH THƯỚC VÀO ĐÂY */
+                    iconSize: [9], // FIX: Đã điền kích thước 45x45 chuẩn
                     iconAnchor: [22.5, 45]
                 });
             };
@@ -1825,14 +1827,14 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
             L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
 
-            // FIX CÚ PHÁP OSRM VÀ ĐẢO CHIỀU TỌA ĐỘ TỪ [LNG, LAT] SANG [LAT, LNG]
+            // FIX: Đảo tọa độ chuẩn [Lat, Lng] cho Leaflet và thêm Padding
             fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?overview=full&geometries=geojson`)
             .then(res => res.json())
             .then(data => {
                 if(data.routes && data.routes.length > 0) {
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[3], coord]); /* ĐẢO TỌA ĐỘ CHUẨN XÁC */
+                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[5], coord]);
                     const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: [2] }); /* TỚ ĐÃ ĐIỀN PADDING 20px VÀO ĐÂY */
+                    mMap.fitBounds(polyline.getBounds(), { padding: [10] });
                     
                     const distanceKm = (data.routes.distance / 1000).toFixed(1);
                     document.getElementById(distId).innerHTML = `${distanceKm} km`;
@@ -1859,15 +1861,14 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             thucHienVeBanDo();
         });
     }
-};    
-    
+};
+
 // === LOGIC ACCORDION & UX CHO ONE CONNECT ===
 window.toggleConnectExpandReal = function(element) {
     const parentItem = element.closest('.friend-connect-item');
     const expandedContent = parentItem.querySelector('.connect-expanded-content');
     const icon = element.querySelector('.expand-icon');
-    
-    // 1. Đóng toàn bộ các thẻ khác đang mở
+
     document.querySelectorAll('.friend-connect-item').forEach(item => {
         if (item !== parentItem) {
             item.querySelector('.connect-expanded-content').style.maxHeight = '0';
@@ -1877,36 +1878,30 @@ window.toggleConnectExpandReal = function(element) {
         }
     });
 
-    // 2. Xử lý mở/đóng thẻ vừa bấm
     if (expandedContent.style.maxHeight && expandedContent.style.maxHeight !== '0px') {
         expandedContent.style.maxHeight = '0';
         expandedContent.style.opacity = '0';
         icon.style.transform = 'rotate(0deg)';
         parentItem.style.backgroundColor = '#e0e0e0';
     } else {
-        expandedContent.style.maxHeight = '500px';
+        expandedContent.style.maxHeight = '800px'; // FIX: Tăng không gian lên 800px để không bị nuốt chữ
         expandedContent.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
         parentItem.style.backgroundColor = '#d5d5d5';
-        
-        setTimeout(() => {
-            parentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        setTimeout(() => { parentItem.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
 
-        // 3. RÚT TỌA ĐỘ THẬT TỪ THẺ HTML ĐỂ NẠP VÀO OSRM VÀ LEAFLET
         const fName = parentItem.getAttribute('data-name');
         const fLat = parseFloat(parentItem.getAttribute('data-lat'));
         const fLng = parseFloat(parentItem.getAttribute('data-lng'));
-        const fAvatar = parentItem.getAttribute('data-avatar');
         const fMapId = parentItem.getAttribute('data-mapid');
         const fDistId = parentItem.getAttribute('data-distid');
-
-        // Gọi hàm vẽ bản đồ thật
+        
+        // Móc Avatar từ biến toàn cục ra vẽ
+        const fAvatar = window.mapAvatars[fName];
         window.loadRealConnectMap(fMapId, fDistId, fName, fLat, fLng, fAvatar, '#e74c3c');
     }
 };
 
-// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
 // === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
@@ -1914,7 +1909,6 @@ window.fetchRealFriends = function() {
 
     if (!window.db) return;
 
-    // SỬA LỖI 1: Đọc dữ liệu từ đúng kho "nguoi_dung" thay vì "vi_tri_hien_tai"
     window.db.ref('nguoi_dung').once('value').then((snapshot) => {
         const data = snapshot.val();
         if (!data) { container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>'; return; }
@@ -1925,39 +1919,36 @@ window.fetchRealFriends = function() {
 
         for (let userId in data) {
             const user = data[userId];
-            if (userId === currentUsername) continue; // Bỏ qua bản thân
+            if (userId === currentUsername) continue;
 
-            // SỬA LỖI 2: Đọc đúng tên biến tọa độ
             const lat = user.toa_do_lat;
             const lng = user.toa_do_lng;
-            
-            // Nếu bạn bè này chưa từng bật GPS thì bỏ qua không hiển thị
             if (!lat || !lng) continue;
 
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
+            window.mapAvatars[userId] = avatar; // FIX: Cất avatar vào biến toàn cục
+
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
-
-            // Xử lý Trạng thái Online / Offline
             const lastUpdate = user.thoi_gian_cap_nhat || now;
             const diffMinutes = Math.floor((now - lastUpdate) / 60000); 
             
             let statusText = "hoạt động gần đây";
-            let dotColor = "#28a745"; // Xanh lá = Online
+            let dotColor = "#28a745"; 
             
             if (diffMinutes > 5) {
-                dotColor = "#dc3545"; // Đỏ = Offline
+                dotColor = "#dc3545"; 
                 if (diffMinutes < 60) statusText = `hoạt động ${diffMinutes} phút trước`;
                 else statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
             }
 
+            // Đã xóa thuộc tính data-avatar ở thẻ div để chống vỡ HTML
             html += `
             <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
-                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-avatar="${avatar}" data-mapid="${mapId}" data-distid="${distId}">
+                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}">
                 
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
                     <div style="width: 50px; height: 50px; border-radius: 50%; background-color: ${dotColor}; border: 3px solid #333; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
-                    
                     <div style="flex: 1; text-align: left;">
                         <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
                         <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>

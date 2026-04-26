@@ -224,64 +224,63 @@
     transform: scale(0.7); /* Lún xuống 30% khi chạm */
 }
 
-/* === ANIMATION === */
-.aqi-panel {
-    background: rgba(255,255,255,0.9);
-    border-radius: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    cursor: pointer;
-    position: relative;
-    z-index: 1000;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    overflow: hidden;
-}
-.aqi-header {
+/* === ANIMATION BẢNG LIỀN NÚT (KIỂU FOLDER TAB) ==== */
+.aqi-pill {
+    background: rgba(255,255,255,0.95);
     padding: 6px 15px;
+    border-radius: 20px;
     font-weight: bold;
     font-size: 12px;
     color: #333;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    cursor: pointer;
+    position: relative;
+    z-index: 1001; /* Luôn nổi lên trên cùng để làm "đầu nối" */
     white-space: nowrap;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
-.aqi-panel.expanded {
-    position: fixed !important;
-    top: 15vh !important;
-    left: 5% !important;
-    width: 90% !important;
-    height: 580px !important;
-    min-height: 580px !important;
-    max-height: 85vh !important;
-    border-radius: 35px;
-    background: #f4f6f8;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    z-index: 999999 !important;
-    cursor: default;
+
+/* Khi bảng mở ra, viên thuốc bỏ bóng, bỏ bo góc dưới và đổi màu để hòa làm 1 với cái bảng */
+.aqi-pill.active {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 0px; /* Góc vuông để nối mượt với góc bảng */
+    box-shadow: none; 
+    background: #f4f6f8; 
 }
-.aqi-panel.expanded .aqi-header {
-    opacity: 0;
-    pointer-events: none;
-}
-.aqi-content {
+
+.aqi-board-wrapper {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    padding: 20px 15px;
-    box-sizing: border-box;
+    top: 100%;
+    right: 0;
+    margin-top: 0; /* Dính sát vách đáy của viên thuốc */
+    width: 88vw;
+    max-width: 360px;
+    background: #f4f6f8;
+    border-radius: 25px;
+    border-top-right-radius: 0px; /* Góc vuông bên phải để không bị lộ khe hở với viên thuốc */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    z-index: 1000;
+    
+    /* Animation nảy ra từ đáy viên thuốc */
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
-    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    transform: scale(0.5) translateY(-20px);
+    transform-origin: top right; 
     pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1.1);
+}
+
+.aqi-board-wrapper.show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+}
+
+.aqi-content {
+    padding: 15px;
+    max-height: 70vh;
     overflow-y: auto;
 }
-.aqi-panel.expanded .aqi-content {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-    transition-delay: 0.1s;
-}
+
 .aqi-item {
     display: flex;
     align-items: flex-start;
@@ -292,6 +291,7 @@
     border-radius: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
+
 .aqi-color {
     width: 22px; height: 22px;
     border-radius: 50%;
@@ -352,34 +352,36 @@
             <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
                 <div id="widget-thoi-tiet" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Đang đo...</div>
 
-<!-- BẢNG AQI có animation-->
-<div id="aqi-info-panel" class="aqi-panel" onclick="window.moPopupAQI(event, this)">
+<!-- BẢNG AQI KIỂU FOLDER TAB  -->
+<div style="position: relative; display: inline-block;">
     
-    <!-- MẶT 1: Nút nhỏ ôm khít chữ -->
-    <div class="aqi-header" id="widget-bui-min">
+    <!--  Nút nhỏ -->
+    <div id="widget-bui-min" class="aqi-pill" onclick="window.toggleAqiBoard(event)">
         Chờ GPS...
     </div>
     
-    <!-- MẶT 2: Hiện lúc bung to -->
-    <div class="aqi-content">
-        <div style="text-align: center; margin-bottom: 15px; color: #444; font-size: 15px; font-weight: 900;">
-            Đánh giá Không khí & Khuyến nghị
-        </div>
-        
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #00e400; box-shadow: 0 0 8px #00e400;"></div><div><strong style="color: #00b000; font-size: 15px;">1. Rất tốt (0 - 50)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng không khí tuyệt vời. Bạn nên ra ngoài hoạt động và tập thể thao.</p></div></div>
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #fce83a; border: 1px solid #ddd;"></div><div><strong style="color: #d4b200; font-size: 15px;">2. Khá tốt (51 - 100)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Phù hợp để ra ngoài. Người cực kỳ nhạy cảm (hoặc bị suyễn) nên hạn chế vận động quá sức.</p></div></div>
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #ff7e00; box-shadow: 0 0 8px rgba(255,126,0,0.5);"></div><div><strong style="color: #ff7e00; font-size: 15px;">3. Trung bình (101 - 150)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng bình thường, bạn có thể ra ngoài nếu muốn. Người có bệnh hô hấp nên ưu tiên tập trong nhà.</p></div></div>
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #ff0000; box-shadow: 0 0 8px rgba(255,0,0,0.5);"></div><div><strong style="color: #e60000; font-size: 15px;">4. Hơi tệ (151 - 200)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;"> Bạn nên mang khẩu trang khi ra đường. Tránh đạp xe hay chạy bộ ngoài trời hôm nay.</p></div></div>
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #8f3f97; box-shadow: 0 0 8px rgba(143,63,151,0.5);"></div><div><strong style="color: #8f3f97; font-size: 15px;">5. Báo động (201 - 300)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Nguy hại sức khỏe! Bạn không nên ra ngoài. Nên chuyển mọi bài tập vào trong nhà.</p></div></div>
-        <div class="aqi-item"><div class="aqi-color" style="background-color: #7e0023;"></div><div><strong style="color: #7e0023; font-size: 15px;">6. Nguy hiểm (300+)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Mức độ cực kì độc hại, chúng tôi khuyên bạn nên ngủ ở nhà cho sướng. Nên đóng cửa sổ và dùng máy lọc kk.</p></div></div>
+    <!--: Bảng thông báo rủ xuống từ đáy viên thuốc -->
+    <div id="aqi-popup-board" class="aqi-board-wrapper">
+        <div class="aqi-content">
+            <div style="text-align: center; margin-bottom: 15px; color: #444; font-size: 15px; font-weight: 900;">
+                Đánh giá Không khí & Khuyến nghị
+            </div>
+            
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #00e400; box-shadow: 0 0 8px #00e400;"></div><div><strong style="color: #00b000; font-size: 15px;">1. Rất tốt (0 - 50)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng không khí tuyệt vời. Bạn nên ra ngoài hoạt động và tập thể thao.</p></div></div>
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #fce83a; border: 1px solid #ddd;"></div><div><strong style="color: #d4b200; font-size: 15px;">2. Khá tốt (51 - 100)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Phù hợp để ra ngoài. Người cực kỳ nhạy cảm (hoặc bị suyễn) nên hạn chế vận động quá sức.</p></div></div>
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #ff7e00; box-shadow: 0 0 8px rgba(255,126,0,0.5);"></div><div><strong style="color: #ff7e00; font-size: 15px;">3. Trung bình (101 - 150)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng bình thường, bạn có thể ra ngoài nếu muốn. Người có bệnh hô hấp nên ưu tiên tập trong nhà.</p></div></div>
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #ff0000; box-shadow: 0 0 8px rgba(255,0,0,0.5);"></div><div><strong style="color: #e60000; font-size: 15px;">4. Hơi tệ (151 - 200)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;"> Bạn nên mang khẩu trang khi ra đường. Tránh đạp xe hay chạy bộ ngoài trời hôm nay.</p></div></div>
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #8f3f97; box-shadow: 0 0 8px rgba(143,63,151,0.5);"></div><div><strong style="color: #8f3f97; font-size: 15px;">5. Báo động (201 - 300)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Nguy hại sức khỏe! Bạn không nên ra ngoài. Nên chuyển mọi bài tập vào trong nhà.</p></div></div>
+            <div class="aqi-item"><div class="aqi-color" style="background-color: #7e0023;"></div><div><strong style="color: #7e0023; font-size: 15px;">6. Nguy hiểm (300+)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Mức độ cực kì độc hại, chúng tôi khuyên bạn nên ngủ ở nhà cho sướng. Nên đóng cửa sổ và dùng máy lọc kk.</p></div></div>
 
-        <div style="text-align: center; margin-top: 15px;">
-            <button class="reaction-btn" style="background: #e0e0e0; color: #333; font-weight: bold; border: none; padding: 10px 30px; border-radius: 25px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" 
-                    onclick="window.dongPopupAQI(event)">Thu gọn</button>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="reaction-btn" style="background: #e0e0e0; color: #333; font-weight: bold; border: none; padding: 10px 30px; border-radius: 25px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
+                        onclick="window.dongAqiBoard(event)">Thu gọn</button>
+            </div>
         </div>
     </div>
 </div>
-            </div>
+                
             
             <!-- Khu vực danh sách bạn bè thật (Sẽ được JS nhồi vào đây) -->
             <div id="story-ban-be-list" style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none;">
@@ -2609,75 +2611,33 @@ window.thaCamXuc = function(event, emoji) {
     if (navigator.vibrate) navigator.vibrate(30);
 };
 
-// === BỘ NÃO DYNAMIC ISLAND AQI DUY NHẤT ===
-window.moPopupAQI = function(event, element) {
+// === LOGIC BẢNG AQI LIỀN NÚT (KHÔNG DÙNG BÓNG MA) ===
+window.toggleAqiBoard = function(event) {
     event.stopPropagation();
-    if (!element.classList.contains('expanded')) {
-        const rect = element.getBoundingClientRect();
-        
-        // 1. Đẻ bóng ma tàng hình giữ chỗ
-        let ghost = document.getElementById('aqi-ghost');
-        if (!ghost) {
-            ghost = document.createElement('div');
-            ghost.id = 'aqi-ghost';
-            element.parentNode.insertBefore(ghost, element);
-        }
-        ghost.style.width = rect.width + 'px';
-        ghost.style.height = rect.height + 'px';
-        ghost.style.display = 'inline-block';
-        ghost.style.flexShrink = '0';
-        
-        // 2. Chốt tọa độ trước khi bay
-        element.style.position = 'fixed';
-        element.style.left = rect.left + 'px';
-        element.style.top = rect.top + 'px';
-        element.style.width = rect.width + 'px';
-        element.style.height = rect.height + 'px';
-        element.style.margin = '0';
-        
-        // 3. Kích hoạt bung lụa
-        requestAnimationFrame(() => {
-            element.classList.add('expanded');
-            element.style.width = '90%';
-            element.style.height = '580px';
-            element.style.left = '5%';
-            element.style.top = '15vh';
-        });
+    const board = document.getElementById('aqi-popup-board');
+    const pill = document.getElementById('widget-bui-min');
+    if (board && pill) {
+        board.classList.toggle('show');
+        pill.classList.toggle('active');
     }
 };
 
-window.dongPopupAQI = function(event) {
+window.dongAqiBoard = function(event) {
     if(event) event.stopPropagation();
-    const panel = document.getElementById('aqi-info-panel');
-    if (panel && panel.classList.contains('expanded')) {
-        const ghost = document.getElementById('aqi-ghost');
-        if (ghost) {
-            const rect = ghost.getBoundingClientRect();
-            panel.style.width = rect.width + 'px';
-            panel.style.height = rect.height + 'px';
-            panel.style.left = rect.left + 'px';
-            panel.style.top = rect.top + 'px';
-        }
-        panel.classList.remove('expanded');
-        
-        setTimeout(() => {
-            if (!panel.classList.contains('expanded')) {
-                panel.style.position = 'relative';
-                panel.style.width = 'auto';
-                panel.style.height = 'auto';
-                panel.style.left = 'auto';
-                panel.style.top = 'auto';
-                if (ghost) ghost.remove();
-            }
-        }, 400);
+    const board = document.getElementById('aqi-popup-board');
+    const pill = document.getElementById('widget-bui-min');
+    if (board && pill) {
+        board.classList.remove('show');
+        pill.classList.remove('active');
     }
 };
 
-// Tính năng bấm ra ngoài vùng popup để đóng
+// Lắng nghe sự kiện click bừa ra ngoài bản đồ để tự thu bảng lại
 document.addEventListener('click', function(event) {
-    const panel = document.getElementById('aqi-info-panel');
-    if (panel && panel.classList.contains('expanded') && !panel.contains(event.target)) {
-        window.dongPopupAQI();
+    const board = document.getElementById('aqi-popup-board');
+    const pill = document.getElementById('widget-bui-min');
+    if (board && board.classList.contains('show') && !board.contains(event.target) && !pill.contains(event.target)) {
+        window.dongAqiBoard();
     }
 });
     

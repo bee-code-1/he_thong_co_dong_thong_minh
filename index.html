@@ -173,6 +173,21 @@
 .snap-item {
     animation: slideUpFade 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
+
+/* CHỐNG BÔI ĐEN, COPY VÀ MENU TÌM KIẾM GOOGLE */
+#btn-flip-camera, 
+#camera-controls div, 
+.nav-item, 
+.action-btn, 
+.top-left-btn,
+#btn-radar-share,
+.friend-connect-item {
+    -webkit-user-select: none;      /* Dành cho Safari trên iPhone */
+    -moz-user-select: none;         /* Dành cho Firefox */
+    -ms-user-select: none;          /* Dành cho Edge/IE */
+    user-select: none;              /* Chuẩn chung */
+    -webkit-touch-callout: none;    /* Chống hiện menu khi nhấn giữ lâu trên iOS */
+}
          
     </style>
 </head>

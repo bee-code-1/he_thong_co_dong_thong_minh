@@ -224,23 +224,81 @@
     transform: scale(0.7); /* Lún xuống 30% khi chạm */
 }
 
-/* ==== ANIMATION mục chất luọng kk - trang chủ ======= */
+/* === ANIMATION DYNAMIC ISLAND - BẢN HOÀN HẢO ==== */
 .aqi-panel {
-    background: #ffffff;
-    border-radius: 40px;
-    width: 150px;
-    height: 45px;
-    min-height: 45px; 
-    max-height: 45px; /* Khóa chiều cao */
-    overflow: hidden;
-    position: relative;
-    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     cursor: pointer;
+    position: relative;
     z-index: 1000;
-    margin: 0;
-    flex-shrink: 0; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow: hidden;
 }
+
+.aqi-header {
+    padding: 6px 15px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #333;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+}
+
+/* TRẠNG THÁI MỞ RỘNG */
+.aqi-panel.expanded {
+    background: #f4f6f8;
+    border-radius: 35px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    z-index: 999999 !important;
+    cursor: default;
+}
+
+.aqi-panel.expanded .aqi-header {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.aqi-content {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 20px 15px;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: none;
+    overflow-y: auto;
+}
+
+.aqi-panel.expanded .aqi-content {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    transition-delay: 0.1s;
+}
+
+.aqi-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    background: white;
+    padding: 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.aqi-color {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
 
 
 /*  BẤM VÀO -> TÁCH KHỎI BỐ CỤC, NỔI LÊN LAYER CAO NHẤT */
@@ -371,69 +429,27 @@
 <!-- BẢNG AQI có animation-->
 <div id="aqi-info-panel" class="aqi-panel" onclick="window.moPopupAQI(event, this)">
     
-    <!-- MẶT 1: Thu gọn (Pill). Gắn id="widget-bui-min" để JS cũ tự động rót màu & nồng độ bụi vào đây -->
+    <!-- MẶT 1: Nút nhỏ ôm khít chữ -->
     <div class="aqi-header" id="widget-bui-min">
         Chờ GPS...
     </div>
     
-    <!-- MẶT 2: Hiện lúc bung to (Dynamic Island Content) -->
+    <!-- MẶT 2: Hiện lúc bung to -->
     <div class="aqi-content">
         <div style="text-align: center; margin-bottom: 15px; color: #444; font-size: 15px; font-weight: 900;">
             Đánh giá Không khí & Khuyến nghị
         </div>
         
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #00e400; box-shadow: 0 0 8px #00e400;"></div>
-            <div>
-                <strong style="color: #00b000; font-size: 15px;">1. Rất tốt (0 - 50)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng không khí tuyệt vời. Bạn nên ra ngoài hoạt động và tập thể thao cường độ cao.</p>
-            </div>
-        </div>
-        
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #fce83a; border: 1px solid #ddd;"></div>
-            <div>
-                <strong style="color: #d4b200; font-size: 15px;">2. Khá tốt (51 - 100)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Phù hợp để ra ngoài. Người cực kỳ nhạy cảm (hoặc bị suyễn) nên hạn chế vận động quá sức.</p>
-            </div>
-        </div>
-        
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #ff7e00; box-shadow: 0 0 8px rgba(255,126,0,0.5);"></div>
-            <div>
-                <strong style="color: #ff7e00; font-size: 15px;">3. Trung bình (101 - 150)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng bình thường, bạn có thể ra ngoài nếu muốn. Bệnh nhân hô hấp nên ưu tiên tập trong nhà.</p>
-            </div>
-        </div>
-        
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #ff0000; box-shadow: 0 0 8px rgba(255,0,0,0.5);"></div>
-            <div>
-                <strong style="color: #e60000; font-size: 15px;">4. Hơi tệ (151 - 200)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Khuyên bạn nên mang khẩu trang khi ra đường. Tránh đạp xe/chạy bộ ngoài trời hôm nay.</p>
-            </div>
-        </div>
-        
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #8f3f97; box-shadow: 0 0 8px rgba(143,63,151,0.5);"></div>
-            <div>
-                <strong style="color: #8f3f97; font-size: 15px;">5. Báo động (201 - 300)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Nguy hại sức khỏe! Bạn không nên ra ngoài. Nên chuyển mọi bài tập vào trong nhà.</p>
-            </div>
-        </div>
-
-        <div class="aqi-item">
-            <div class="aqi-color" style="background-color: #7e0023;"></div>
-            <div>
-                <strong style="color: #7e0023; font-size: 15px;">6. Nguy hiểm (300+)</strong>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Mức độ cực kì độc hại, chúng tôi khuyên bạn nên ngủ ở nhà cho sướng. Nên đóng cửa sổ và dùng máy lọc kk.</p>
-            </div>
-        </div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #00e400; box-shadow: 0 0 8px #00e400;"></div><div><strong style="color: #00b000; font-size: 15px;">1. Rất tốt (0 - 50)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng không khí tuyệt vời. Bạn nên ra ngoài hoạt động và tập thể thao.</p></div></div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #fce83a; border: 1px solid #ddd;"></div><div><strong style="color: #d4b200; font-size: 15px;">2. Khá tốt (51 - 100)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Phù hợp để ra ngoài. Người cực kỳ nhạy cảm (hoặc bị suyễn) nên hạn chế vận động quá sức.</p></div></div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #ff7e00; box-shadow: 0 0 8px rgba(255,126,0,0.5);"></div><div><strong style="color: #ff7e00; font-size: 15px;">3. Trung bình (101 - 150)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng bình thường, bạn có thể ra ngoài nếu muốn. Người có bệnh hô hấp nên ưu tiên tập trong nhà.</p></div></div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #ff0000; box-shadow: 0 0 8px rgba(255,0,0,0.5);"></div><div><strong style="color: #e60000; font-size: 15px;">4. Hơi tệ (151 - 200)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;"> Bạn nên mang khẩu trang khi ra đường. Tránh đạp xe hay chạy bộ ngoài trời hôm nay.</p></div></div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #8f3f97; box-shadow: 0 0 8px rgba(143,63,151,0.5);"></div><div><strong style="color: #8f3f97; font-size: 15px;">5. Báo động (201 - 300)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Nguy hại sức khỏe! Bạn không nên ra ngoài. Nên chuyển mọi bài tập vào trong nhà.</p></div></div>
+        <div class="aqi-item"><div class="aqi-color" style="background-color: #7e0023;"></div><div><strong style="color: #7e0023; font-size: 15px;">6. Nguy hiểm (300+)</strong><p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Mức độ cực kì độc hại, chúng tôi khuyên bạn nên ngủ ở nhà cho sướng. Nên đóng cửa sổ và dùng máy lọc kk.</p></div></div>
 
         <div style="text-align: center; margin-top: 15px;">
-            <!-- Nút đóng thủ công -->
             <button class="reaction-btn" style="background: #e0e0e0; color: #333; font-weight: bold; border: none; padding: 10px 30px; border-radius: 25px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" 
-                    onclick="event.stopPropagation(); document.getElementById('aqi-info-panel').classList.remove('expanded')">Thu gọn</button>
+                    onclick="window.dongPopupAQI(event)">Thu gọn</button>
         </div>
     </div>
 </div>

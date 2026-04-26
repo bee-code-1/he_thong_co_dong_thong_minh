@@ -252,17 +252,18 @@
     position: absolute;
     top: 100%;
     right: 0;
-    margin-top: 0; /* Dính sát vách đáy của viên thuốc */
+    margin-top: 0; 
     width: 88vw;
     max-width: 360px;
     background: #f4f6f8;
     border-radius: 25px;
-    border-top-right-radius: 0px; /* Góc vuông bên phải để không bị lộ khe hở với viên thuốc */
+    border-top-right-radius: 0px; 
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
     z-index: 1000;
     
-    /* Animation nảy ra từ đáy viên thuốc */
+    /*  Dùng visibility để tắt hẳn tương tác vật lý */
     opacity: 0;
+    visibility: hidden; 
     transform: scale(0.5) translateY(-20px);
     transform-origin: top right; 
     pointer-events: none;
@@ -271,6 +272,7 @@
 
 .aqi-board-wrapper.show {
     opacity: 1;
+    visibility: visible; /* Cho phép tương tác vật lý trở lại khi hiện */
     transform: scale(1) translateY(0);
     pointer-events: auto;
 }

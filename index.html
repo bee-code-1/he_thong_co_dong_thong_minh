@@ -1983,7 +1983,11 @@ window.fetchRealFriends = function() {
                  data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}">
                 
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; background-color: ${dotColor}; border: 3px solid #333; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
+                   <!-- Vòng tròn trạng thái (Xanh/Đỏ) + Avatar -->
+<div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
+    <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #333; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
+    <div style="position: absolute; bottom: -2px; right: -5px; width: 15px; height: 15px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
+</div>
                     <div style="flex: 1; text-align: left;">
                         <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
                         <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>

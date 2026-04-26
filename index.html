@@ -20,7 +20,27 @@
         .tab-content { padding: 20px; padding-top: 40px; text-align: center; color: #333; }
 
         /* 2. THANH ĐIỀU HƯỚNG DƯỚI CÙNG  */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.15); z-index: 2000; transition: transform 0.3s ease-in-out; }
+        .bottom-nav { 
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    background: white; 
+    display: flex; 
+    justify-content: space-around; 
+    /* Đẩy padding né vạch Home của iPhone */
+    padding-top: 15px; 
+    padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
+    border-top-left-radius: 20px; 
+    border-top-right-radius: 20px; 
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.15); 
+    z-index: 2000; 
+    transition: transform 0.3s ease-in-out; 
+    /* Ép trình duyệt tách lớp đồ họa (GPU) để không bị mất click */
+    transform: translateZ(0); 
+    /* Tăng độ nhạy khi chạm trên màn hình cảm ứng */
+    touch-action: manipulation; 
+}
         .nav-hidden { transform: translateY(100%); }
         .nav-item { font-size: 26px; opacity: 0.4; transition: 0.3s all ease; cursor: pointer; }
         .nav-item.active { opacity: 1; transform: scale(1.2); filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }

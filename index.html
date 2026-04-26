@@ -2709,6 +2709,79 @@ document.addEventListener('click', function(event) {
         panel.classList.remove('expanded'); // Tự động thu gọn lại
     }
 });
+
+// === flip animation ===
+window.moPopupAQI = function(event, element) {
+    event.stopPropagation(); 
+    if (!element.classList.contains('expanded')) {
+        // Lấy kích thước và tọa độ thật trên màn hình của cái nút nhỏ
+        const rect = element.getBoundingClientRect();
+        
+        // 1.  Tạo 1 div tàng hình giữ chỗ để nút thời tiết không bị giật
+        let ghost = document.getElementById('aqi-ghost');
+        if (!ghost) {
+            ghost = document.createElement('div');
+            ghost.id = 'aqi-ghost';
+            element.parentNode.insertBefore(ghost, element);
+        }
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        ghost.style.display = 'inline-block';
+        ghost.style.flexShrink = '0';
+        
+        // 2. CHỐT TỌA ĐỘ NÚT CHÍNH XÁC TẠI CHỖ 
+        element.style.position = 'fixed';
+        element.style.left = rect.left + 'px';
+        element.style.top = rect.top + 'px';
+        element.style.width = rect.width + 'px';
+        element.style.height = rect.height + 'px';
+        element.style.margin = '0';
+        
+        // 3. KÍCH HOẠT BAY LÊN GIỮA MÀN HÌNH 
+        requestAnimationFrame(() => {
+            element.classList.add('expanded');
+            element.style.width = '90%';
+            element.style.height = '580px';
+            element.style.left = '5%';
+            element.style.top = '15vh';
+        });
+    }
+};
+
+window.dongPopupAQI = function(event) {
+    if(event) event.stopPropagation();
+    const panel = document.getElementById('aqi-info-panel');
+    if (panel && panel.classList.contains('expanded')) {
+        const ghost = document.getElementById('aqi-ghost');
+        if (ghost) {
+            const rect = ghost.getBoundingClientRect();
+            panel.style.width = rect.width + 'px';
+            panel.style.height = rect.height + 'px';
+            panel.style.left = rect.left + 'px';
+            panel.style.top = rect.top + 'px';
+        }
+        panel.classList.remove('expanded');
+        
+        setTimeout(() => {
+            if (!panel.classList.contains('expanded')) {
+                panel.style.position = 'relative';
+                panel.style.width = 'auto';
+                panel.style.height = 'auto';
+                panel.style.left = 'auto';
+                panel.style.top = 'auto';
+                if (ghost) ghost.remove();
+            }
+        }, 400);
+    }
+};
+
+// Tính năng bấm ra ngoài vùng popup để đóng
+document.addEventListener('click', function(event) {
+    const panel = document.getElementById('aqi-info-panel');
+    if (panel && panel.classList.contains('expanded') && !panel.contains(event.target)) {
+        window.dongPopupAQI();
+    }
+});
     
 </script>
 </body>

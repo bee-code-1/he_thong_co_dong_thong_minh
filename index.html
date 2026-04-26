@@ -224,7 +224,7 @@
     transform: scale(0.7); /* Lún xuống 30% khi chạm */
 }
 
-/* === ANIMATION DYNAMIC ISLAND - BẢN HOÀN HẢO ==== */
+/* === ANIMATION === */
 .aqi-panel {
     background: rgba(255,255,255,0.9);
     border-radius: 20px;
@@ -238,7 +238,6 @@
     transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
     overflow: hidden;
 }
-
 .aqi-header {
     padding: 6px 15px;
     font-weight: bold;
@@ -247,21 +246,24 @@
     white-space: nowrap;
     transition: opacity 0.3s ease;
 }
-
-/* TRẠNG THÁI MỞ RỘNG */
 .aqi-panel.expanded {
-    background: #f4f6f8;
+    position: fixed !important;
+    top: 15vh !important;
+    left: 5% !important;
+    width: 90% !important;
+    height: 580px !important;
+    min-height: 580px !important;
+    max-height: 85vh !important;
     border-radius: 35px;
+    background: #f4f6f8;
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
     z-index: 999999 !important;
     cursor: default;
 }
-
 .aqi-panel.expanded .aqi-header {
     opacity: 0;
     pointer-events: none;
 }
-
 .aqi-content {
     position: absolute;
     top: 0; left: 0;
@@ -274,14 +276,12 @@
     pointer-events: none;
     overflow-y: auto;
 }
-
 .aqi-panel.expanded .aqi-content {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
     transition-delay: 0.1s;
 }
-
 .aqi-item {
     display: flex;
     align-items: flex-start;
@@ -292,80 +292,6 @@
     border-radius: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.aqi-color {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 3px;
-}
-
-
-
-/*  BẤM VÀO -> TÁCH KHỎI BỐ CỤC, NỔI LÊN LAYER CAO NHẤT */
-.aqi-panel.expanded {
-    position: fixed !important; 
-    top: 15vh !important;
-    left: 5% !important;
-    width: 90% !important;
-    height: 580px !important;
-    min-height: 580px !important;
-    max-height: 85vh !important;
-    border-radius: 35px;
-    background: #f4f6f8;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    z-index: 999999 !important; 
-    cursor: default;
-}
-
-.aqi-header {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 45px; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    color: #333;
-    transition: all 0.3s ease;
-}
-
-.aqi-panel.expanded .aqi-header {
-    opacity: 0;
-    transform: scale(0.8) translateY(10px);
-    pointer-events: none;
-}
-
-.aqi-content {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    padding: 15px 15px 20px 15px;
-    box-sizing: border-box;
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    overflow-y: auto;
-    pointer-events: none;
-}
-
-.aqi-panel.expanded .aqi-content {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-    transition-delay: 0.1s;
-}
-
-.aqi-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
-    background: white;
-    padding: 12px;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
 .aqi-color {
     width: 22px; height: 22px;
     border-radius: 50%;
@@ -2683,41 +2609,13 @@ window.thaCamXuc = function(event, emoji) {
     if (navigator.vibrate) navigator.vibrate(30);
 };
 
-// ===AQI : TÂM THU PHÓNG VÀ CLICK RA NGOÀI TẮT===
+// === BỘ NÃO DYNAMIC ISLAND AQI DUY NHẤT ===
 window.moPopupAQI = function(event, element) {
-    event.stopPropagation(); 
-    
+    event.stopPropagation();
     if (!element.classList.contains('expanded')) {
-        // 1. Lấy tọa độ thanh ngắn AQI
-        const rect = element.getBoundingClientRect();
-        const originX = rect.left + rect.width / 2;
-        const originY = rect.top + rect.height / 2;
-        
-        // 2. Gán tâm thu phóng vào đúng tọa độ đó
-        element.style.transformOrigin = `${originX}px ${originY}px`;
-        
-        // 3. Bung lụa
-        element.classList.add('expanded');
-    }
-};
-
-// Lắng nghe sự kiện bấm vào bất cứ đâu trên toàn bộ ứng dụng
-document.addEventListener('click', function(event) {
-    const panel = document.getElementById('aqi-info-panel');
-    // Nếu bảng AQI đang mở, VÀ chỗ vừa bấm ngón tay KHÔNG nằm bên trong bảng AQI
-    if (panel && panel.classList.contains('expanded') && !panel.contains(event.target)) {
-        panel.classList.remove('expanded'); // Tự động thu gọn lại
-    }
-});
-
-// === flip animation ===
-window.moPopupAQI = function(event, element) {
-    event.stopPropagation(); 
-    if (!element.classList.contains('expanded')) {
-        // Lấy kích thước và tọa độ thật trên màn hình của cái nút nhỏ
         const rect = element.getBoundingClientRect();
         
-        // 1.  Tạo 1 div tàng hình giữ chỗ để nút thời tiết không bị giật
+        // 1. Đẻ bóng ma tàng hình giữ chỗ
         let ghost = document.getElementById('aqi-ghost');
         if (!ghost) {
             ghost = document.createElement('div');
@@ -2729,7 +2627,7 @@ window.moPopupAQI = function(event, element) {
         ghost.style.display = 'inline-block';
         ghost.style.flexShrink = '0';
         
-        // 2. CHỐT TỌA ĐỘ NÚT CHÍNH XÁC TẠI CHỖ 
+        // 2. Chốt tọa độ trước khi bay
         element.style.position = 'fixed';
         element.style.left = rect.left + 'px';
         element.style.top = rect.top + 'px';
@@ -2737,7 +2635,7 @@ window.moPopupAQI = function(event, element) {
         element.style.height = rect.height + 'px';
         element.style.margin = '0';
         
-        // 3. KÍCH HOẠT BAY LÊN GIỮA MÀN HÌNH 
+        // 3. Kích hoạt bung lụa
         requestAnimationFrame(() => {
             element.classList.add('expanded');
             element.style.width = '90%';

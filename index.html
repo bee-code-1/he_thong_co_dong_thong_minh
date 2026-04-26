@@ -2048,17 +2048,18 @@ window.xacNhanDangBai = function() {
         document.getElementById('draft-overlay').style.display = 'none';
         dayLenFirebase('text', noteContent, caption);
         
-        if (noteObj) noteObj.value = ''; // ✅ Reset nội dung sau đăng
-        cheDoDangBai = null; // ✅ Reset trạng thái
+        if (noteObj) noteObj.value = ''; //  Reset nội dung sau đăng
+        cheDoDangBai = null; //  Reset trạng thái
         
     } else if (cheDoDangBai === 'image') {
         document.getElementById('draft-overlay').style.display = 'none';
-        cheDoDangBai = null; // ✅ Thêm dòng này để reset trạng thái
+        cheDoDangBai = null; // Thêm dòng này để reset trạng thái
         
         console.log("Đang nén và đẩy ảnh lên ImgBB...");
         const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89";
-        const base64Data = anhDangCho.split(',')[6];
-        const formData = new FormData(); formData.append("image", base64Data);
+        const base64Data = anhDangCho.split(',')[1]; 
+        const formData = new FormData(); 
+        formData.append("image", base64Data);
         
         fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData })
         .then(res => res.json())

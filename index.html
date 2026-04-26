@@ -1860,17 +1860,16 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             fetch(`https://router.project-osrm.org/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?overview=full&geometries=geojson`)
             .then(res => res.json())
             .then(data => {
-                if(data.routes && data.routes.length > 0) {
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[12], coord]); /* Đảo tọa độ chuẩn Leaflet [Lat, Lng] */
-                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: [13] });
-                    
-                    const distanceKm = (data.routes.distance / 1000).toFixed(1);
-                    document.getElementById(distId).innerHTML = `${distanceKm} km`;
-                } else {
-                    document.getElementById(distId).innerHTML = "Không tìm thấy đường";
-                }
-            })
+            if(data.routes && data.routes.length > 0) {
+                const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[4], coord]);
+                const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                mMap.fitBounds(polyline.getBounds(), { padding: [5] }); 
+                const distanceKm = (data.routes.distance / 1000).toFixed(1);
+                document.getElementById(distId).innerHTML = `${distanceKm} km`;
+            } else {
+                document.getElementById(distId).innerHTML = "Không tìm thấy đường";
+            }
+        })
             .catch(err => {
                 console.error("Lỗi OSRM:", err);
                 document.getElementById(distId).innerHTML = "Lỗi tuyến đường";

@@ -247,7 +247,7 @@
         </div>
 
 <!-- 2. NÚT BỤI MỊN  -->
-<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;">Bụi mịn<br>🔴 OFF</button>
+<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng không khí <br>🔴 OFF</button>
 <!-- NÚT BẢN ĐỒ ĐỊA HÌNH (Đường bình độ - Bên phải) -->
 <button id="btn-dia-hinh" onclick="window.toggleDiaHinh()" style="position: absolute; top: 140px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #28a745; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.3s;">Địa hình<br>⛰️ OFF</button>
 <!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
@@ -276,7 +276,75 @@
         <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px; z-index: 50; background: #8bd8af;">
             <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
                 <div id="widget-thoi-tiet" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Đang đo...</div>
-                <div id="widget-bui-min" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Chờ GPS...</div>
+
+                <!-- bấm vào thanh AQI để mở -->
+<div id="aqi-info-panel" class="aqi-panel" onclick="if(!this.classList.contains('expanded')) this.classList.add('expanded')">
+    
+    <!-- MẶT 1: Hiện lúc thu gọn  -->
+    <div class="aqi-header">
+        ☁️ Chất lượng KK
+    </div>
+    
+    <!-- MẶT 2: Hiện lúc bung to  -->
+    <div class="aqi-content">
+        <div style="text-align: center; margin-bottom: 15px; color: #444; font-size: 15px; font-weight: 900;">
+            Đánh giá Không khí & Khuyến nghị
+        </div>
+        
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #00e400; box-shadow: 0 0 8px #00e400;"></div>
+            <div>
+                <strong style="color: #00b000; font-size: 15px;">1. Rất tốt (0 - 50)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng không khí tuyệt vời. Bạn nên ra ngoài hoạt động và tập thể thao.</p>
+            </div>
+        </div>
+        
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #fce83a; border: 1px solid #ddd;"></div>
+            <div>
+                <strong style="color: #d4b200; font-size: 15px;">2. Khá tốt (51 - 100)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Phù hợp để ra ngoài. Người cực kỳ nhạy cảm (hoặc bị suyễn) nên hạn chế vận động quá sức.</p>
+            </div>
+        </div>
+        
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #ff7e00; box-shadow: 0 0 8px rgba(255,126,0,0.5);"></div>
+            <div>
+                <strong style="color: #ff7e00; font-size: 15px;">3. Trung bình (101 - 150)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Chất lượng bình thường, bạn có thể ra ngoài nếu muốn. Người có bệnh hô hấp nên ưu tiên tập trong nhà.</p>
+            </div>
+        </div>
+        
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #ff0000; box-shadow: 0 0 8px rgba(255,0,0,0.5);"></div>
+            <div>
+                <strong style="color: #e60000; font-size: 15px;">4. Hơi tệ (151 - 200)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;"> Bạn nên mang khẩu trang khi ra đường. Tránh đạp xe hay chạy bộ ngoài trời hôm nay.</p>
+            </div>
+        </div>
+        
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #8f3f97; box-shadow: 0 0 8px rgba(143,63,151,0.5);"></div>
+            <div>
+                <strong style="color: #8f3f97; font-size: 15px;">5. Báo động (201 - 300)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Nguy hại sức khỏe! Bạn không nên ra ngoài. Nên chuyển mọi bài tập vào trong nhà.</p>
+            </div>
+        </div>
+
+        <div class="aqi-item">
+            <div class="aqi-color" style="background-color: #7e0023;"></div>
+            <div>
+                <strong style="color: #7e0023; font-size: 15px;">6. Nguy hiểm (300+)</strong>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4;">Mức độ cực kì độc hại, chúng tôi khuyên bạn nên ngủ ở nhà cho sướng. Nên đóng cửa sổ và dùng máy lọc kk.</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="reaction-btn" style="background: #e0e0e0; color: #333; font-weight: bold; border: none; padding: 10px 30px; border-radius: 25px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" 
+                    onclick="event.stopPropagation(); this.closest('.aqi-panel').classList.remove('expanded')">Thu gọn</button>
+        </div>
+    </div>
+</div>
             </div>
             
             <!-- Khu vực danh sách bạn bè thật (Sẽ được JS nhồi vào đây) -->
@@ -610,7 +678,6 @@ window.capNhatThoiTietAQI = function(lat, lng) {
                     document.getElementById('widget-thoi-tiet').innerHTML = `${icon} ${temp}°C`;
                 });
 
-            // 3. LẤY CHỈ SỐ BỤI MỊN US AQI (Open-Meteo Air Quality)
         // 3. LẤY CHỈ SỐ BỤI MỊN US AQI (Open-Meteo Air Quality)
         fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi`)
         .then(res => res.json())

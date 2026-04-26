@@ -583,19 +583,32 @@ window.capNhatThoiTietAQI = function(lat, lng) {
                 });
 
             // 3. LẤY CHỈ SỐ BỤI MỊN US AQI (Open-Meteo Air Quality)
-            fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi`)
-                .then(res => res.json())
-                .then(aqiData => {
-                    const aqi = Math.round(aqiData.current.us_aqi);
-                    
-                    // Logic biến đổi Icon và Màu sắc theo mức độ ô nhiễm US AQI
-                    let aqiIcon = "🟢"; // Tốt (0-50)
-                    if (aqi > 50 && aqi <= 100) aqiIcon = "🟡"; // Trung bình
-                    else if (aqi > 100 && aqi <= 150) aqiIcon = "🟠"; // Kém cho người nhạy cảm
-                    else if (aqi > 150 && aqi <= 200) aqiIcon = "🔴"; // Xấu
-                    else if (aqi > 200) aqiIcon = "🟣"; // Rất xấu / Nguy hại
+        // 3. LẤY CHỈ SỐ BỤI MỊN US AQI (Open-Meteo Air Quality)
+        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi`)
+        .then(res => res.json())
+        .then(aqiData => {
+            const aqi = Math.round(aqiData.current.us_aqi);
+            
+            // Logic biến đổi Icon và Màu sắc theo mức độ ô nhiễm US AQI
+            let aqiIcon = "🟢"; 
+            let aqiColor = "#28a745"; // Xanh lá (Tốt 0-50)
 
-                    document.getElementById('widget-bui-min').innerHTML = `${aqiIcon} AQI: ${aqi} (${tenKhuVuc})`;
+            if (aqi > 50 && aqi <= 100) { aqiIcon = "🟡"; aqiColor = "#ffc107"; } // Vàng (Trung bình)
+            else if (aqi > 100 && aqi <= 150) { aqiIcon = "🟠"; aqiColor = "#fd7e14"; } // Cam (Kém)
+            else if (aqi > 150 && aqi <= 200) { aqiIcon = "🔴"; aqiColor = "#dc3545"; } // Đỏ (Xấu)
+            else if (aqi > 200) { aqiIcon = "🟣"; aqiColor = "#6f42c1"; } // Tím (Nguy hại)
+
+            // Lưu màu hiện tại vào biến toàn cục để nút bấm sử dụng
+            window.currentAQIColor = aqiColor;
+
+            document.getElementById('widget-bui-min').innerHTML = `${aqiIcon} AQI: ${aqi} (${tenKhuVuc})`;
+
+            // Tự động đổi màu nút Bụi Mịn LUÔN nếu nó đang ở trạng thái ON
+            const btnBui = document.getElementById('btn-bui-min');
+            if (btnBui && window.isHienBui) {
+                btnBui.style.backgroundColor = window.currentAQIColor;
+            }
+        });
                 });
         })
         .catch(err => console.error("Lỗi cập nhật API môi trường:", err));
@@ -1273,23 +1286,36 @@ window.toggleRadarAndShare = function() {
     }
 };
 let lopBanDoBui = null;
+window.currentAQIColor = window.currentAQIColor || '#28a745'; // Màu dự phòng ban đầu
+
 window.toggleBuiMin = function() {
     if (typeof window.isHienBui === 'undefined') window.isHienBui = false;
     window.isHienBui = !window.isHienBui;
     const btn = document.getElementById('btn-bui-min');
+    
     if (!btn) return;
+
     if (window.isHienBui) {
-        btn.style.backgroundColor = '#dc3545';
+        // TRẠNG THÁI ON: Lấy màu AQI hiện tại, chữ trắng, không tỏa viền
+        btn.style.backgroundColor = window.currentAQIColor;
+        btn.style.color = 'white'; 
+        btn.style.border = '2px solid white';
         btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
+
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18, opacity: 0.9, attribution: 'Air Quality by WAQI'
             });
         }
         if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
+
     } else {
+        // TRẠNG THÁI OFF: Màu xám tối tĩnh lặng, chữ trắng
         btn.style.backgroundColor = '#555';
+        btn.style.color = 'white';
+        btn.style.border = '2px solid #333';
         btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
+        
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
 };

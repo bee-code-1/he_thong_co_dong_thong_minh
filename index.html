@@ -195,6 +195,34 @@
     user-select: none;              /* Chuẩn chung */
     -webkit-touch-callout: none;    /* Chống hiện menu khi nhấn giữ lâu trên iOS */
 }
+
+  /* HIỆU ỨNG THẢ CẢM XÚC (FLOATING REACTIONS)  */
+         
+@keyframes floatUpEmoji {
+    0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    50% { transform: translateY(-60px) scale(1.5) rotate(-15deg); opacity: 0.9; }
+    100% { opacity: 0; transform: translateY(-130px) scale(1) rotate(15deg); }
+}
+
+.floating-emoji {
+    position: fixed; /* Cố định theo màn hình điện thoại */
+    font-size: 28px;
+    animation: floatUpEmoji 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    pointer-events: none; 
+    z-index: 10000; /* Luôn nổi lên trên cùng */
+    user-select: none;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Hiệu ứng lún nút  */
+.reaction-btn {
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    display: inline-block;
+}
+.reaction-btn:active {
+    transform: scale(0.7); /* Lún xuống 30% khi chạm */
+}
          
     </style>
 </head>
@@ -2450,6 +2478,28 @@ window.addEventListener('load', () => {
         if (typeof window.langNgheLocket === 'function') window.langNgheLocket(); 
     }, 2000); 
 });
+
+// === HỆ THỐNG TƯƠNG TÁC THẢ emote ===
+window.thaCamXuc = function(event, emoji) {
+    event.stopPropagation(); // Tránh bấm nhầm vào các thẻ bọc bên ngoài
+    
+    // Lấy tọa độ X, Y chính xác ngay đầu ngón tay bạn vừa chạm
+    const x = event.clientX;
+    const y = event.clientY;
+    const icon = document.createElement('div');
+    icon.className = 'floating-emoji';
+    icon.innerText = emoji;
+    
+    // Căn giữa icon vào đúng ngón tay 
+    icon.style.left = (x - 14) + 'px'; 
+    icon.style.top = (y - 14) + 'px';
+    
+    document.body.appendChild(icon);
+    setTimeout(() => { icon.remove(); }, 1000);
+
+    //  rung nhẹ 30ms 
+    if (navigator.vibrate) navigator.vibrate(30);
+};
     
 </script>
 </body>

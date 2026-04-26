@@ -223,6 +223,96 @@
 .reaction-btn:active {
     transform: scale(0.7); /* Lún xuống 30% khi chạm */
 }
+
+/* ==== ANIMATION mục chất luọng kk - trang chủ ======= */
+.aqi-panel {
+    background: #ffffff;
+    border-radius: 40px;
+    width: 150px;
+    height: 45px;
+    min-height: 45px; 
+    max-height: 45px; /* Khóa chiều cao */
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    cursor: pointer;
+    z-index: 1000;
+    margin: 0;
+    flex-shrink: 0; 
+}
+
+
+.aqi-panel.expanded {
+    position: fixed !important; /* Lệnh nổi lên trên cùng */
+    top: 10% !important;
+    left: 5% !important;
+    width: 90% !important;
+    height: 580px !important;
+    min-height: 580px !important;
+    max-height: 85vh !important;
+    border-radius: 35px;
+    background: #f4f6f8;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    z-index: 999999 !important; /* Đè lên toàn bộ app */
+    cursor: default;
+}
+
+.aqi-header {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 45px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.aqi-panel.expanded .aqi-header {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+    pointer-events: none;
+}
+
+.aqi-content {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 15px 15px 20px 15px;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow-y: auto;
+    pointer-events: none;
+}
+
+.aqi-panel.expanded .aqi-content {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    transition-delay: 0.1s;
+}
+
+.aqi-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    background: white;
+    padding: 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.aqi-color {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+}         
          
     </style>
 </head>
@@ -247,7 +337,7 @@
         </div>
 
 <!-- 2. NÚT BỤI MỊN  -->
-<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng không khí <br>🔴 OFF</button>
+<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng kk <br>🔴 OFF</button>
 <!-- NÚT BẢN ĐỒ ĐỊA HÌNH (Đường bình độ - Bên phải) -->
 <button id="btn-dia-hinh" onclick="window.toggleDiaHinh()" style="position: absolute; top: 140px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #28a745; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.3s;">Địa hình<br>⛰️ OFF</button>
 <!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
@@ -1373,7 +1463,7 @@ window.toggleRadarAndShare = function() {
             if (banDoHienTai) banDoHienTai.removeLayer(friendMarkers[user]);
         }
         friendMarkers = {};
-        alert("🔕 Đã TẮT chia sẻ vị trí và Ẩn Radar!");
+        alert(" Đã TẮT chia sẻ vị trí và Ẩn Radar!");
     }
 };
 let lopBanDoBui = null;
@@ -1391,7 +1481,7 @@ window.toggleBuiMin = function() {
         btn.style.backgroundColor = window.currentAQIColor;
         btn.style.color = 'white'; 
         btn.style.border = '2px solid white';
-        btn.innerHTML = 'BỤI MỊN<br>🟢 ON';
+        btn.innerHTML = 'Chất lượng kk<br>🟢 ON';
 
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
@@ -1405,7 +1495,7 @@ window.toggleBuiMin = function() {
         btn.style.backgroundColor = '#555';
         btn.style.color = 'white';
         btn.style.border = '2px solid #333';
-        btn.innerHTML = 'BỤI MỊN<br>🔴 OFF';
+        btn.innerHTML = 'Chất lượng kk<br>🔴 OFF';
         
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }

@@ -808,7 +808,7 @@ function initGPS() {
         const currentTimestamp = Date.now();
         
         // 🛑 BỘ LỌC 1: Lọc Độ Chính Xác
-        if (doChinhXac > 12) return;
+        if (doChinhXac > 25) return;
         // 💡 KÍCH HOẠT API THỜI TIẾT & BỤI MỊN THEO TỌA ĐỘ HIỆN TẠI
         if (typeof window.capNhatThoiTietAQI === 'function') {
             window.capNhatThoiTietAQI(lat, lng);
@@ -867,8 +867,8 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
     const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0; // Vận tốc: mét/giây
 
     // Vận động viên chạy bộ nhanh nhất cũng chỉ 10-12m/s. 
-    // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> HỦY BỎ NGAY LẬP TỨC
-    if (currentSpeed > 7) {
+    // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> 
+    if (currentSpeed > 15.3) {
         console.warn("Đã chặn 1 điểm GPS nhiễu! Trôi xa: " + dist2D.toFixed(1) + "m");
         return; // Đóng sập hàm lại, không cộng số liệu, không vẽ đường ngoằn ngoèo!
     }

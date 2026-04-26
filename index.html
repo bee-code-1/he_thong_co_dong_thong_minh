@@ -2379,19 +2379,25 @@ window.langNgheLocket = function() {
                     </button>
                 </div>`;
             } else {
-                // NẾU LÀ BÀI BẠN BÈ -> HIỆN TƯƠNG TÁC
+                // NẾU LÀ BÀI BẠN BÈ -> HIỆN TƯƠNG TÁC KÈM HIỆU ỨNG BAY LƠ LỬNG
                 interactionBar = `
                 <div style="width: 85%; margin: 10px auto 0; background-color: #e0e0e0; border-radius: 20px; display: flex; align-items: center; padding: 10px 15px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.15); pointer-events: auto;">
                     <input type="text" placeholder="Viết bình luận..." 
                            onkeypress="if(event.key === 'Enter' && this.value.trim() !== '') { window.guiTuongTac('binh_luan', this.value.trim(), '${data.nguoi_gui}', this); }"
                            style="min-width: 0; flex: 1; border: none; background: transparent; font-size: 14px; color: #555; outline: none; font-weight: bold; margin-right: 10px; pointer-events: auto;">
-                    <div style="display: flex; gap: 10px; font-size: 20px; cursor: pointer; flex-shrink: 0; pointer-events: auto;">
-                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '❤️', '${data.nguoi_gui}');">❤️</span>
-                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '🔥', '${data.nguoi_gui}');">🔥</span>
-                        <span onclick="this.style.transform='scale(1.5)'; setTimeout(()=>this.style.transform='scale(1)',200); window.guiTuongTac('cam_xuc', '😢', '${data.nguoi_gui}');">😢</span>
+                    
+                    <!-- KHU VỰC THẢ CẢM XÚC GÂY NGHIỆN -->
+                    <div style="display: flex; gap: 15px; font-size: 24px; cursor: pointer; flex-shrink: 0; pointer-events: auto;">
+                        <span class="reaction-btn" style="user-select: none;" 
+                              onclick="window.thaCamXuc(event, '❤️'); window.guiTuongTac('cam_xuc', '❤️', '${data.nguoi_gui}');">❤️</span>
+                        
+                        <span class="reaction-btn" style="user-select: none;" 
+                              onclick="window.thaCamXuc(event, '🔥'); window.guiTuongTac('cam_xuc', '🔥', '${data.nguoi_gui}');">🔥</span>
+                        
+                        <span class="reaction-btn" style="user-select: none;" 
+                              onclick="window.thaCamXuc(event, '😢'); window.guiTuongTac('cam_xuc', '😢', '${data.nguoi_gui}');">😢</span>
                     </div>
                 </div>`;
-            }
 
             // FIX LỖI TRÌNH DUYỆT CƯỚP SỰ KIỆN: Thêm pointer-events: none vào ảnh
             let innerContent = data.loai === 'text' 

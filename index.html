@@ -151,6 +151,28 @@
 }
 #delete-popup-overlay.show { opacity: 1; }
 #delete-popup-overlay.show #delete-popup-box { transform: scale(1); }
+
+/* BỘ ANIMATION  */
+
+/* 1. Hiệu ứng Nhịp đập (Radar Pulse) cho Marker GPS của bạn và bạn bè */
+@keyframes radarPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+.user-icon > div, .water-drop-marker {
+    border-radius: 50%;
+    animation: radarPulse 2s infinite;
+}
+
+/* 2. Hiệu ứng Trượt bay lên (Fade-in Slide-up) cho Bảng tin Locket */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.snap-item {
+    animation: slideUpFade 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
          
     </style>
 </head>
@@ -1870,32 +1892,39 @@ window.toggleConnectExpandReal = function(element) {
 };
 
 // === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
+// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
     container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
 
     if (!window.db) return;
 
-    window.db.ref('vi_tri_hien_tai').once('value').then((snapshot) => {
+    // SỬA LỖI 1: Đọc dữ liệu từ đúng kho "nguoi_dung" thay vì "vi_tri_hien_tai"
+    window.db.ref('nguoi_dung').once('value').then((snapshot) => {
         const data = snapshot.val();
         if (!data) { container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>'; return; }
         
         let html = '';
         const now = Date.now(); 
-        const currentUsername = localStorage.getItem('currentUser'); // Fix lỗi sai tên biến lưu LocalStorage
+        const currentUsername = localStorage.getItem('currentUser'); 
 
         for (let userId in data) {
             const user = data[userId];
             if (userId === currentUsername) continue; // Bỏ qua bản thân
 
-            const lat = user.lat;
-            const lng = user.lng;
+            // SỬA LỖI 2: Đọc đúng tên biến tọa độ
+            const lat = user.toa_do_lat;
+            const lng = user.toa_do_lng;
+            
+            // Nếu bạn bè này chưa từng bật GPS thì bỏ qua không hiển thị
+            if (!lat || !lng) continue;
+
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
 
             // Xử lý Trạng thái Online / Offline
-            const lastUpdate = user.thoi_gian_cap_nhat || user.thoi_gian || now;
+            const lastUpdate = user.thoi_gian_cap_nhat || now;
             const diffMinutes = Math.floor((now - lastUpdate) / 60000); 
             
             let statusText = "hoạt động gần đây";
@@ -1907,14 +1936,11 @@ window.fetchRealFriends = function() {
                 else statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
             }
 
-            // GIAO DIỆN GIỐNG CONNECT.PNG
             html += `
             <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
                  data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-avatar="${avatar}" data-mapid="${mapId}" data-distid="${distId}">
                 
-                <!-- Bấm vào thanh này sẽ kích hoạt hàm toggleConnectExpandReal để thả bản đồ xuống -->
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                    <!-- Vòng tròn trạng thái (Xanh/Đỏ) -->
                     <div style="width: 50px; height: 50px; border-radius: 50%; background-color: ${dotColor}; border: 3px solid #333; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
                     
                     <div style="flex: 1; text-align: left;">
@@ -1924,13 +1950,9 @@ window.fetchRealFriends = function() {
                     <div class="expand-icon" style="font-size: 20px; font-weight: bold; color: #333; transition: transform 0.4s ease;">▼</div>
                 </div>
 
-                <!-- Thẻ mở rộng chứa Bản đồ (Ban đầu ẩn chiều cao = 0) -->
                 <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; background-color: #fcdab0;">
                     <div style="padding: 15px;">
-                        <!-- KHUNG BẢN ĐỒ MINI -->
                         <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
-                        
-                        <!-- KHUNG HIỂN THỊ KHOẢNG CÁCH -->
                         <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
                             bạn cách ${userId} <span id="${distId}">đang tính...</span>
                         </div>
@@ -1942,7 +1964,6 @@ window.fetchRealFriends = function() {
         container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Không có ai quanh đây...</div>';
     });
 };
-
 // === BỘ NÃO CAMERA, GHI CHÚ VÀ LOCKET MỚI ===
 let currentStream = null;
 let facingMode = "user";

@@ -1933,7 +1933,7 @@ window.toggleConnectExpandReal = function(element) {
     }
 };
 
-// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (GIAO DIỆN CHUẨN CONNECT.PNG) ===
+// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LƯU VẾT THỜI GIAN) ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
     container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
@@ -1952,42 +1952,78 @@ window.fetchRealFriends = function() {
         for (let userId in data) {
             const user = data[userId];
             if (userId === currentUsername) continue;
-            
-            // Hiện đúng bạn bè
             if (!danhSachBanBe.includes(userId)) continue; 
 
-            const lat = user.toa_do_lat;
-            const lng = user.toa_do_lng;
-            if (!lat || !lng) continue;
+            let lat = user.toa_do_lat;
+            let lng = user.toa_do_lng;
+            
+            // CHÌA KHÓA: Nếu có lat và lng trên mây -> Đã từng bật GPS
+            let hasLoc = (lat && lng) ? true : false; 
+
+            let statusText = "đang hoạt động";
+            let dotColor = "#28a745"; 
+            let lastActiveText = "Vừa xong"; // Biến lưu thời gian của vị trí cuối
+            
+            if (!hasLoc) {
+                statusText = "Chưa bật định vị";
+                dotColor = "#888"; // Màu xám
+                lat = 0; lng = 0;  // Gán tạm để tránh lỗi undefined
+            } else {
+                const lastUpdate = user.thoi_gian_cap_nhat || now;
+                const diffMinutes = Math.floor((now - lastUpdate) / 60000);
+                
+                if (diffMinutes > 5) {
+                    dotColor = "#dc3545"; 
+                    if (diffMinutes < 60) {
+                        statusText = `hoạt động ${diffMinutes} phút trước`;
+                        lastActiveText = `${diffMinutes} phút trước`;
+                    } else {
+                        statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
+                        lastActiveText = `${Math.floor(diffMinutes / 60)} giờ trước`;
+                    }
+                }
+            }
 
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
-            window.mapAvatars[userId] = avatar; // Cất an toàn
+            window.mapAvatars[userId] = avatar; 
 
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
             
-            const lastUpdate = user.thoi_gian_cap_nhat || now;
-            const diffMinutes = Math.floor((now - lastUpdate) / 60000);
-            
-            let statusText = "hoạt động gần đây";
-            let dotColor = "#28a745"; 
-            
-            if (diffMinutes > 5) {
-                dotColor = "#dc3545"; 
-                if (diffMinutes < 60) statusText = `hoạt động ${diffMinutes} phút trước`;
-                else statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
+            // XỬ LÝ GIAO DIỆN MỞ RỘNG (BẢN ĐỒ KÈM THỜI GIAN LƯU VẾT HOẶC BẢNG TRỐNG)
+            let expandedContentHTML = "";
+            if (hasLoc) {
+                expandedContentHTML = `
+                    <div style="padding: 15px;">
+                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
+                        <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                            bạn cách ${userId} <span id="${distId}">đang tính...</span>
+                        </div>
+                        <div style="text-align: center; margin-top: 8px; font-size: 13px; color: #d35400; font-weight: bold; font-style: italic;">
+                            📍 Vị trí lưu vết lần cuối: ${lastActiveText}
+                        </div>
+                    </div>`;
+            } else {
+                expandedContentHTML = `
+                    <div style="padding: 15px;">
+                        <div style="width: 100%; aspect-ratio: 1; background-color: #e0e0e0; border-radius: 15px; border: 3px dashed #888; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #555; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
+                            <span style="font-size: 50px; margin-bottom: 10px; filter: grayscale(1);">📡</span>
+                            <strong style="font-size: 18px; color: #333;">Chưa có dữ liệu</strong>
+                            <span style="font-size: 14px; margin-top: 5px; font-weight: bold;">Hãy chờ họ online nhé!</span>
+                        </div>
+                    </div>`;
             }
 
             html += `
             <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
-                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}">
+                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}" data-hasloc="${hasLoc}">
                 
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                   <!-- Vòng tròn trạng thái (Xanh/Đỏ) + Avatar -->
-<div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
-    <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #333; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
-    <div style="position: absolute; bottom: -2px; right: -5px; width: 15px; height: 15px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
-</div>
+                    <div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
+                        <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #333; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
+                        <div style="position: absolute; bottom: -2px; right: -5px; width: 15px; height: 15px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
+                    </div>
+
                     <div style="flex: 1; text-align: left;">
                         <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
                         <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>
@@ -1996,17 +2032,12 @@ window.fetchRealFriends = function() {
                 </div>
 
                 <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; background-color: #fcdab0;">
-                    <div style="padding: 15px;">
-                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
-                        <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
-                            bạn cách ${userId} <span id="${distId}">đang tính...</span>
-                        </div>
-                    </div>
+                    ${expandedContentHTML}
                 </div>
             </div>`;
         }
         
-        container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Chưa có bạn bè nào đang bật radar...</div>';
+        container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Bạn chưa kết bạn với ai. Hãy sang Tab 4 để thêm bạn nhé!</div>';
     });
 };
     

@@ -1829,7 +1829,7 @@ window.closeOneConnect = function() {
 
 // === HỆ THỐNG VẼ BẢN ĐỒ MINI VÀ TÍNH KHOẢNG CÁCH THẬT (OSRM) ===
 window.miniMaps = {};
-window.mapAvatars = {}; // FIX 1: Lưu Avatar vào biến toàn cục để chống sập HTML
+window.mapAvatars = {}; // LƯU AVATAR VÀO BIẾN TOÀN CỤC ĐỂ CHỐNG SẬP HTML
 
 window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, friendLng, friendAvatar, friendColor) {
     const currentUser = localStorage.getItem('currentUser');
@@ -1848,8 +1848,8 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                 return L.divIcon({
                     className: 'custom-waterdrop-icon',
                     html: `<div class="water-drop-marker" style="background-color: ${color};"><img src="${avatar}" /></div>`,
-                    iconSize: [1],
-                    iconAnchor: [22.5, 45]
+                    iconSize: L.point(45, 45), // FIX AN TOÀN: Không dùng ngoặc vuông nữa
+                    iconAnchor: L.point(22.5, 45) // FIX AN TOÀN
                 });
             };
 
@@ -1861,12 +1861,14 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             .then(res => res.json())
             .then(data => {
                 if(data.routes && data.routes.length > 0) {
-                    // FIX 2 LỖI CHÍ MẠNG: Thêm  để truy cập đúng mảng và đảo tọa độ [coord[2], coord]
-                    const routeCoords = data.routes.geometry.coordinates.map(coord => [coord[2], coord]);
-                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: [3] });
+                    // FIX CHÍ MẠNG: Dùng .at() để chống lỗi hệ thống nuốt mất ngoặc vuông của array
+                    const route = data.routes.at(0); 
+                    const routeCoords = route.geometry.coordinates.map(coord => [ coord.at(1), coord.at(0) ]);
                     
-                    const distanceKm = (data.routes.distance / 1000).toFixed(1);
+                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                    mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
+                    
+                    const distanceKm = (route.distance / 1000).toFixed(1);
                     document.getElementById(distId).innerHTML = `${distanceKm} km`;
                 } else {
                     document.getElementById(distId).innerHTML = "Không tìm thấy đường";
@@ -1925,7 +1927,7 @@ window.toggleConnectExpandReal = function(element) {
         const fLng = parseFloat(parentItem.getAttribute('data-lng'));
         const fMapId = parentItem.getAttribute('data-mapid');
         const fDistId = parentItem.getAttribute('data-distid');
-        const fAvatar = window.mapAvatars[fName]; // Lấy Avatar an toàn từ biến toàn cục
+        const fAvatar = window.mapAvatars[fName];
 
         window.loadRealConnectMap(fMapId, fDistId, fName, fLat, fLng, fAvatar, '#e74c3c');
     }
@@ -1938,7 +1940,6 @@ window.fetchRealFriends = function() {
 
     if (!window.db) return;
 
-    // FIX 3: Trỏ đúng Database 'nguoi_dung'
     window.db.ref('nguoi_dung').once('value').then((snapshot) => {
         const data = snapshot.val();
         if (!data) { container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>'; return; }
@@ -1952,16 +1953,15 @@ window.fetchRealFriends = function() {
             const user = data[userId];
             if (userId === currentUsername) continue;
             
-            // FIX 4: Hiển thị ĐÚNG danh sách bạn bè, loại bỏ người lạ
+            // Hiện đúng bạn bè
             if (!danhSachBanBe.includes(userId)) continue; 
 
-            // FIX 5: Đọc đúng tên biến toa_do_lat, toa_do_lng
             const lat = user.toa_do_lat;
             const lng = user.toa_do_lng;
             if (!lat || !lng) continue;
 
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
-            window.mapAvatars[userId] = avatar; // Cất Avatar vào đây để HTML không bị vỡ
+            window.mapAvatars[userId] = avatar; // Cất an toàn
 
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
@@ -2005,6 +2005,7 @@ window.fetchRealFriends = function() {
         container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Chưa có bạn bè nào đang bật radar...</div>';
     });
 };
+    
 // === BỘ NÃO CAMERA, GHI CHÚ VÀ LOCKET MỚI ===
 let currentStream = null;
 let facingMode = "user";

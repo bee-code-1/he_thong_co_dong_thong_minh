@@ -623,16 +623,22 @@
         </div>
     </div>
 
-    <div id="onboarding-modal" class="overlay-modal" style="display: none;">
-        <div class="modal-content">
-            <h2>Chỉ số Cơ thể</h2>
-            <select id="gender"><option value="male">Nam giới</option><option value="female">Nữ giới</option></select>
-            <input type="number" id="height" placeholder="Chiều cao (cm) - VD: 170">
-            <input type="number" id="weight" placeholder="Cân nặng (kg) - VD: 65">
-            <button onclick="saveProfile(false)">Hoàn tất</button>
-            <button class="skip-btn" onclick="saveProfile(true)">Bỏ qua</button>
-        </div>
+<div id="onboarding-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-content">
+        <h2>Chỉ số Cơ thể & Sức khỏe</h2>
+        <select id="gender"><option value="male">Nam giới</option><option value="female">Nữ giới</option></select>
+        <input type="number" id="age" placeholder="Tuổi của cậu? (VD: 20)">
+        <input type="number" id="height" placeholder="Chiều cao (cm) - VD: 170">
+        <input type="number" id="weight" placeholder="Cân nặng (kg) - VD: 65">
+        <select id="health-condition">
+            <option value="none">Sức khỏe bình thường</option>
+            <option value="asthma">Bị Hen suyễn / Viêm xoang</option>
+            <option value="heart">Bệnh Tim mạch / Huyết áp</option>
+        </select>
+        <button onclick="saveProfile(false)">Hoàn tất</button>
+        <button class="skip-btn" onclick="saveProfile(true)">Bỏ qua</button>
     </div>
+</div>
 <!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
 <div id="app-container">  
     <div id="fog-layer"></div>
@@ -690,16 +696,25 @@
 
         <!-- Các chỉ số tùy chỉnh -->
         <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Chiều cao (cm):</label>
-            <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-            
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Cân nặng (kg):</label>
-            <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-            
-            <label style="font-weight: bold; font-size: 14px; color: #333;">  Sải chân (m/bước):</label>
-            <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-        </div>
-
+    <label style="font-weight: bold; font-size: 14px; color: #333;"> Tuổi:</label>
+    <input type="number" id="hs-edit-age" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+    
+    <label style="font-weight: bold; font-size: 14px; color: #333;"> Chiều cao (cm):</label>
+    <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+    
+    <label style="font-weight: bold; font-size: 14px; color: #333;"> Cân nặng (kg):</label>
+    <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+    
+    <label style="font-weight: bold; font-size: 14px; color: #333;"> Bệnh lý đặc biệt:</label>
+    <select id="hs-edit-condition" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
+        <option value="none">Bình thường</option>
+        <option value="asthma">Hen suyễn / Viêm xoang</option>
+        <option value="heart">Tim mạch / Huyết áp</option>
+    </select>
+    
+    <label style="font-weight: bold; font-size: 14px; color: #333;"> Sải chân (m/bước):</label>
+    <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
+</div>
         <!-- KHU VỰC ĐỔI MẬT KHẨU -->
         <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-top: 2px dashed #ccc;">
             <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 15px;">🔐 Đổi mật khẩu</h4>
@@ -920,18 +935,29 @@ window.addEventListener('load', function() {
     }
 });
 
-    function saveProfile(skip) {
-        const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
-        const w = skip ? 65 : parseFloat(document.getElementById('weight').value) || 65;
-        userWeight = w; stepsPerMeter = 1 / ((h / 100) * 0.415);
-        
-        const data = JSON.parse(localStorage.getItem("appUser_" + currentUser));
-        data.weight = w; data.strideLength = (h / 100) * 0.415;
-        localStorage.setItem("appUser_" + currentUser, JSON.stringify(data));
-        
-        document.getElementById('onboarding-modal').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
+function saveProfile(skip) {
+    const a = skip ? 20 : parseInt(document.getElementById('age').value) || 20;
+    const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
+    const w = skip ? 65 : parseFloat(document.getElementById('weight').value) || 65;
+    const c = skip ? 'none' : document.getElementById('health-condition').value;
+    const g = skip ? 'male' : document.getElementById('gender').value;
+
+    userWeight = w; stepsPerMeter = 1 / ((h / 100) * 0.415);
+    const data = JSON.parse(localStorage.getItem("appUser_" + currentUser)) || {};
+    data.age = a; data.gender = g; data.weight = w; data.height = h;
+    data.condition = c; data.strideLength = (h / 100) * 0.415;
+    
+    localStorage.setItem("appUser_" + currentUser, JSON.stringify(data));
+    
+    // Đồng bộ lên Firebase để AI phân tích
+    if (typeof window.db !== 'undefined') {
+        window.db.ref('nguoi_dung/' + currentUser).update({
+            tuoi: a, gioi_tinh: g, chieu_cao: h, can_nang: w, benh_ly: c
+        });
     }
+    document.getElementById('onboarding-modal').style.display = 'none';
+    document.getElementById('app-container').style.display = 'block';
+}
 
     //  UI CONTROLS 
     function toggleLightbulbMenu() { 
@@ -1562,26 +1588,27 @@ window.moHoSo = function() {
     try {
         const user = localStorage.getItem('currentUser') || "Khach";
         let userData = {};
-        try {
-            let parsedData = JSON.parse(localStorage.getItem("appUser_" + user));
-            if (parsedData) userData = parsedData;
-        } catch (e) {}
+        try { userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {}; } catch (e) {}
 
         let avatarUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
         let previewImg = document.getElementById('hs-avatar-preview');
         if (previewImg) previewImg.src = avatarUrl;
-
-        // 💡 HIỂN THỊ TÊN TÀI KHOẢN CỐ ĐỊNH
+        
         let nameDisplay = document.getElementById('hs-display-username');
         if (nameDisplay) nameDisplay.innerText = user;
 
-        let w = parseFloat(userData.weight); if (isNaN(w)) w = 65;
-        let s = parseFloat(userData.strideLength); if (isNaN(s)) s = 0.7;
-        let h = Math.round(s / 0.415 * 100);
+        // Đọc dữ liệu cá nhân hóa
+        let a = parseInt(userData.age) || 20;
+        let w = parseFloat(userData.weight) || 65;
+        let s = parseFloat(userData.strideLength) || 0.7;
+        let h = parseFloat(userData.height) || Math.round(s / 0.415 * 100);
+        let c = userData.condition || 'none';
 
-        let weightInput = document.getElementById('hs-edit-weight'); if (weightInput) weightInput.value = w;
-        let strideInput = document.getElementById('hs-edit-stride'); if (strideInput) strideInput.value = s.toFixed(2);
-        let heightInput = document.getElementById('hs-edit-height'); if (heightInput) heightInput.value = h;
+        if (document.getElementById('hs-edit-age')) document.getElementById('hs-edit-age').value = a;
+        if (document.getElementById('hs-edit-weight')) document.getElementById('hs-edit-weight').value = w;
+        if (document.getElementById('hs-edit-height')) document.getElementById('hs-edit-height').value = h;
+        if (document.getElementById('hs-edit-stride')) document.getElementById('hs-edit-stride').value = s.toFixed(2);
+        if (document.getElementById('hs-edit-condition')) document.getElementById('hs-edit-condition').value = c;
 
         let modal = document.getElementById('hoso-modal');
         if (modal) modal.style.display = 'flex';
@@ -1656,46 +1683,38 @@ window.toggleEye = function(inputId, iconId) {
 window.luuHoSo = function() {
     const user = localStorage.getItem('currentUser');
     if (!user) return;
-
     let userData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
 
-    // 1. KIỂM TRA LOGIC ĐỔI MẬT KHẨU
     const oldPass = document.getElementById('hs-old-pass').value;
     const newPass = document.getElementById('hs-new-pass').value;
     const confirmPass = document.getElementById('hs-confirm-pass').value;
-
     if (oldPass !== "" || newPass !== "" || confirmPass !== "") {
-        if (oldPass !== userData.password) {
-            alert("❌ Lỗi: Mật khẩu cũ không chính xác!");
-            return; 
-        }
-        if (newPass !== confirmPass) {
-            alert("❌ Lỗi: Mật khẩu mới và Xác nhận không giống nhau!");
-            return;
-        }
-        if (newPass.length < 3) {
-            alert("❌ Lỗi: Mật khẩu mới phải có ít nhất 3 ký tự!");
-            return;
-        }
+        if (oldPass !== userData.password) return alert("❌ Lỗi: Mật khẩu cũ không chính xác!");
+        if (newPass !== confirmPass) return alert("❌ Lỗi: Mật khẩu mới và Xác nhận không giống nhau!");
+        if (newPass.length < 3) return alert("❌ Lỗi: Mật khẩu phải có ít nhất 3 ký tự!");
         userData.password = newPass;
     }
 
-    // 2. LƯU CHỈ SỐ CƠ THỂ NHƯ CŨ
-    const weightInput = document.getElementById('hs-edit-weight');
-    const strideInput = document.getElementById('hs-edit-stride');
-    const w = weightInput ? parseFloat(weightInput.value) || 65 : 65;
-    let s = strideInput ? parseFloat(strideInput.value) || 0.7 : 0.7;
+    const a = parseInt(document.getElementById('hs-edit-age').value) || 20;
+    const w = parseFloat(document.getElementById('hs-edit-weight').value) || 65;
+    const h = parseFloat(document.getElementById('hs-edit-height').value) || 170;
+    const s = parseFloat(document.getElementById('hs-edit-stride').value) || 0.7;
+    const c = document.getElementById('hs-edit-condition').value || 'none';
 
     if (typeof window.userWeight !== 'undefined') window.userWeight = w;
     if (typeof window.stepsPerMeter !== 'undefined') window.stepsPerMeter = 1 / s;
 
-    userData.weight = w;
-    userData.strideLength = s;
-
+    userData.age = a; userData.weight = w; userData.height = h;
+    userData.strideLength = s; userData.condition = c;
     localStorage.setItem("appUser_" + user, JSON.stringify(userData));
+
+    if (typeof window.db !== 'undefined') {
+        window.db.ref('nguoi_dung/' + user).update({
+            tuoi: a, chieu_cao: h, can_nang: w, benh_ly: c
+        });
+    }
+
     alert("✅ Đã lưu thay đổi hồ sơ thành công!");
-    
-    // Gọi hàm đóng chuẩn để dọn dẹp và hiện lại điều hướng
     window.dongHoSo(); 
 };
 
@@ -2731,18 +2750,18 @@ let currentX, currentY, initialX, initialY;
 let xOffset = 0, yOffset = 0;
 
 const catMessages = [
-    "Hôm nay đẹp trời ghê, còn không mau ra ngoài chạy bộ !!",
-    "Nhớ uống đủ nước nhé, tớ thấy trời hơi hanh khô đấy!",
-    "~Take me back, back home~",
+    "Hôm nay đẹp trời, còn không mau ra ngoài !!",
+    "Nhớ uống đủ nước nhé",
+    "🎶Take me back, back home🎵",
     "Cố lên! Sắp đạt mục tiêu calo hôm nay rồi 🔥",
-    "Không chịu ra ngoài mà đòi khoẻ mạnh kìa 😒",
+    "Không chịu ra ngoài mà đòi khoẻ mạnh à 😏",
     "Tâm không tịnh vì mỡ quá dày",
     "Thở thôi cũng thấy mệt 💨",
-    "Nhìn cái gì mà nhìn 😼",
+    "Nhìn cái gì mà nhìn 😒",
     "Cột sống ổn không cậu ?",
-    "Người ta 6 múi,mình 1 tảng",
+    "Người ta 6 múi, mình 6 xí ",
     "Mèo còn tập, cậu thì không",
-    "Mèo chê cậu lười nhé! 😿",
+    "Mèo chê cậu lười nhé 😿",
     " Orcc5cxtcmd 🥀",
     "Mèo còn khỏe hơn cả cậu",
     "Cậu nhìn Mèo mà học tập!"

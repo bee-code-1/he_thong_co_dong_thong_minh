@@ -389,7 +389,7 @@
     
     <!-- Hình dáng con mèo Load thẳng từ GitHub -->
     <div id="cat-body" style="width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: grab; user-select: none; background: transparent; border: none; box-shadow: none;">
-        <img id="cat-real-img" src="linh_bao_1_xoa_nen.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+        <img id="cat-real-img" src="meo_binh_thuong.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
     </div>
 </div>
         <div id="info-panel" style="position: absolute; top: 15px; left: 15px; right: auto; pointer-events: auto;">
@@ -2946,8 +2946,8 @@ catAssistant.addEventListener("dblclick", function(e) {
     }, 3500);
 });
 
-// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
-let shakeThreshold = 15; 
+// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT )
+let shakeThreshold = 60; // ngưỡng lực lắc đt
 let lastUpdate = 0;
 let x, y, z, last_x, last_y, last_z;
 let shakeCount = 0;
@@ -2966,9 +2966,9 @@ window.addEventListener('devicemotion', function(e) {
 
         if (speed > shakeThreshold) {
             shakeCount++;
-            if(shakeCount > 3) { 
+            if(shakeCount > 4) { // Phải lắc mạnh liên tục 5 nhịp
                 catImgObj.src = imgChongMat; 
-                catBubble.innerText = "Lắc điện thoại ít thôi! Trẫm tiền đình rồi 😵‍💫";
+                catBubble.innerText = "Lắc vừa thôi, chóng mặt quá";
                 catBubble.style.backgroundColor = '#fdf8e4';
                 catBubble.style.border = '2px solid #d4b895';
                 catBubble.style.display = 'block';
@@ -3002,7 +3002,7 @@ function dragStart(e) {
         catAssistant.classList.remove('idle-cat');
         catAssistant.classList.add('dragging-cat');
         catBubble.style.display = 'none';
-        catImgObj.src = imgChongMat; 
+        catImgObj.src = imgChongMat; // Lúc bị xách lên thì hoảng hốt (chóng mặt)
     }
 }
 
@@ -3031,11 +3031,13 @@ function dragEnd(e) {
     catAssistant.classList.remove('dragging-cat');
     xOffset = 0; yOffset = 0;
     catAssistant.classList.add('idle-cat');
-    catAssistant.style.transform = `translate(0px, 0px)`; 
+    catAssistant.style.transform = `translate(0px, 0px)`; // Nảy về chỗ cũ
 
-    if (distanceMoved > 50) {
-        catImgObj.src = imgChongMat;
-        catBubble.innerText = "Trẫm tiền đình rồi! Quay cuồng quá 😵‍💫";
+    // Nếu kéo đi xa (> 20px) rồi thả -> Về trạng thái bình thường kèm câu cằn nhằn
+    if (distanceMoved > 20) {
+        catImgObj.src = getAnhMacDinh(); // Trở về mặt bình thường (hoặc kính đen nếu đang đeo)
+        const thaMsgs = ["Kéo kéo cái cmm", "Đừng có lôi tmb đi lung tung", "Bỏ cái tay ra nha 😾"];
+        catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4';
         catBubble.style.border = '2px solid #d4b895';
         
@@ -3043,14 +3045,14 @@ function dragEnd(e) {
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
         setTimeout(() => {
-            catImgObj.src = getAnhMacDinh(); 
             catBubble.classList.remove('show-bubble');
             setTimeout(() => catBubble.style.display = 'none', 600);
-        }, 3000);
+        }, 2500);
 
     } else {
+        // Chạm nhẹ tại chỗ -> Vuốt ve nhắm mắt
         catImgObj.src = imgNhamMat;
-        const khenMsgs = ["Meow~ Vuốt xù lông Trẫm rồi >.<", "Cứ xoa đầu trẫm đi! 🐾", "Mát xa phê quá trẫm thích~"];
+        const khenMsgs = ["Orcc5cxtcmd 🥀", "Odntttokto 💔", ":3","Bmlnv💢, Qmmx💥];
         catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
         catBubble.style.backgroundColor = '#ffebee'; 
         catBubble.style.border = '2px solid #ffcdd2';
@@ -3059,7 +3061,7 @@ function dragEnd(e) {
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
         setTimeout(() => {
-            catImgObj.src = getAnhMacDinh(); 
+            catImgObj.src = getAnhMacDinh(); // Trở về bình thường
             catBubble.classList.remove('show-bubble');
             setTimeout(() => catBubble.style.display = 'none', 600);
         }, 2000);

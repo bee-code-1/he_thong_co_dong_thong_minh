@@ -2912,25 +2912,32 @@ function showRandomCatMessage() {
 }
 setInterval(showRandomCatMessage, 15000);
 
-// 3. TƯƠNG TÁC DOUBLE TAP (ĐEO KÍNH BÁO CÁO NHANH)
+// 3. TƯƠNG TÁC DOUBLE TAP 
 catAssistant.addEventListener("dblclick", function(e) {
     e.preventDefault();
-    if (isCatDragging) return;
+    if (typeof isCatDragging !== 'undefined' && isCatDragging) return;
     
     isMangKinh = !isMangKinh;
     catImgObj.src = getAnhMacDinh();
-
-    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
-    const aqi = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText : "AQI Ổn";
     
     let msg = "";
     if (isMangKinh) {
-        const ngauMsgs = [`😎 Báo cáo nhanh: ${thoiTiet} | ${aqi}`, `😎 Thông số: ${thoiTiet}. Lên đồ đi cộng sự!`, `😎 Đeo kính vào soi map: Bụi đang ${aqi}!`];
+        // Lời thoại khi đeo
+        const ngauMsgs = [
+            "biến hình thành mèo ngầu đét 😎",
+            "Đã thấy mèo xịn chưa",
+            "Mèo oách xà lách đây"
+        ];
         msg = ngauMsgs[Math.floor(Math.random() * ngauMsgs.length)];
         catBubble.style.backgroundColor = '#e3f2fd'; 
         catBubble.style.border = '2px solid #0d47a1';
     } else {
-        const thaoKinhMsgs = [`😺 Tháo kính ra nhìn cho rõ: ${thoiTiet}`, `😺 Cất kính đi làm việc tiếp! Mát mẻ đấy!`, `😺 Trở lại ngoan hiền. AQI: ${aqi}`];
+        // Lời thoại khi tháo kính 
+        const thaoKinhMsgs = [
+            "Tháo kính ra đâyy",
+            "Bỏ kính đi vậy",
+            "Đừng đấm t nữaa"
+        ];
         msg = thaoKinhMsgs[Math.floor(Math.random() * thaoKinhMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4'; 
         catBubble.style.border = '2px solid #d4b895';
@@ -2940,14 +2947,15 @@ catAssistant.addEventListener("dblclick", function(e) {
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
+    // Thu dọn khung chat sau 3.5 giây 
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => catBubble.style.display = 'none', 600);
     }, 3500);
 });
 
-// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT - Lì hơn)
-let shakeThreshold = 60; 
+// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
+let shakeThreshold = 150; 
 let lastUpdate = 0;
 let x, y, z, last_x, last_y, last_z;
 let shakeCount = 0;
@@ -2966,9 +2974,9 @@ window.addEventListener('devicemotion', function(e) {
 
         if (speed > shakeThreshold) {
             shakeCount++;
-            if(shakeCount > 4) { 
+            if(shakeCount > 7) { 
                 catImgObj.src = imgChongMat; 
-                catBubble.innerText = "Lắc điện thoại ít thôi! Trẫm tiền đình rồi 😵‍💫";
+                catBubble.innerText = "Đừng lắc nữa, chóng mặt quá";
                 catBubble.style.backgroundColor = '#fdf8e4';
                 catBubble.style.border = '2px solid #d4b895';
                 catBubble.style.display = 'block';

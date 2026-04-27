@@ -799,6 +799,10 @@ window.capNhatThoiTietAQI = function(lat, lng) {
                 .then(weatherData => {
                     const temp = Math.round(weatherData.current_weather.temperature);
                     const code = weatherData.current_weather.weathercode;
+
+                    //  tính ứng suất nhiệt WBGT thời gian thực
+                    window.currentTemp = temp;
+                    if (typeof window.tinhWBGT === 'function') window.tinhWBGT(temp);
                     
                     // Logic biến đổi Icon theo mã thời tiết WMO
                     let icon = "☀️"; // Mặc định Nắng
@@ -850,6 +854,48 @@ window.capNhatThoiTietAQI = function(lat, lng) {
         let lastTimestamp = 0; 
         let lopBuiMin = L.layerGroup().addTo(map);
         let isHienBui = false; // Trạng thái mặc định là Tắt bụi
+    // BỘ NÃO Y SINH & MÔI TRƯỜNG 
+window.currentTemp = 25; // Mặc định
+window.currentWBGT = 25;
+
+window.tinhWBGT = function(temp) {
+    // Mô phỏng WBGT từ nhiệt độ (Công thức 0.7Tw + 0.2Tg + 0.1Td)
+    // Cấp độ nguy cơ: >29.3 Nguy cơ cao, >31 Rất nguy cơ
+    let wbgt = temp + (temp > 30 ? 2.5 : 0);
+    window.currentWBGT = wbgt;
+    return wbgt;
+};
+
+window.tinhCaloThucTe = function(khoangCachMet, giayTroiQua) {
+    if (giayTroiQua === 0) return 0;
+
+    const user = localStorage.getItem('currentUser');
+    let data = { age: 20, gender: 'male', weight: 65, height: 170 };
+    if (user) {
+        let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
+        if (parsed) Object.assign(data, parsed);
+    }
+
+    // 1.  tính Tốc độ trao đổi chất cơ bản
+    let BMR = (10 * data.weight) + (6.25 * data.height) - (5 * data.age);
+    BMR += (data.gender === 'male') ? 5 : -161;
+
+    // 2. Tính Vận tốc (km/h) để suy ra chỉ số cường độ vận động MET
+    let speedKmh = (khoangCachMet / 1000) / (giayTroiQua / 3600);
+    let MET = 3.0; // Đi bộ bình thường
+    if (speedKmh > 5.5) MET = 4.3; // Đi bộ nhanh
+    if (speedKmh > 8.0) MET = 8.0; // Chạy chậm
+    if (speedKmh > 12.0) MET = 11.5; // Chạy nhanh
+
+    // 3. Trọng số ứng suất nhiệt 
+    let heSoNhietDo = window.currentWBGT >= 29.3 ? 1.08 : 1.0;
+
+    // 4. Tổng Calo tiêu thụ thực tế
+    let caloPhut = (BMR / 1440) * MET * heSoNhietDo;
+    let tongCalo = caloPhut * (giayTroiQua / 60);
+
+    return tongCalo;
+};
 
     //  LOGIC TÀI KHOẢN 
     function toggleAuthMode() {
@@ -1121,8 +1167,10 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
         // Cập nhật giao diện NGAY LẬP TỨC (Không bị phụ thuộc mạng)
         if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
         if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-        if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = (0.5 * canNang * (totalDistanceMeter / 1000)).toFixed(1);
-
+        // Gọi Não AI tính Calo chuẩn y khoa (Mifflin-St Jeor + Nhiệt độ môi trường)
+if (typeof window.tinhCaloThucTe === 'function') {
+    let caloDungChuan = window.tinhCaloThucTe(totalDistanceMeter, elapsedSeconds);
+    if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = caloDungChuan.toFixed(1);
         // Lưu tọa độ để vẽ đường lập tức
         pathLatLngs.push(currentLatLng);
         if(polyline) polyline.setLatLngs(pathLatLngs);

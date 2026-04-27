@@ -319,7 +319,54 @@
     border-radius: 50%;
     flex-shrink: 0;
     margin-top: 3px;
-}         
+}
+
+/* === ANIMATION TRỢ LÝ MÈO === */
+/* 1. Hiệu ứng lơ lửng khi ở nhà */
+@keyframes floatCat {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+}
+.idle-cat {
+    animation: floatCat 3s ease-in-out infinite;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+/* 2. Hiệu ứng nhịp thở phập phồng cho ảnh mèo */
+@keyframes catBreathing {
+    0% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.06) translateY(-2px); } /* Phình lồng ngực ra 6% */
+    100% { transform: scale(1) translateY(0); }
+}
+#cat-real-img {
+    animation: catBreathing 3.5s ease-in-out infinite;
+    transform-origin: bottom center; /* Neo chặt chân mèo, chỉ phình thân trên */
+}
+
+/* 3. Hiệu ứng khi bị người dùng túm cổ kéo đi */
+.dragging-cat {
+    animation: none; 
+    transition: none; 
+    cursor: grabbing !important;
+}
+.dragging-cat #cat-body {
+    transform: scale(1.15) rotate(-15deg); /* Nhấc bổng và nghiêng */
+    filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));
+}
+.dragging-cat #cat-real-img {
+    animation: none; 
+}
+
+/* 4. Animation khung chat nảy ra */
+@keyframes popBubble {
+    0% { opacity: 0; transform: scale(0.5) translateX(20px); }
+    100% { opacity: 1; transform: scale(1) translateX(0); }
+}
+.show-bubble {
+    display: block !important;
+    animation: popBubble 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
          
     </style>
 </head>
@@ -333,6 +380,18 @@
     <div id="tab-1" class="tab-screen active-tab">
         
         <!-- 1. BẢNG THÔNG SỐ (Góc trên trái) -->
+        <!-- === TRỢ LÝ ẢO SỨC KHỎE (MÈO) === -->
+<div id="cat-assistant" class="idle-cat" style="position: absolute; top: 15px; right: 15px; z-index: 2000; touch-action: none;">
+    <!-- Khung chat (Bong bóng thoại) -->
+    <div id="cat-speech-bubble" style="display: none; position: absolute; right: 60px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px 0 15px 15px; padding: 10px 15px; width: max-content; max-width: 180px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 13px; font-weight: bold; color: #333; line-height: 1.4;">
+        Trời hôm nay mát lắm, chạy thêm 1km nữa nhé! 
+    </div>
+    
+    <!-- Hình dáng con mèo Load thẳng từ GitHub -->
+    <div id="cat-body" style="width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: grab; user-select: none; background: transparent; border: none; box-shadow: none;">
+        <img id="cat-real-img" src="linh_bao_1_xoa_nen.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+    </div>
+</div>
         <div id="info-panel" style="position: absolute; top: 15px; left: 15px; right: auto; pointer-events: auto;">
             <!-- QUAN TRỌNG: Đã sửa id thành time-display để core cũ nhận diện -->
             <div id="time-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00:00</div>
@@ -2663,6 +2722,92 @@ document.addEventListener('click', function(event) {
         window.dongAqiBoard();
     }
 });
+
+// === LOGIC TRỢ LÝ ẢO (MÈO SỨC KHỎE) ===
+const catAssistant = document.getElementById('cat-assistant');
+const catBubble = document.getElementById('cat-speech-bubble');
+let isCatDragging = false;
+let currentX, currentY, initialX, initialY;
+let xOffset = 0, yOffset = 0;
+
+// 1. Kho tàng câu nói (Thêm bớt thoải mái, nhớ có dấu ngoặc kép và dấu phẩy!)
+const catMessages = [
+    "Hôm nay đẹp trời ghê, còn không mau ra ngoài chạy bộ !!",
+    "Nhớ uống đủ nước nhé, tớ thấy trời hơi hanh khô đấy!",
+    "~ Take me back, back home ~",
+    "Cố lên! Sắp đạt mục tiêu calo hôm nay rồi 🔥",
+    "Không chịu ra ngoài mà đòi khoẻ mạnh kìa 😒",
+    "Nhà phát triển là người siêu đẹp trai 😎 "
+];
+
+function showRandomCatMessage() {
+    if (isCatDragging) return; // Đang bị xách cổ thì không nói chuyện
+    const randomMsg = catMessages[Math.floor(Math.random() * catMessages.length)];
+    catBubble.innerText = randomMsg;
+    catBubble.classList.add('show-bubble');
+    
+    // Tự động thu khung chat sau đúng 3 GIÂY (3000ms) 
+    setTimeout(() => {
+        catBubble.classList.remove('show-bubble');
+        setTimeout(() => catBubble.style.display = 'none', 400); //  0.4s hiệu ứng thu lại
+    }, 3000);
+}
+// mèo tự động lải nhải mỗi 25 giây
+setInterval(showRandomCatMessage, 25000); 
+
+// 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ 
+function dragStart(e) {
+    if (e.type === "touchstart") {
+        initialX = e.touches.clientX - xOffset;
+        initialY = e.touches.clientY - yOffset;
+    } else {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+    }
+    
+    if (e.target.closest('#cat-body')) {
+        isCatDragging = true;
+        catAssistant.classList.remove('idle-cat');
+        catAssistant.classList.add('dragging-cat');
+        catBubble.style.display = 'none'; // Giấu ngay khung chat khi bị kéo
+    }
+}
+
+function drag(e) {
+    if (isCatDragging) {
+        e.preventDefault(); // Chống cuộn trang web khi đang vuốt mèo
+        if (e.type === "touchmove") {
+            currentX = e.touches.clientX - initialX;
+            currentY = e.touches.clientY - initialY;
+        } else {
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+        }
+        xOffset = currentX;
+        yOffset = currentY;
+        catAssistant.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    }
+}
+
+function dragEnd(e) {
+    if (!isCatDragging) return;
+    initialX = currentX; initialY = currentY;
+    isCatDragging = false;
+    catAssistant.classList.remove('dragging-cat');
+    
+    // mồn lèo nảy về nhà (Reset toạ độ)
+    xOffset = 0; yOffset = 0;
+    catAssistant.classList.add('idle-cat'); 
+    catAssistant.style.transform = `translate(0px, 0px)`; 
+}
+
+// Gắn cảm ứng cho điện thoại và chuột cho PC
+catAssistant.addEventListener("touchstart", dragStart, { passive: false });
+catAssistant.addEventListener("touchend", dragEnd, { passive: false });
+catAssistant.addEventListener("touchmove", drag, { passive: false });
+catAssistant.addEventListener("mousedown", dragStart);
+document.addEventListener("mouseup", dragEnd);
+document.addEventListener("mousemove", drag);
     
 </script>
 </body>

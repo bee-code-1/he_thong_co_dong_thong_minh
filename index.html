@@ -2869,22 +2869,24 @@ function getSmartCatMessage() {
             if (parsed && parsed.condition) userCondition = parsed.condition;
         }
 
-        // Cảnh báo AI (Tin nhắn hệ thống -> Khung màu Be)
+        // Cảnh báo AI 
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
             if (userCondition === 'asthma') {
                 return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
             }
-            return { text: "Bụi tím ngắt, ở nhà đi 😷", type: "alert" };
+            return { text: "Bụi quá, ở nhà đi 😷", type: "alert" };
         }
 
         // Kích hoạt theo khung giờ 
         if (hour >= 5 && hour <= 9) {
             preWorkoutMessages.push("Ăn nhẹ rồi đi thôi ");
-            preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
-        } else if (hour >= 15 && hour <= 18) {
-            preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
+            preWorkoutMessages.push("Ra ngoài thôi");
+        } else if (hour >= 15 && hour <= 16) {
+            preWorkoutMessages.push("Ăn nhẹ rồi cbi thoi");
+        } else if (hour >=16 && hour <=19){
+            preWorkoutMessages.push("Được rồi đi thôi");
         } else if (hour >= 19 || hour < 5) {
-            preWorkoutMessages.push("Tối rồi, mặc áo phản quang!");
+            preWorkoutMessages.push("Tối rồi, đi ngủ cho sướng");
         }
 
         // vu vơ và kịa đểu ng dùng

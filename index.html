@@ -1305,8 +1305,34 @@ window.hienThiRecap = function() {
     const rSpeed = document.getElementById('recap-speed');
     if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2); 
 
-    const rModal = document.getElementById('recap-modal');
-    if(rModal) rModal.style.display = 'flex';
+const rModal = document.getElementById('recap-modal');
+if(rModal) {
+    rModal.style.display = 'flex';
+    
+    // Đánh thức Mèo Ảo để chúc mừng sau tập
+    if (typeof catBubble !== 'undefined') {
+        const postMsgs = [
+            "Đỉnh đấy! Mèo khen cậu 🐟",
+            "Recap xịn, cho Mèo ké tí",
+            "Người hôi rồi, tắm đi cậu",
+            "Đến giờ đớp rồi 😋"
+        ];
+        catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
+        
+        // Đổi màu nền sang vàng vinh danh luôn cho ngầu
+        catBubble.style.backgroundColor = '#fff9c4'; 
+        catBubble.style.border = '2px solid #ffc107';
+        catBubble.style.color = '#333';
+        
+        catBubble.style.display = 'block';
+        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+        
+        setTimeout(() => {
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600); 
+        }, 6000);
+    }
+}
 };
 
 // === HÀM LƯU TIẾN TRÌNH  ===
@@ -2790,43 +2816,124 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// === LOGIC TRỢ LÝ ẢO (MÈO SỨC KHỎE) ===
-const catAssistant = document.getElementById('cat-assistant');
-const catBubble = document.getElementById('cat-speech-bubble');
-let isCatDragging = false;
-let currentX, currentY, initialX, initialY;
-let xOffset = 0, yOffset = 0;
+// 1. BỘ NÃO TRỢ LÝ AI (Tự phân tích ngữ cảnh & Phân loại tin nhắn)
+function getSmartCatMessage() {
+    const now = new Date();
+    const hour = now.getHours();
 
-const catMessages = [
-    "Hôm nay đẹp trời, còn không mau ra ngoài !!",
-    "Nhớ uống đủ nước nhé",
-    "🎶Take me back, back home🎵",
-    "Cố lên! Sắp đạt mục tiêu calo hôm nay rồi 🔥",
-    "Không chịu ra ngoài mà đòi khoẻ mạnh à 😏",
-    "Tâm không tịnh vì mỡ quá dày",
-    "Thở thôi cũng thấy mệt 💨",
-    "Nhìn cái gì mà nhìn 😒",
-    "Cột sống ổn không cậu ?",
-    "Người ta 6 múi, mình 6 xí ",
-    "Mèo còn tập, cậu thì không",
-    "Mèo chê cậu lười nhé 😿",
-    " Orcc5cxtcmd 🥀",
-    "Mèo còn khỏe hơn cả cậu",
-    "Cậu nhìn Mèo mà học tập!"
-];
+    // TRẠNG THÁI 2: ĐANG CHẠY (Vệ sĩ ảo)
+    if (typeof isTracking !== 'undefined' && isTracking && typeof isPaused !== 'undefined' && !isPaused) {
+        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) {
+            return { text: "Uống nước đi, héo rồi 💧", type: "alert" };
+        }
+        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) {
+            const hotMsgs = ["Nắng gắt quá, vào bóng râm!", "Sốc nhiệt đấy, chạy chậm!"];
+            return { text: hotMsgs[Math.floor(Math.random() * hotMsgs.length)], type: "alert" };
+        }
+        if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
+            return { text: "Né đường khói bụi ra 💨", type: "alert" };
+        }
+        if (typeof friendMarkers !== 'undefined' && Object.keys(friendMarkers).length > 0 && Math.random() > 0.7) {
+            return { text: "Bạn cậu ở gần đây nè! 📍", type: "alert" };
+        }
+        return { text: "Tiếp đi! Mèo đẩy mông cho 🐾", type: "default" };
+    } 
+    
+    // TRẠNG THÁI 3: TẠM DỪNG (Giãn cơ)
+    else if (typeof isPaused !== 'undefined' && isPaused) {
+        const pauseMsgs = [
+            "Đứng lên! Cấm ngồi bệt 🚫", 
+            "Giãn cơ đi, đừng có lười!", 
+            "Nghỉ tí thôi, đừng có bỏ", 
+            "Lắc cái chân, xoay cái hông"
+        ];
+        return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
+    }
+
+    // TRẠNG THÁI 1 & 5: CHƯA BẮT ĐẦU (Kích hoạt, Cảnh báo & Nói vu vơ)
+    else {
+        let preWorkoutMessages = [];
+        let userCondition = 'none';
+        
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            let parsed = JSON.parse(localStorage.getItem("appUser_" + currentUser));
+            if (parsed && parsed.condition) userCondition = parsed.condition;
+        }
+
+        // Cảnh báo AI (Tin nhắn hệ thống -> Khung màu Be)
+        if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
+            if (userCondition === 'asthma') {
+                return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
+            }
+            return { text: "Bụi quá trời, ở nhà đi 😷", type: "alert" };
+        }
+
+        // Kích hoạt theo khung giờ 
+        if (hour >= 5 && hour <= 9) {
+            preWorkoutMessages.push("Ăn nhẹ rồi đi thôi ");
+            preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
+        } else if (hour >= 15 && hour <= 18) {
+            preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
+        } else if (hour >= 19 || hour < 5) {
+            preWorkoutMessages.push("Tối rồi, mặc áo phản quang!");
+        }
+
+        // Trộn chung với Trạng thái 5 (Vu vơ & Cà khịa)
+        const vuVoMsgs = [
+            "Mỡ dày thế, tâm sao tịnh?",
+            "Đừng nhìn máy nữa, đi tập!",
+            "Ra đường hay làm lợn? 🐷",
+            "Nhìn lại cái bụng cậu đi!",
+            "Mèo còn tập, cậu thì không",
+            "Mèo khinh cậu lười nhé",
+            "Nhấc mông lên hộ Mèo cái!",
+            "🎵Take me back, back home🎶",
+            "Nà ná na na",
+            "Trợ lý mèo tên là Mèo",
+            "Thở thôi cũng mệt 🥵",
+            "Lười quá, hay là nghỉ đi"
+        ];
+
+        preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
+
+        return { text: preWorkoutMessages[Math.floor(Math.random() * preWorkoutMessages.length)], type: "default" };
+    }
+}
 
 function showRandomCatMessage() {
     if (isCatDragging) return; 
-    const randomMsg = catMessages[Math.floor(Math.random() * catMessages.length)];
-    catBubble.innerText = randomMsg;
-    catBubble.classList.add('show-bubble');
     
+    // Gọi AI lấy cả chữ lẫn loại tin nhắn
+    const smartData = getSmartCatMessage(); 
+    
+    catBubble.innerText = smartData.text;
+    
+    // THAY ĐỔI MÀU SẮC ĐỘNG DỰA TRÊN LOẠI TIN NHẮN
+    if (smartData.type === 'alert') {
+        // Thông báo hệ thống: Nền be nhạt, viền be đậm
+        catBubble.style.backgroundColor = '#fdf8e4'; 
+        catBubble.style.border = '2px solid #d4b895';
+        catBubble.style.color = '#333';
+    } else {
+        // Nói vu vơ: Nền trắng xám khói, viền xanh tím than
+        catBubble.style.backgroundColor = '#f0f0f0'; 
+        catBubble.style.border = '2px solid #1a237e';
+        catBubble.style.color = '#333';
+    }
+
+    catBubble.style.display = 'block';
+    setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+    
+    // Tự động thu chat
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => catBubble.style.display = 'none', 600); 
-    }, 4000);
+    }, 5000);
 }
-setInterval(showRandomCatMessage, 15000); 
+
+// Chạy bộ não phân tích mỗi 20 giây
+setInterval(showRandomCatMessage, 20000);
 
 function dragStart(e) {
     if (e.type === "touchstart") {

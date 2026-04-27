@@ -1320,10 +1320,10 @@ if(rModal) {
         ];
         catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
         
-        // Đổi màu nền sang vàng vinh danh luôn cho ngầu
-        catBubble.style.backgroundColor = '#fff9c4'; 
-        catBubble.style.border = '2px solid #ffc107';
-        catBubble.style.color = '#333';
+        // MÀU CHO TRẠNG THÁI CHÚC MỪNG
+        catBubble.style.backgroundColor = '#fff9c4';  // Đổi màu nền ở đây
+        catBubble.style.border = '2px solid #ffc107'; // Đổi màu viền ở đây
+        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
         
         catBubble.style.display = 'block';
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
@@ -2916,13 +2916,15 @@ function showRandomCatMessage() {
     catBubble.innerText = smartData.text;
     
     if (smartData.type === 'alert') {
-        catBubble.style.backgroundColor = '#fdf8e4'; 
-        catBubble.style.border = '2px solid #d4b895';
-        catBubble.style.color = '#333';
+        // MÀU CHO TRẠNG THÁI CẢNH BÁO 
+        catBubble.style.backgroundColor = '#94cbe3';  // Đổi màu nền ở đây
+        catBubble.style.border = '2px solid #378eb3'; // Đổi màu và độ dày viền ở đây
+        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
     } else {
-        catBubble.style.backgroundColor = '#f0f0f0'; 
-        catBubble.style.border = '2px solid #1a237e';
-        catBubble.style.color = '#333';
+        // MÀU CHO TRẠNG THÁI VU VƠ, CÀ KHỊA 
+        catBubble.style.backgroundColor = '#ccff00';  // Đổi màu nền ở đây
+        catBubble.style.border = '2px solid #8f230d'; // Đổi màu và độ dày viền ở đây
+        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
     }
 
     catBubble.style.display = 'block';

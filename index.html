@@ -2767,9 +2767,11 @@ setInterval(showRandomCatMessage, 15000);
 // 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ 
 function dragStart(e) {
     if (e.type === "touchstart") {
+        // Điện thoại: Lấy tọa độ của ngón tay đầu tiên chạm vào 
         initialX = e.touches.clientX - xOffset;
         initialY = e.touches.clientY - yOffset;
     } else {
+        // Máy tính: Lấy tọa độ con chuột
         initialX = e.clientX - xOffset;
         initialY = e.clientY - yOffset;
     }
@@ -2778,7 +2780,7 @@ function dragStart(e) {
         isCatDragging = true;
         catAssistant.classList.remove('idle-cat');
         catAssistant.classList.add('dragging-cat');
-        catBubble.style.display = 'none'; // Giấu ngay khung chat khi bị kéo
+        catBubble.style.display = 'none'; // Giấu ngay khung chat khi bị túm cổ
     }
 }
 

@@ -2856,13 +2856,13 @@ function getSmartCatMessage() {
     const hour = now.getHours();
 
     if (typeof isTracking !== 'undefined' && isTracking && typeof isPaused !== 'undefined' && !isPaused) {
-        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi, héo rồi 💧", type: "alert" };
-        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng gắt quá, vào bóng râm!", type: "alert" };
+        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi", type: "alert" };
+        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng quá, tìm chỗ mát coi", type: "alert" };
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) return { text: "Né đường khói bụi ra 💨", type: "alert" };
-        return { text: "Tiếp đi! Mèo đẩy mông cho 🐾", type: "default" };
+        return { text: "Nhanh mml !", type: "default" };
     }
     else if (typeof isPaused !== 'undefined' && isPaused) {
-        const pauseMsgs = ["Đứng lên! Cấm ngồi bệt 🚫", "Giãn cơ đi, đừng có lười!", "Lắc cái chân, xoay cái hông"];
+        const pauseMsgs = ["Đứng nghỉ thôi, đừng ngồi", "Nghỉ tí lấy sức chứ?", "Lắc cái chân, xoay cái hông"];
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
     }
     else {
@@ -2876,12 +2876,13 @@ function getSmartCatMessage() {
 
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
             if (userCondition === 'asthma') return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
-            return { text: "Bụi tím ngắt, ở nhà đi 😷", type: "alert" };
+            return { text: "Bụi quá, ở nhà đi 😷", type: "alert" };
         }
 
-        if (hour >= 5 && hour <= 9) preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
-        else if (hour >= 15 && hour <= 18) preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
-        else if (hour >= 19 || hour < 5) preWorkoutMessages.push("Tối rồi, mặc áo phản quang!");
+        if (hour >= 4 && hour <= 7) preWorkoutMessages.push("Đến lúc ra ngoài chạm cỏ rồi");
+        else if (hour >= 16 && hour < 17) preWorkoutMessages.push("Ăn nhẹ để cbi chạy thôi");
+        else if (hour >= 17 || hour < 21) preWorkoutMessages.push("Mèo muốn ra ngoài rồi, đi thôi");
+        else if (hour >= 21 && hour < 4) preWorkoutMessages.push("Muộn rồi mà  sao còn~");
 
         const vuVoMsgs = ["Mỡ dày thế, tâm sao tịnh?", "Mèo khinh cậu lười nhé", "Thở thôi cũng mệt 🥵"];
         preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
@@ -3047,7 +3048,7 @@ function dragEnd(e) {
 
     if (distanceMoved > 20) {
         catImgObj.src = getAnhMacDinh(); 
-        const thaMsgs = ["Kéo đi đâu đấy! Trẫm thích ở nhà 🏠", "Đừng có lôi Trẫm đi lung tung!", "Bỏ cái tay ra nha! 😼"];
+        const thaMsgs = ["Kéo kéo cái cmm", "Nghịch ít thôi", "Bỏ cái tay ra nha 😼"];
         catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4';
         catBubble.style.border = '2px solid #d4b895';
@@ -3062,7 +3063,7 @@ function dragEnd(e) {
 
     } else {
         catImgObj.src = imgNhamMat;
-        const khenMsgs = ["Meow~ Vuốt xù lông Trẫm rồi >.<", "Cứ xoa đầu trẫm đi! 🐾", "Mát xa phê quá trẫm thích~"];
+        const khenMsgs = ["Tình yêu là cái rắm", "Có hai con mèo ngồi bên cửa sổ", "Trợ lý con mèo số 1 thế giới đây"];
         catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
         catBubble.style.backgroundColor = '#ffebee'; 
         catBubble.style.border = '2px solid #ffcdd2';

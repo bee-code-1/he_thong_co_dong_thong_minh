@@ -2746,14 +2746,14 @@ function showRandomCatMessage() {
     catBubble.innerText = randomMsg;
     catBubble.classList.add('show-bubble');
     
-    // Tự động thu khung chat sau đúng 3 GIÂY (3000ms) 
+    // Tự động thu khung chat sau đúng 4 GIÂY (4000ms) 
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
-        setTimeout(() => catBubble.style.display = 'none', 400); //  0.4s hiệu ứng thu lại
-    }, 3000);
+        setTimeout(() => catBubble.style.display = 'none', 600); //  0.6s hiệu ứng thu lại
+    }, 4000);
 }
-// mèo tự động lải nhải mỗi 25 giây
-setInterval(showRandomCatMessage, 25000); 
+// mèo tự động lải nhải mỗi 15 giây
+setInterval(showRandomCatMessage, 15000); 
 
 // 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ 
 function dragStart(e) {

@@ -2787,7 +2787,7 @@ window.thaCamXuc = function(event, emoji) {
     if (navigator.vibrate) navigator.vibrate(30);
 };
 
-// === LOGIC BẢNG AQI LIỀN NÚT (KHÔNG DÙNG BÓNG MA) ===
+// === LOGIC BẢNG AQI LIỀN NÚT  ===
 window.toggleAqiBoard = function(event) {
     event.stopPropagation();
     const board = document.getElementById('aqi-popup-board');
@@ -2817,7 +2817,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// === KHAI BÁO BIẾN CHO MÈO & BỘ ẢNH ===
+// === KHAI BÁO BIẾN CHO MÈO ===
 const catAssistant = document.getElementById('cat-assistant');
 const catBubble = document.getElementById('cat-speech-bubble');
 const catImgObj = document.getElementById('cat-real-img');
@@ -2884,7 +2884,23 @@ function getSmartCatMessage() {
         else if (hour >= 17 || hour < 21) preWorkoutMessages.push("Mèo muốn ra ngoài rồi, đi thôi");
         else if (hour >= 21 && hour < 4) preWorkoutMessages.push("Muộn rồi mà  sao còn~");
 
-        const vuVoMsgs = ["Mỡ dày thế, tâm sao tịnh?", "Mèo khinh cậu lười nhé", "Thở thôi cũng mệt 🥵"];
+        // vu vơ và kịa đểu ng dùng
+const vuVoMsgs = [
+    "Tâm ko tịnh do mỡ quá dày",
+    "Ra đường hay làm lợn? 🐷",
+    "Nhìn lại cái bụng cậu đi😒",
+    "Mèo còn tập, cậu thì không",
+    "Mèo khinh cậu lười nhé",
+    "Nhấc mông lên hộ Mèo cái!",
+    "🎵Take me back, back home🎶",
+    "Nà ná na na",
+    "Trợ lý mèo tên là Mèo",
+    "Thở thôi cũng mệt 🥵",
+    "Lười quá, hay là nghỉ đi",
+    " Aawhhuuu ",
+    "Còn ai mạnh hơn Mèo 😼",
+    "Buông bỏ để có tất cả"
+]
         preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
         return { text: preWorkoutMessages[Math.floor(Math.random() * preWorkoutMessages.length)], type: "default" };
     }

@@ -2856,13 +2856,13 @@ function getSmartCatMessage() {
     const hour = now.getHours();
 
     if (typeof isTracking !== 'undefined' && isTracking && typeof isPaused !== 'undefined' && !isPaused) {
-        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi nhóc", type: "alert" };
-        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng gắt quá, vào chỗ mát thôi", type: "alert" };
+        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi, héo rồi 💧", type: "alert" };
+        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng gắt quá, vào bóng râm!", type: "alert" };
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) return { text: "Né đường khói bụi ra 💨", type: "alert" };
-        return { text: "Cố lên cố lên cậu ơi", type: "default" };
+        return { text: "Tiếp đi! Mèo đẩy mông cho 🐾", type: "default" };
     }
     else if (typeof isPaused !== 'undefined' && isPaused) {
-        const pauseMsgs = ["Đứng nghỉ thôi nhé", "Giãn cơ chút đi nhóc", "Lắc cái chân, xoay cái hông"];
+        const pauseMsgs = ["Đứng lên! Cấm ngồi bệt 🚫", "Giãn cơ đi, đừng có lười!", "Lắc cái chân, xoay cái hông"];
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
     }
     else {
@@ -2912,7 +2912,7 @@ function showRandomCatMessage() {
 }
 setInterval(showRandomCatMessage, 15000);
 
-// 3. TƯƠNG TÁC DOUBLE TAP : THÁO/ĐEO KÍNH
+// 3. TƯƠNG TÁC DOUBLE TAP (ĐEO KÍNH BÁO CÁO NHANH)
 catAssistant.addEventListener("dblclick", function(e) {
     e.preventDefault();
     if (isCatDragging) return;
@@ -2925,12 +2925,12 @@ catAssistant.addEventListener("dblclick", function(e) {
     
     let msg = "";
     if (isMangKinh) {
-        const ngauMsgs = [`😎 Báo cáo nhanh: ${thoiTiet} | ${aqi}`, `😎 Thông số: ${thoiTiet}. Lên đồ đi cậu`, `😎 Đeo kính vào soi map: Bụi đang ${aqi}!`];
+        const ngauMsgs = [`😎 Báo cáo nhanh: ${thoiTiet} | ${aqi}`, `😎 Thông số: ${thoiTiet}. Lên đồ đi cộng sự!`, `😎 Đeo kính vào soi map: Bụi đang ${aqi}!`];
         msg = ngauMsgs[Math.floor(Math.random() * ngauMsgs.length)];
         catBubble.style.backgroundColor = '#e3f2fd'; 
         catBubble.style.border = '2px solid #0d47a1';
     } else {
-        const thaoKinhMsgs = [`😺 Tháo kính ra nhìn cho rõ: ${thoiTiet}`, `😺 Cất kính đi làm việc tiếp`, `😺 Trở lại ngoan hiền. AQI: ${aqi}`];
+        const thaoKinhMsgs = [`😺 Tháo kính ra nhìn cho rõ: ${thoiTiet}`, `😺 Cất kính đi làm việc tiếp! Mát mẻ đấy!`, `😺 Trở lại ngoan hiền. AQI: ${aqi}`];
         msg = thaoKinhMsgs[Math.floor(Math.random() * thaoKinhMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4'; 
         catBubble.style.border = '2px solid #d4b895';
@@ -2946,8 +2946,8 @@ catAssistant.addEventListener("dblclick", function(e) {
     }, 3500);
 });
 
-// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT )
-let shakeThreshold = 60; // ngưỡng lực lắc đt
+// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT - Lì hơn)
+let shakeThreshold = 60; 
 let lastUpdate = 0;
 let x, y, z, last_x, last_y, last_z;
 let shakeCount = 0;
@@ -2966,9 +2966,9 @@ window.addEventListener('devicemotion', function(e) {
 
         if (speed > shakeThreshold) {
             shakeCount++;
-            if(shakeCount > 4) { // Phải lắc mạnh liên tục 5 nhịp
+            if(shakeCount > 4) { 
                 catImgObj.src = imgChongMat; 
-                catBubble.innerText = "Lắc vừa thôi, chóng mặt quá";
+                catBubble.innerText = "Lắc điện thoại ít thôi! Trẫm tiền đình rồi 😵‍💫";
                 catBubble.style.backgroundColor = '#fdf8e4';
                 catBubble.style.border = '2px solid #d4b895';
                 catBubble.style.display = 'block';
@@ -3002,7 +3002,7 @@ function dragStart(e) {
         catAssistant.classList.remove('idle-cat');
         catAssistant.classList.add('dragging-cat');
         catBubble.style.display = 'none';
-        catImgObj.src = imgChongMat; // Lúc bị xách lên thì hoảng hốt (chóng mặt)
+        catImgObj.src = imgChongMat; // Lúc bị xách lên thì hoảng hốt
     }
 }
 
@@ -3031,12 +3031,11 @@ function dragEnd(e) {
     catAssistant.classList.remove('dragging-cat');
     xOffset = 0; yOffset = 0;
     catAssistant.classList.add('idle-cat');
-    catAssistant.style.transform = `translate(0px, 0px)`; // Nảy về chỗ cũ
+    catAssistant.style.transform = `translate(0px, 0px)`; 
 
-    // Nếu kéo đi xa (> 20px) rồi thả -> Về trạng thái bình thường kèm câu cằn nhằn
     if (distanceMoved > 20) {
-        catImgObj.src = getAnhMacDinh(); // Trở về mặt bình thường (hoặc kính đen nếu đang đeo)
-        const thaMsgs = ["Kéo kéo cái cmm", "Đừng có lôi tmb đi lung tung", "Bỏ cái tay ra nha 😾"];
+        catImgObj.src = getAnhMacDinh(); 
+        const thaMsgs = ["Kéo đi đâu đấy! Trẫm thích ở nhà 🏠", "Đừng có lôi Trẫm đi lung tung!", "Bỏ cái tay ra nha! 😼"];
         catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4';
         catBubble.style.border = '2px solid #d4b895';
@@ -3050,9 +3049,8 @@ function dragEnd(e) {
         }, 2500);
 
     } else {
-        // Chạm nhẹ tại chỗ -> Vuốt ve nhắm mắt
         catImgObj.src = imgNhamMat;
-        const khenMsgs = ["Orcc5cxtcmd 🥀", "Odntttokto 💔", ":3","Bmlnv💢, Qmmx💥];
+        const khenMsgs = ["Meow~ Vuốt xù lông Trẫm rồi >.<", "Cứ xoa đầu trẫm đi! 🐾", "Mát xa phê quá trẫm thích~"];
         catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
         catBubble.style.backgroundColor = '#ffebee'; 
         catBubble.style.border = '2px solid #ffcdd2';
@@ -3061,7 +3059,7 @@ function dragEnd(e) {
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
         setTimeout(() => {
-            catImgObj.src = getAnhMacDinh(); // Trở về bình thường
+            catImgObj.src = getAnhMacDinh(); 
             catBubble.classList.remove('show-bubble');
             setTimeout(() => catBubble.style.display = 'none', 600);
         }, 2000);

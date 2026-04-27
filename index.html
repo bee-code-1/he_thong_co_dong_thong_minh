@@ -2764,10 +2764,10 @@ function showRandomCatMessage() {
 // mèo tự động lải nhải mỗi 15 giây
 setInterval(showRandomCatMessage, 15000); 
 
-// 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ (ĐÃ FIX LỖI THIẾU )
+// 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ (FIX CHUẨN 100% CẢM ỨNG MOBILE)
 function dragStart(e) {
     if (e.type === "touchstart") {
-        // Đã sửa: Có  để lấy chính xác ngón tay đầu tiên
+        // Đã sửa: Có  để lấy tọa độ ngón tay đầu tiên
         initialX = e.touches.clientX - xOffset;
         initialY = e.touches.clientY - yOffset;
     } else {
@@ -2785,9 +2785,9 @@ function dragStart(e) {
 
 function drag(e) {
     if (isCatDragging) {
-        e.preventDefault(); // Chống cuộn trang web khi đang vuốt mèo
+        e.preventDefault(); // Chống cuộn trang web khi đang vuốt mèo (cần passive: false ở listener)
         if (e.type === "touchmove") {
-            // Đã sửa: Có  
+            // Đã sửa: Có  để theo dõi đúng ngón tay
             currentX = e.touches.clientX - initialX;
             currentY = e.touches.clientY - initialY;
         } else {
@@ -2802,17 +2802,19 @@ function drag(e) {
 
 function dragEnd(e) {
     if (!isCatDragging) return;
-    initialX = currentX; initialY = currentY;
+    initialX = currentX; 
+    initialY = currentY;
     isCatDragging = false;
     catAssistant.classList.remove('dragging-cat');
     
-    // Thuật toán nảy vèo về tổ
-    xOffset = 0; yOffset = 0;
+    // Thuật toán nảy vèo về tổ (Reset toạ độ)
+    xOffset = 0; 
+    yOffset = 0;
     catAssistant.classList.add('idle-cat'); 
     catAssistant.style.transform = `translate(0px, 0px)`; 
 }
 
-// Gắn cảm ứng cho điện thoại và chuột cho PC
+// 3. GẮN SỰ KIỆN CẢM ỨNG VÀ CHUỘT
 catAssistant.addEventListener("touchstart", dragStart, { passive: false });
 catAssistant.addEventListener("touchend", dragEnd, { passive: false });
 catAssistant.addEventListener("touchmove", drag, { passive: false });

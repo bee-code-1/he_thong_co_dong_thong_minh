@@ -1196,7 +1196,7 @@ if (typeof window.tinhCaloThucTe === 'function') {
     pathLatLngs.push(currentLatLng);
     lastTimestamp = currentTimestamp;
 }
-    }, err => {
+    } err => {
         alert("Lỗi GPS: Vui lòng bật định vị :v ");
     }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
 }

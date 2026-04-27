@@ -2912,31 +2912,35 @@ function showRandomCatMessage() {
 }
 setInterval(showRandomCatMessage, 15000);
 
-// 3. TƯƠNG TÁC DOUBLE TAP 
+// 3. TƯƠNG TÁC DOUBLE TAP (HOÁN ĐỔI TRẠNG THÁI & BÁO CÁO )
 catAssistant.addEventListener("dblclick", function(e) {
     e.preventDefault();
     if (typeof isCatDragging !== 'undefined' && isCatDragging) return;
     
     isMangKinh = !isMangKinh;
     catImgObj.src = getAnhMacDinh();
+
+    // 1. Quét dữ liệu thời tiết & AQI thực tế
+    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
+    const aqi = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText : "AQI Ổn";
     
     let msg = "";
     if (isMangKinh) {
-        // Lời thoại khi đeo
+        // Lời thoại khi đeo kính đen lên mặt (kèm báo cáo)
         const ngauMsgs = [
-            "biến hình thành mèo ngầu đét 😎",
-            "Đã thấy mèo xịn chưa",
-            "Mèo oách xà lách đây"
+            `biến hình thành mèo ngầu đét 😎\nBáo cáo: ${thoiTiet} | ${aqi}`,
+            `Đã thấy mèo xịn chưa\nSoi map thấy bụi đang ${aqi}`,
+            `Mèo oách xà lách đây\nNhiệt độ đang là: ${thoiTiet}`
         ];
         msg = ngauMsgs[Math.floor(Math.random() * ngauMsgs.length)];
         catBubble.style.backgroundColor = '#e3f2fd'; 
         catBubble.style.border = '2px solid #0d47a1';
     } else {
-        // Lời thoại khi tháo kính 
+        // Lời thoại khi tháo kính (kèm báo cáo)
         const thaoKinhMsgs = [
-            "Tháo kính ra đâyy",
-            "Bỏ kính đi vậy",
-            "Đừng đấm t nữaa"
+            `Tháo kính ra đâyy\nTiện báo luôn: ${thoiTiet}`,
+            `Bỏ kính đi vậy\nAQI đang ${aqi} nhé!`,
+            `Đừng đấm t nữaa\nTrời đang ${thoiTiet} kìa!`
         ];
         msg = thaoKinhMsgs[Math.floor(Math.random() * thaoKinhMsgs.length)];
         catBubble.style.backgroundColor = '#fdf8e4'; 

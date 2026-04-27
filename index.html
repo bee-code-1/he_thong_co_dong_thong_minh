@@ -2281,7 +2281,7 @@ window.fetchRealFriends = function() {
             
             if (!hasLoc) {
                 statusText = "Chưa bật định vị";
-                dotColor = "#888"; // Màu xám
+                dotColor = "#888"; 
                 lat = 0; lng = 0;  // Gán tạm để tránh lỗi undefined
             } else {
                 const lastUpdate = user.thoi_gian_cap_nhat || now;
@@ -2917,13 +2917,13 @@ function showRandomCatMessage() {
     
     if (smartData.type === 'alert') {
         // MÀU CHO TRẠNG THÁI CẢNH BÁO 
-        catBubble.style.backgroundColor = '#94cbe3';  // Đổi màu nền ở đây
-        catBubble.style.border = '2px solid #378eb3'; // Đổi màu và độ dày viền ở đây
+        catBubble.style.backgroundColor = '#ccff00';  // Đổi màu nền ở đây
+        catBubble.style.border = '2px solid #8f230d'; // Đổi màu và độ dày viền ở đây
         catBubble.style.color = '#333';               // Đổi màu chữ ở đây
     } else {
         // MÀU CHO TRẠNG THÁI VU VƠ, CÀ KHỊA 
-        catBubble.style.backgroundColor = '#ccff00';  // Đổi màu nền ở đây
-        catBubble.style.border = '2px solid #8f230d'; // Đổi màu và độ dày viền ở đây
+        catBubble.style.backgroundColor = '#94cbe3';  // Đổi màu nền ở đây
+        catBubble.style.border = '2px solid #378eb3'; // Đổi màu và độ dày viền ở đây
         catBubble.style.color = '#333';               // Đổi màu chữ ở đây
     }
 

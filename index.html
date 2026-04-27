@@ -2816,12 +2816,19 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// === KHAI BÁO BIẾN CHO MÈO  ===
+const catAssistant = document.getElementById('cat-assistant');
+const catBubble = document.getElementById('cat-speech-bubble');
+let isCatDragging = false;
+let currentX, currentY, initialX, initialY;
+let xOffset = 0, yOffset = 0;
+
 // 1. BỘ NÃO TRỢ LÝ AI (Tự phân tích ngữ cảnh & Phân loại tin nhắn)
 function getSmartCatMessage() {
     const now = new Date();
     const hour = now.getHours();
 
-    // TRẠNG THÁI 2: ĐANG CHẠY (Vệ sĩ ảo)
+    // TRẠNG THÁI 2: ĐANG CHẠY 
     if (typeof isTracking !== 'undefined' && isTracking && typeof isPaused !== 'undefined' && !isPaused) {
         if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) {
             return { text: "Uống nước đi, héo rồi 💧", type: "alert" };
@@ -2839,7 +2846,7 @@ function getSmartCatMessage() {
         return { text: "Tiếp đi! Mèo đẩy mông cho 🐾", type: "default" };
     } 
     
-    // TRẠNG THÁI 3: TẠM DỪNG (Giãn cơ)
+    // TRẠNG THÁI 3: TẠM DỪNG 
     else if (typeof isPaused !== 'undefined' && isPaused) {
         const pauseMsgs = [
             "Đứng lên! Cấm ngồi bệt 🚫", 
@@ -2850,7 +2857,7 @@ function getSmartCatMessage() {
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
     }
 
-    // TRẠNG THÁI 1 & 5: CHƯA BẮT ĐẦU (Kích hoạt, Cảnh báo & Nói vu vơ)
+    // TRẠNG THÁI 1 & 5: CHƯA BẮT ĐẦU :Kích hoạt, cảnh báo & nói vu vơ
     else {
         let preWorkoutMessages = [];
         let userCondition = 'none';
@@ -2866,7 +2873,7 @@ function getSmartCatMessage() {
             if (userCondition === 'asthma') {
                 return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
             }
-            return { text: "Bụi quá trời, ở nhà đi 😷", type: "alert" };
+            return { text: "Bụi tím ngắt, ở nhà đi 😷", type: "alert" };
         }
 
         // Kích hoạt theo khung giờ 
@@ -2904,19 +2911,14 @@ function getSmartCatMessage() {
 function showRandomCatMessage() {
     if (isCatDragging) return; 
     
-    // Gọi AI lấy cả chữ lẫn loại tin nhắn
     const smartData = getSmartCatMessage(); 
-    
     catBubble.innerText = smartData.text;
     
-    // THAY ĐỔI MÀU SẮC ĐỘNG DỰA TRÊN LOẠI TIN NHẮN
     if (smartData.type === 'alert') {
-        // Thông báo hệ thống: Nền be nhạt, viền be đậm
         catBubble.style.backgroundColor = '#fdf8e4'; 
         catBubble.style.border = '2px solid #d4b895';
         catBubble.style.color = '#333';
     } else {
-        // Nói vu vơ: Nền trắng xám khói, viền xanh tím than
         catBubble.style.backgroundColor = '#f0f0f0'; 
         catBubble.style.border = '2px solid #1a237e';
         catBubble.style.color = '#333';
@@ -2925,15 +2927,15 @@ function showRandomCatMessage() {
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
     
-    // Tự động thu chat
+    // TỰ ĐỘNG THU CHAT SAU 4 GIÂY
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => catBubble.style.display = 'none', 600); 
-    }, 5000);
+    }, 4000);
 }
 
-// Chạy bộ não phân tích mỗi 20 giây
-setInterval(showRandomCatMessage, 20000);
+// MÈO NÓI CHUYỆN MỖI 15 GIÂY
+setInterval(showRandomCatMessage, 15000);
 
 function dragStart(e) {
     if (e.type === "touchstart") {

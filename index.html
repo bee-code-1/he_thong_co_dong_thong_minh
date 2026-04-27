@@ -2817,133 +2817,178 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// === KHAI BÁO BIẾN CHO MÈO  ===
+// === KHAI BÁO BIẾN CHO MÈO & BỘ ẢNH ===
 const catAssistant = document.getElementById('cat-assistant');
 const catBubble = document.getElementById('cat-speech-bubble');
+const catImgObj = document.getElementById('cat-real-img');
+
+const imgBinhThuong = "meo_binh_thuong.png"; 
+const imgNhamMat = "meo_nham_mat.png";       
+const imgChongMat = "meo_chong_mat.png";     
+const imgKinhDen = "meo_ngau_det.png"; 
+
+let isMangKinh = false;
 let isCatDragging = false;
-let currentX, currentY, initialX, initialY;
+let currentX = 0, currentY = 0, initialX = 0, initialY = 0;
 let xOffset = 0, yOffset = 0;
 
-// 1. BỘ NÃO TRỢ LÝ AI (Tự phân tích ngữ cảnh & Phân loại tin nhắn)
+function getAnhMacDinh() {
+    return isMangKinh ? imgKinhDen : imgBinhThuong;
+}
+
+// 1. TƯƠNG TÁC THỤ ĐỘNG: CHỚP MẮT TỰ NHIÊN
+function meoChopMat() {
+    if (!isMangKinh && catImgObj.src.includes(imgBinhThuong)) {
+        catImgObj.src = imgNhamMat; 
+        setTimeout(() => {
+            if (catImgObj.src.includes(imgNhamMat)) {
+                catImgObj.src = imgBinhThuong;
+            }
+        }, 200); 
+    }
+    setTimeout(meoChopMat, Math.random() * 4000 + 2000);
+}
+setTimeout(meoChopMat, 3000);
+
+// 2. BỘ NÃO LẢI NHẢI TỰ ĐỘNG (Lấy dữ liệu thời tiết, GPS)
 function getSmartCatMessage() {
     const now = new Date();
     const hour = now.getHours();
 
-    // TRẠNG THÁI 2: ĐANG CHẠY 
     if (typeof isTracking !== 'undefined' && isTracking && typeof isPaused !== 'undefined' && !isPaused) {
-        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) {
-            return { text: "Uống nước đi, héo rồi 💧", type: "alert" };
-        }
-        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) {
-            const hotMsgs = ["Nắng gắt quá, vào bóng râm!", "Sốc nhiệt đấy, chạy chậm!"];
-            return { text: hotMsgs[Math.floor(Math.random() * hotMsgs.length)], type: "alert" };
-        }
-        if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
-            return { text: "Né đường khói bụi ra 💨", type: "alert" };
-        }
-        if (typeof friendMarkers !== 'undefined' && Object.keys(friendMarkers).length > 0 && Math.random() > 0.7) {
-            return { text: "Bạn cậu ở gần đây nè! 📍", type: "alert" };
-        }
-        return { text: "Tiếp đi! Mèo đẩy mông cho 🐾", type: "default" };
-    } 
-    
-    // TRẠNG THÁI 3: TẠM DỪNG 
+        if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi nhóc", type: "alert" };
+        if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng gắt quá, vào chỗ mát thôi", type: "alert" };
+        if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) return { text: "Né đường khói bụi ra 💨", type: "alert" };
+        return { text: "Cố lên cố lên cậu ơi", type: "default" };
+    }
     else if (typeof isPaused !== 'undefined' && isPaused) {
-        const pauseMsgs = [
-            "Đứng lên! Cấm ngồi bệt 🚫", 
-            "Giãn cơ đi, đừng có lười!", 
-            "Nghỉ tí thôi, đừng có bỏ", 
-            "Lắc cái chân, xoay cái hông"
-        ];
+        const pauseMsgs = ["Đứng nghỉ thôi nhé", "Giãn cơ chút đi nhóc", "Lắc cái chân, xoay cái hông"];
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
     }
-
-    // TRẠNG THÁI 1 & 5: CHƯA BẮT ĐẦU :Kích hoạt, cảnh báo & nói vu vơ
     else {
         let preWorkoutMessages = [];
         let userCondition = 'none';
-        
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             let parsed = JSON.parse(localStorage.getItem("appUser_" + currentUser));
             if (parsed && parsed.condition) userCondition = parsed.condition;
         }
 
-        // Cảnh báo AI 
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) {
-            if (userCondition === 'asthma') {
-                return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
-            }
-            return { text: "Bụi quá, ở nhà đi 😷", type: "alert" };
+            if (userCondition === 'asthma') return { text: "Xoang thế kia đừng ra bụi", type: "alert" };
+            return { text: "Bụi tím ngắt, ở nhà đi 😷", type: "alert" };
         }
 
-        // Kích hoạt theo khung giờ 
-        if (hour >= 5 && hour <= 9) {
-            preWorkoutMessages.push("Ăn nhẹ rồi đi thôi ");
-            preWorkoutMessages.push("Ra ngoài thôi");
-        } else if (hour >= 15 && hour <= 16) {
-            preWorkoutMessages.push("Ăn nhẹ rồi cbi thoi");
-        } else if (hour >=16 && hour <=19){
-            preWorkoutMessages.push("Được rồi đi thôi");
-        } else if (hour >= 19 || hour < 5) {
-            preWorkoutMessages.push("Tối rồi, đi ngủ cho sướng");
-        }
+        if (hour >= 5 && hour <= 9) preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
+        else if (hour >= 15 && hour <= 18) preWorkoutMessages.push("Đi vả mỡ đi, trời đẹp lắm");
+        else if (hour >= 19 || hour < 5) preWorkoutMessages.push("Tối rồi, mặc áo phản quang!");
 
-        // vu vơ và kịa đểu ng dùng
-        const vuVoMsgs = [
-            "Tâm ko tịnh do mỡ quá dày",
-            "Ra đường hay làm lợn? 🐷",
-            "Nhìn lại cái bụng cậu đi😒",
-            "Mèo còn tập, cậu thì không",
-            "Mèo khinh cậu lười nhé",
-            "Nhấc mông lên hộ Mèo cái!",
-            "🎵Take me back, back home🎶",
-            "Nà ná na na",
-            "Trợ lý mèo tên là Mèo",
-            "Thở thôi cũng mệt 🥵",
-            "Lười quá, hay là nghỉ đi",
-            " Aawhhuuu ",
-            "Còn ai mạnh hơn Mèo 😼",
-            "Buông bỏ để có tất cả"
-        ];
-
+        const vuVoMsgs = ["Mỡ dày thế, tâm sao tịnh?", "Mèo khinh cậu lười nhé", "Thở thôi cũng mệt 🥵"];
         preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
-
         return { text: preWorkoutMessages[Math.floor(Math.random() * preWorkoutMessages.length)], type: "default" };
     }
 }
 
 function showRandomCatMessage() {
-    if (isCatDragging) return; 
-    
-    const smartData = getSmartCatMessage(); 
+    if (isCatDragging) return;
+    const smartData = getSmartCatMessage();
     catBubble.innerText = smartData.text;
     
     if (smartData.type === 'alert') {
-        // MÀU CHO TRẠNG THÁI CẢNH BÁO 
-        catBubble.style.backgroundColor = '#ccff00';  // Đổi màu nền ở đây
-        catBubble.style.border = '2px solid #8f230d'; // Đổi màu và độ dày viền ở đây
-        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
+        catBubble.style.backgroundColor = '#fdf8e4';
+        catBubble.style.border = '2px solid #d4b895';
     } else {
-        // MÀU CHO TRẠNG THÁI VU VƠ, CÀ KHỊA 
-        catBubble.style.backgroundColor = '#c2fffa';  // Đổi màu nền ở đây
-        catBubble.style.border = '2px solid #8ee6de'; // Đổi màu và độ dày viền ở đây
-        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
+        catBubble.style.backgroundColor = '#f0f0f0';
+        catBubble.style.border = '2px solid #1a237e';
     }
-
+    catBubble.style.color = '#333';
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-    
-    // TỰ ĐỘNG THU CHAT SAU 4 GIÂY
+
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
-        setTimeout(() => catBubble.style.display = 'none', 600); 
+        setTimeout(() => catBubble.style.display = 'none', 600);
     }, 4000);
 }
-
-// MÈO NÓI CHUYỆN MỖI 15 GIÂY
 setInterval(showRandomCatMessage, 15000);
 
+// 3. TƯƠNG TÁC DOUBLE TAP : THÁO/ĐEO KÍNH
+catAssistant.addEventListener("dblclick", function(e) {
+    e.preventDefault();
+    if (isCatDragging) return;
+    
+    isMangKinh = !isMangKinh;
+    catImgObj.src = getAnhMacDinh();
+
+    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
+    const aqi = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText : "AQI Ổn";
+    
+    let msg = "";
+    if (isMangKinh) {
+        const ngauMsgs = [`😎 Báo cáo nhanh: ${thoiTiet} | ${aqi}`, `😎 Thông số: ${thoiTiet}. Lên đồ đi cậu`, `😎 Đeo kính vào soi map: Bụi đang ${aqi}!`];
+        msg = ngauMsgs[Math.floor(Math.random() * ngauMsgs.length)];
+        catBubble.style.backgroundColor = '#e3f2fd'; 
+        catBubble.style.border = '2px solid #0d47a1';
+    } else {
+        const thaoKinhMsgs = [`😺 Tháo kính ra nhìn cho rõ: ${thoiTiet}`, `😺 Cất kính đi làm việc tiếp`, `😺 Trở lại ngoan hiền. AQI: ${aqi}`];
+        msg = thaoKinhMsgs[Math.floor(Math.random() * thaoKinhMsgs.length)];
+        catBubble.style.backgroundColor = '#fdf8e4'; 
+        catBubble.style.border = '2px solid #d4b895';
+    }
+    
+    catBubble.innerText = msg;
+    catBubble.style.display = 'block';
+    setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+    setTimeout(() => {
+        catBubble.classList.remove('show-bubble');
+        setTimeout(() => catBubble.style.display = 'none', 600);
+    }, 3500);
+});
+
+// 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
+let shakeThreshold = 15; 
+let lastUpdate = 0;
+let x, y, z, last_x, last_y, last_z;
+let shakeCount = 0;
+
+window.addEventListener('devicemotion', function(e) {
+    let current = e.accelerationIncludingGravity;
+    if(!current) return; 
+    
+    let currentTime = new Date().getTime();
+    if ((currentTime - lastUpdate) > 100) {
+        let diffTime = (currentTime - lastUpdate);
+        lastUpdate = currentTime;
+
+        x = current.x; y = current.y; z = current.z;
+        let speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+
+        if (speed > shakeThreshold) {
+            shakeCount++;
+            if(shakeCount > 3) { 
+                catImgObj.src = imgChongMat; 
+                catBubble.innerText = "Lắc điện thoại ít thôi! Trẫm tiền đình rồi 😵‍💫";
+                catBubble.style.backgroundColor = '#fdf8e4';
+                catBubble.style.border = '2px solid #d4b895';
+                catBubble.style.display = 'block';
+                setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+                setTimeout(() => {
+                    if (catImgObj.src.includes(imgChongMat)) catImgObj.src = getAnhMacDinh(); 
+                    catBubble.classList.remove('show-bubble');
+                    setTimeout(() => catBubble.style.display = 'none', 600);
+                }, 3000);
+                shakeCount = 0; 
+            }
+        } else {
+            if(shakeCount > 0) shakeCount--;
+        }
+        last_x = x; last_y = y; last_z = z;
+    }
+});
+
+// 5. CƠ CHẾ KÉO THẢ & VUỐT VE
 function dragStart(e) {
     if (e.type === "touchstart") {
         initialX = e.touches.item(0).clientX - xOffset;
@@ -2952,18 +2997,18 @@ function dragStart(e) {
         initialX = e.clientX - xOffset;
         initialY = e.clientY - yOffset;
     }
-    
     if (e.target.closest('#cat-body')) {
         isCatDragging = true;
         catAssistant.classList.remove('idle-cat');
         catAssistant.classList.add('dragging-cat');
-        catBubble.style.display = 'none'; 
+        catBubble.style.display = 'none';
+        catImgObj.src = imgChongMat; 
     }
 }
 
 function drag(e) {
     if (isCatDragging) {
-        e.preventDefault(); 
+        e.preventDefault();
         if (e.type === "touchmove") {
             currentX = e.touches.item(0).clientX - initialX;
             currentY = e.touches.item(0).clientY - initialY;
@@ -2979,15 +3024,46 @@ function drag(e) {
 
 function dragEnd(e) {
     if (!isCatDragging) return;
-    initialX = currentX; 
-    initialY = currentY;
+    const distanceMoved = Math.sqrt(Math.pow(currentX, 2) + Math.pow(currentY, 2));
+
+    initialX = currentX; initialY = currentY;
     isCatDragging = false;
     catAssistant.classList.remove('dragging-cat');
-    
-    xOffset = 0; 
-    yOffset = 0;
-    catAssistant.classList.add('idle-cat'); 
+    xOffset = 0; yOffset = 0;
+    catAssistant.classList.add('idle-cat');
     catAssistant.style.transform = `translate(0px, 0px)`; 
+
+    if (distanceMoved > 50) {
+        catImgObj.src = imgChongMat;
+        catBubble.innerText = "Trẫm tiền đình rồi! Quay cuồng quá 😵‍💫";
+        catBubble.style.backgroundColor = '#fdf8e4';
+        catBubble.style.border = '2px solid #d4b895';
+        
+        catBubble.style.display = 'block';
+        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+        setTimeout(() => {
+            catImgObj.src = getAnhMacDinh(); 
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 3000);
+
+    } else {
+        catImgObj.src = imgNhamMat;
+        const khenMsgs = ["Meow~ Vuốt xù lông Trẫm rồi >.<", "Cứ xoa đầu trẫm đi! 🐾", "Mát xa phê quá trẫm thích~"];
+        catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
+        catBubble.style.backgroundColor = '#ffebee'; 
+        catBubble.style.border = '2px solid #ffcdd2';
+        
+        catBubble.style.display = 'block';
+        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+        setTimeout(() => {
+            catImgObj.src = getAnhMacDinh(); 
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 2000);
+    }
 }
 
 catAssistant.addEventListener("touchstart", dragStart, { passive: false });

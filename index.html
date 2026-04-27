@@ -2764,14 +2764,13 @@ function showRandomCatMessage() {
 // mèo tự động lải nhải mỗi 15 giây
 setInterval(showRandomCatMessage, 15000); 
 
-// 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ (BẢN FIX CHUẨN CẢM ỨNG MOBILE)
+// 2. THUẬT TOÁN KÉO THẢ VÀ NẢY VỀ NHÀ (FIX CHUẨN CẢM ỨNG ĐIỆN THOẠI)
 function dragStart(e) {
     if (e.type === "touchstart") {
-        // Điện thoại: Lấy tọa độ của ngón tay đầu tiên chạm vào (touches)
+        // FIX: Thêm  để lấy tọa độ của ngón tay ĐẦU TIÊN chạm vào màn hình
         initialX = e.touches.clientX - xOffset;
         initialY = e.touches.clientY - yOffset;
     } else {
-        // Máy tính: Lấy tọa độ con chuột
         initialX = e.clientX - xOffset;
         initialY = e.clientY - yOffset;
     }
@@ -2788,6 +2787,7 @@ function drag(e) {
     if (isCatDragging) {
         e.preventDefault(); // Chống cuộn trang web khi đang vuốt mèo
         if (e.type === "touchmove") {
+            // FIX: Thêm 
             currentX = e.touches.clientX - initialX;
             currentY = e.touches.clientY - initialY;
         } else {
@@ -2806,7 +2806,7 @@ function dragEnd(e) {
     isCatDragging = false;
     catAssistant.classList.remove('dragging-cat');
     
-    // mèo về tổ (Reset toạ độ)
+    // Thuật toán nảy vèo về tổ
     xOffset = 0; yOffset = 0;
     catAssistant.classList.add('idle-cat'); 
     catAssistant.style.transform = `translate(0px, 0px)`; 

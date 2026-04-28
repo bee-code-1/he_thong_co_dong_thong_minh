@@ -3168,20 +3168,42 @@ function dragEnd(e) {
 
     // Khúc check distance > 120 cũ cậu cứ để nguyên...
     if (distanceMoved > 120) {
-        catImgObj.src = getAnhMacDinh();
-        const thaMsgs = ["Kéo kéo cái cmm", "Nghịch ít thôi", "Bỏ cái tay ra nha 😼"];
+        catImgObj.src = getAnhMacDinh(); 
+        const thaMsgs = ["Kéo kéo cái cmm", "Đừng có chạm vào Mèo", "Bỏ cái tay ra nha 😼"];
         catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
+        
+        // TRẢ LẠI MÀU VÀNG (Mắng ng dùng, láo vô dùng)
+        catBubble.style.backgroundColor = '#fdf8e4';
+        catBubble.style.border = '2px solid #d4b895';
+        catBubble.style.color = '#333';
+        
         catBubble.style.display = 'block';
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        setTimeout(() => { catBubble.classList.remove('show-bubble'); setTimeout(() => catBubble.style.display = 'none', 600); }, 2500);
+
+        setTimeout(() => {
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 2500);
+
     } else {
         catImgObj.src = imgNhamMat;
-        catBubble.innerText = "Trợ lý con mèo số 1 thế giới đây";
+        const khenMsgs = ["Tình yêu là cái rắm", "Có hai con mèo ngồi bên cửa sổ", "Trợ lý con mèo số 1 thế giới đây"];
+        catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
+        
+        // TRẢ LẠI MÀU HỒNG 
+        catBubble.style.backgroundColor = '#ffebee'; 
+        catBubble.style.border = '2px solid #ffcdd2';
+        catBubble.style.color = '#333';
+        
         catBubble.style.display = 'block';
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        setTimeout(() => { catImgObj.src = getAnhMacDinh(); catBubble.classList.remove('show-bubble'); setTimeout(() => catBubble.style.display = 'none', 600); }, 2000);
+
+        setTimeout(() => {
+            catImgObj.src = getAnhMacDinh(); 
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 2000);
     }
-}
 
 // === CƠ CHẾ GIAO DIỆN CHAT VÀ LƯU LOCAL STORAGE ===
 function moChatMeo() {
@@ -3239,7 +3261,7 @@ function guiTinNhanMeo() {
     // Tạm thời cho Mèo rep tự động (Chờ fix AI sau)
     setTimeout(() => {
         let historyUpdate = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
-        const catReplies = ["Cậu nói gì Mèo chả hiểu 😼", "Mèo đang bị Google khóa mõm, tha cho Mèo đi!", "Ghi nhận! Tí Mèo méc chủ Mèo.", "Ăn hạt dưa không cậu?"];
+        const catReplies = ["Cậu nói gì Mèo chả hiểu", "Mèo đang bị máy chủ khóa mõm, tha cho Mèo đi!", "Mèo đi chơi chưa về đâuu", "Mèo đang bị cấm chat rồi, chịu khó đợi nhé"];
         historyUpdate.push({ sender: 'cat', text: catReplies[Math.floor(Math.random() * catReplies.length)] });
         localStorage.setItem('cat_chat_' + user, JSON.stringify(historyUpdate));
         taiLichSuChat();

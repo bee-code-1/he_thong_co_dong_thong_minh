@@ -2995,18 +2995,18 @@ catAssistant.addEventListener("dblclick", async function(e) {
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
-    // 4. CHUẨN BỊ PROMPT CHO GEMINI 
-    // Dịch bệnh lý sang tiếng Việt cho AI dễ hiểu
-    let benhLyText = "Khỏe mạnh";
-    if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
-    else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
+        // 4. CHUẨN BỊ PROMPT CHO GEMINI
+        // Dịch bệnh lý sang tiếng Việt cho AI dễ hiểu
+        let benhLyText = "Khỏe mạnh";
+        if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
+        else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
 
-    const prompt = `Bạn là một con mèo trợ lý ảo. Tên của bạn là Mèo. Tính cách của bạn cực kỳ xéo xắt, mặn mòi, hơi chảnh nhưng thực ra rất quan tâm sức khỏe người dùng. 
-    Quy tắc xưng hô BẮT BUỘC: Luôn xưng là "Mèo", và gọi người dùng là "cậu". Không bao giờ xưng là tôi, tao, hay trẫm.
+        const prompt = `Bạn là một con mèo trợ lý ảo. Tên của bạn là Mèo. Tính cách của bạn cực kỳ xéo xắt, mặn mòi, hơi chảnh nhưng thực ra rất quan tâm sức khỏe người dùng. 
+    Quy tắc xưng hô BẮT BUỘC: Luôn xưng là "Mèo", và gọi người dùng là "cậu". Không bao giờ xưng là tôi, tao, hay trẫm. 
     Người dùng (cậu) đang tương tác với Mèo là một người ${userAge} tuổi, tình trạng sức khỏe: ${benhLyText}. 
-    Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn ${aqi}.
+    Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn ${aqi}. 
     Hành động: ${isMangKinh ? 'Mèo vừa được cậu đeo kính đen siêu ngầu' : 'Mèo vừa bị cậu lột kính ra'}.
-    Yêu cầu: Hãy nói MỘT câu duy nhất dưới 25 chữ, nhận xét về thời tiết và khuyên bảo sức khỏe cho đúng với bệnh lý của cậu ấy. Giọng điệu phải khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
+    Yêu cầu: Hãy khuyên bảo sức khỏe hoặc nhận xét thời tiết bằng MỘT câu duy nhất, ĐỘ DÀI TỐI ĐA 80 KÝ TỰ (tuyệt đối không được dài hơn). Giọng điệu khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
 
     // 5. GỌI API GEMINI
     try {

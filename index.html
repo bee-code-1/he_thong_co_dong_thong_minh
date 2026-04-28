@@ -3010,8 +3010,8 @@ catAssistant.addEventListener("dblclick", async function(e) {
             return; 
         }
 
-        if (data.candidates && data.candidates.length > 0 && data.candidates'0'.content && data.candidates'0'.content.parts && data.candidates'0'.content.parts.length > 0) {
-            let aiMessage = data.candidates'0'.content.parts'0'.text.trim();;
+        if (data.candidates && data.candidates.length > 0 && data.candidates.at(0).content && data.candidates.at(0).content.parts && data.candidates.at(0).content.parts.length > 0) {
+            let aiMessage = data.candidates.at(0).content.parts.at(0).text.trim();
             catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu có
         } else {
             catBubble.innerText = "Mèo đang lag, cậu double tap lại coi sao 😿";

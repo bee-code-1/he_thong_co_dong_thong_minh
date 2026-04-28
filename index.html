@@ -2908,8 +2908,12 @@ const vuVoMsgs = [
     }
 }
 
+let isCatThinking = false; // Cờ khóa họng Mèo khi đang load AI
+
 function showRandomCatMessage() {
-    if (isCatDragging) return;
+    // Nếu mèo đang bị kéo hoặc đang bận hỏi API thì im lặng
+    if (isCatDragging || isCatThinking) return; 
+    
     const smartData = getSmartCatMessage();
     catBubble.innerText = smartData.text;
     
@@ -2981,6 +2985,8 @@ catAssistant.addEventListener("dblclick", async function(e) {
     Hành động của bạn: ${isMangKinh ? 'Vừa được đeo kính siêu ngầu' : 'Vừa bị người dùng lột kính ra'}.
     Yêu cầu: Hãy nói MỘT câu duy nhất dưới 25 chữ, nhận xét về thời tiết và khuyên bảo sức khỏe cho đúng với bệnh lý của họ. Giọng điệu phải khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
 
+       isCatThinking = true; // Khóa chế độ tự động lải nhải
+
     // 5. GỌI API GEMINI 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -2992,21 +2998,24 @@ catAssistant.addEventListener("dblclick", async function(e) {
         });
 
         const data = await response.json();
-        if (data.candidates && data.candidates.content.parts.text) {
+        if (data.candidates && data.candidates.length > 0 && data.candidates.content.parts.text) {
             let aiMessage = data.candidates.content.parts.text.trim();
-            catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu AI trả về
+            catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu có
         } else {
-            catBubble.innerText = " Thử double tap lại vào tớ đi ";
+            catBubble.innerText = "Mèo đang lag, double tap lại xem nào! 😿";
         }
     } catch (error) {
         console.error("Lỗi AI:", error);
-        catBubble.innerText = "Disconnected rồi 😭";
+        catBubble.innerText = "Mất kết nối rồi 😿";
     }
 
-    // 6. Thu dọn khung chat sau 6 giây 
+    // 6. Thu dọn khung chat sau 6 giây và mở lại họng cho nó
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
-        setTimeout(() => catBubble.style.display = 'none', 600);
+        setTimeout(() => {
+            catBubble.style.display = 'none';
+            isCatThinking = false; // Xong việc, cho phép lải nhải tự động trở lại
+        }, 600);
     }, 6000);
 });
 

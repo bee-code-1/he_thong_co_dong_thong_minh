@@ -2958,10 +2958,21 @@ function showRandomCatMessage() {
 setInterval(showRandomCatMessage, 15000);
 
 // 3. TƯƠNG TÁC DOUBLE TAP VỚI BỘ NÃO AI GEMINI
-// CHIA CẮT KEY ĐỂ LỪA BOT GITHUB (Ngụy trang)
-const part1 = "AIzaSyBkUBBm9GL"; 
-const part2 = "-8lhqOK8GYE-lT-12dBVckdQ"; 
-const GEMINI_API_KEY = part1 + part2;
+let GEMINI_API_KEY = ""; // Khai báo rỗng, sạch bóng 100% không có tí mã nào để Bot GitHub quét!
+
+// Tự động kéo API Key từ Firebase xuống bộ nhớ khi web vừa load xong
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        if (typeof window.db !== 'undefined') {
+            window.db.ref('cai_dat_he_thong/gemini_key').once('value').then(snap => {
+                if(snap.exists()) {
+                    GEMINI_API_KEY = snap.val();
+                    console.log("Đã tải xong não AI từ Firebase xuống!");
+                }
+            });
+        }
+    }, 1500); // Đợi 1.5s cho Firebase khởi động xong
+});
 catAssistant.addEventListener("dblclick", async function(e) {
     e.preventDefault();
     if (typeof isCatDragging !== 'undefined' && isCatDragging) return;

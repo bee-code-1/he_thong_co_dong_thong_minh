@@ -2998,9 +2998,10 @@ catAssistant.addEventListener("dblclick", async function(e) {
 
         const data = await response.json();
         
+        // FIX LỖI: Đã chèn  vào candidates và parts để chọc đúng vào mảng dữ liệu JSON
         if (data.candidates && data.candidates.length > 0 && data.candidates.content && data.candidates.content.parts && data.candidates.content.parts.length > 0) {
             let aiMessage = data.candidates.content.parts.text.trim();
-            catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu có
+            catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu AI trả về
         } else {
             catBubble.innerText = "Mèo đang lag, cậu double tap lại xem nào! 😿";
         }
@@ -3020,7 +3021,7 @@ catAssistant.addEventListener("dblclick", async function(e) {
 });
 
 // 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
-let shakeThreshold = 150; 
+let shakeThreshold = 300; 
 let lastUpdate = 0;
 let x, y, z, last_x, last_y, last_z;
 let shakeCount = 0;
@@ -3039,7 +3040,7 @@ window.addEventListener('devicemotion', function(e) {
 
         if (speed > shakeThreshold) {
             shakeCount++;
-            if(shakeCount > 7) { 
+            if(shakeCount > 10) { 
                 catImgObj.src = imgChongMat; 
                 catBubble.innerText = "Đừng lắc nữa, chóng mặt quá";
                 catBubble.style.backgroundColor = '#fdf8e4';

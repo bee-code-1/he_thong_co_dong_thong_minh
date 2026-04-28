@@ -779,7 +779,7 @@
     <div style="background: #004BAd; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; padding-top: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <img src="meo_ngau_det.png" style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #ffc107;">
-            <h3 style="margin: 0; font-size: 18px;">Trợ lý Mèo oách xà lách siêu ngầu</h3>
+            <h3 style="margin: 0; font-size: 18px;">Trợ lý Mèo oách xà lách </h3>
         </div>
         <!-- Cụm nút công cụ -->
         <div style="display: flex; gap: 15px; align-items: center;">
@@ -3269,7 +3269,7 @@ async function guiTinNhanMeo() {
     catChatContainer.innerHTML += `
         <div id="${typingId}" style="display: flex; justify-content: flex-start; width: 100%;">
             <div style="background: #e4e6eb; color: black; padding: 10px 15px; border-radius: 15px 15px 15px 0; font-size: 14px; font-style: italic;">
-                Mèo đang bấm phím... 🐾
+                Mèo đang bấm phím... 
             </div>
         </div>
     `;
@@ -3292,7 +3292,7 @@ async function guiTinNhanMeo() {
         const data = await response.json();
         document.getElementById(typingId).remove(); // Xóa chữ "Mèo đang bấm phím..."
 
-        let aiMessage = "Google nó chặn họng Mèo rồi 😿";
+        let aiMessage = "Máy chủ nó chặn họng Mèo rồi 😿";
         
         // BÓC TÁCH BẰNG NGOẶC VUÔNG SỐ 0 CHỐNG LỖI
         if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {

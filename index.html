@@ -799,11 +799,18 @@
         <!-- Tin nhắn sẽ được JS nhồi vào đây -->
     </div>
     
-    <!-- Ô nhập tin nhắn (THÊM SAFE-AREA-INSET-BOTTOM ĐỂ NÉ VẠCH VUỐT HOME CỦA IPHONE) -->
-    <div style="padding: 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="cat-chat-input" placeholder="Hỏi Mèo thứ gì đó..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 15px; background: #f8f9fa;">
-        <button onclick="guiTinNhanMeo()" style="background: #004BAd; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚀</button>
-    </div>
+<!-- KHU VỰC GỢI Ý CÂU HỎI (CẬP NHẬT) -->
+<div style="background: white; padding: 10px 15px 5px; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid #eee;">
+    <button onclick="chonGoiYChat('Có nên ra ngoài lúc này?')" style="white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;">🏃 Ra ngoài lúc này?</button>
+    <button onclick="chonGoiYChat('Chất lượng không khí hiện tại thế nào vậy Mèo ?')" style="white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;">🌫️ Hỏi Không khí</button>
+    <button onclick="chonGoiYChat('Thể trạng của tôi thế nào')" style="white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;">😼 Check body</button>
+</div>
+
+<!-- Ô nhập tin nhắn -->
+<div style="padding: 10px 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center;">
+    <input type="text" id="cat-chat-input" placeholder="Hỏi Mèo gì đi cậu..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 15px; background: #f8f9fa;">
+    <button onclick="guiTinNhanMeo()" style="background: #004BAd; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚀</button>
+</div>
 </div>
 <script>
     //  KHỞI TẠO BẢN ĐỒ 
@@ -3271,6 +3278,97 @@ function taiLichSuChat() {
         `;
     });
     container.scrollTop = container.scrollHeight;
+}
+
+// === LOGIC XỬ LÝ CÂU HỎI GỢI Ý (KHÔNG TỐN API) ===
+function chonGoiYChat(cauHoi) {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
+    
+    // 1. In câu hỏi của người dùng ra màn hình
+    history.push({ sender: 'user', text: cauHoi });
+    localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
+    taiLichSuChat();
+
+    // 2. Kéo dữ liệu sức khỏe (để tính BMI) & môi trường
+    let userCondition = 'none';
+    let heightM = 1.7; // Mặc định 1m70
+    let weightKg = 65; // Mặc định 65kg
+    
+    let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
+    if (parsed) {
+        userCondition = parsed.condition || 'none';
+        if (parsed.height) heightM = parsed.height / 100; // Đổi cm sang m
+        if (parsed.weight) weightKg = parsed.weight;
+    }
+    
+    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "chưa rõ";
+    const aqiText = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText.replace('🔴 OFF', '').replace('🟢 ON', '').trim() : "chưa rõ AQI";
+    const aqiColor = window.currentAQIColor || "#28a745"; 
+
+    // 3. Mèo tự nảy số dựa trên kịch bản (Không gọi Google)
+    let aiMessage = "";
+
+    setTimeout(() => {
+        // CÂU 1: CÓ NÊN RA NGOÀI?
+        if (cauHoi.includes('ra ngoài lúc này')) {
+            if (aqiColor === "#dc3545" || aqiColor === "#6f42c1" || aqiColor === "#7e0023") {
+                if (userCondition === 'asthma') {
+                    aiMessage = `Cậu bị viêm xoang/suyễn mà định ra đường lúc bụi đang ${aqiText} à? 😷 Tính hi sinh cho khoa học hay gì?  Ở nhà !!!`;
+                } else {
+                    aiMessage = `Khê phết, ${aqiText}, thôi ở nhà cho Mèo được nhờ 🚬😼`;
+                }
+            } else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") {
+                if (userCondition === 'asthma' || userCondition === 'heart') {
+                    aiMessage = `Ra ngoài bây giờ cũng được thôi, cơ thể cậu hơi yếu thì nên đem theo khẩu trang nhé, tốt nhất thì đợi mát mẻ hơn hãy ra. enjoy ! 😷`;
+                } else {
+                    aiMessage = `Hơi bụi chút nhưng không sao, Mèo khuyên cậu nên ra công viên nhé 🌳🏃‍♂️`;
+                }
+            } else {
+                aiMessage = `Nhiệt độ ${thoiTiet}, không khí xanh mướt! 🌿 Không xách mông lên đi tập ngay bây giờ thì định đợi đến bao giờ hả? Đi!!`;
+            }
+        } 
+        
+        // CÂU 2: CHẤT LƯỢNG KHÔNG KHÍ
+        else if (cauHoi.includes('Chất lượng không khí')) {
+            if (aqiColor === "#28a745") {
+                aiMessage = `Quá ngon luôn, ${aqiText} với nhiệt độ ${thoiTiet} thì còn gì sướng bằng ✨😸`;
+            } else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") {
+                aiMessage = `Trời đang ${thoiTiet}, đo được ${aqiText}. Cũng không tệ nhỉ? 🤷‍♂️`;
+            } else {
+                aiMessage = `Tệ lắm! Mèo đo được ${aqiText} và ${thoiTiet} này, có ra đường thì đừng quên khẩu trang và tránh đường nhiều khói bụi nhé 😾🌪️`;
+            }
+        } 
+        
+        // CÂU 3: KIỂM TRA THỂ TRẠNG VÀ TÍNH BMI
+        else if (cauHoi.includes('Thể trạng')) {
+            let bmi = weightKg / (heightM * heightM);
+            let kieuDang = "";
+
+            // Phân loại cực gắt theo cấp độ
+            if (bmi < 16) kieuDang = "Khác gì bộ xương không☠️ gió thổi chắc bay lên trời mất !";
+            else if (bmi >= 16 && bmi < 18.5) kieuDang = "Hơi gầy đấy, ăn nhiều vào cho Mèo nhờ !";
+            else if (bmi >= 18.5 && bmi < 22) kieuDang = "Bình thường thôi, cứ duy trì thế này là chuẩn";
+            else if (bmi >= 22 && bmi < 25) kieuDang = "Rất tốt 💪 dáng chuẩn fitness luôn, Mèo ưng !";
+            else if (bmi >= 25 && bmi < 28) kieuDang = "Hơi mũm mĩm rồi nha, xách mông lên chạy bộ lẹ đi !";
+            else if (bmi >= 28 && bmi < 32) kieuDang = "Hơi thừa cân rồi đấy, chăm tập thể dục lên cho Mèo !";
+            else if (bmi >= 32 && bmi < 40) kieuDang = "Báo động béo phì rồi 🐋 cậu định lăn thay vì đi bộ à ? nhớ thể dục thể thao nhiều lên nha !";
+            else kieuDang = "đã đạt cảnh giới tự sinh ra trọng lực hấp dẫn các vật thể khác, Mèo chịu cậu rồi ";
+
+            aiMessage = `Hệ thống phân tích BMI của cậu là ${bmi.toFixed(1)}, nhìn chung là ${kieuDang}`;
+            
+            // Nhắc nhở thêm nếu có bệnh nền
+            if (userCondition !== 'none') {
+                aiMessage += ` (Nhưng nhớ có bệnh nền nên tập luyện chú ý nhen!)`;
+            }
+        }
+
+        // 4. Lưu và in câu trả lời của Mèo
+        history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
+        history.push({ sender: 'cat', text: aiMessage });
+        localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
+        taiLichSuChat();
+    }, 600); // Trễ 0.6s cho cảm giác Mèo đang rep
 }
 
 async function guiTinNhanMeo() {

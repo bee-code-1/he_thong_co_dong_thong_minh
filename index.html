@@ -2958,19 +2958,17 @@ function showRandomCatMessage() {
 setInterval(showRandomCatMessage, 15000);
 
 // 3. TƯƠNG TÁC DOUBLE TAP VỚI BỘ NÃO AI GEMINI
-const GEMINI_API_KEY = "AIzaSyBqMIRi57HHb9GPwXYcnzd3ZZLXIl5ZlOI"; 
-
+const GEMINI_API_KEY = "DÁN_API_KEY_MỚI_CỦA_CẬU_VÀO_ĐÂY"; // <-- Nhớ thay Key thả cửa của cậu vào nhé
 catAssistant.addEventListener("dblclick", async function(e) {
     e.preventDefault();
     if (typeof isCatDragging !== 'undefined' && isCatDragging) return;
-    
     isMangKinh = !isMangKinh;
     catImgObj.src = getAnhMacDinh();
 
     // 1. Quét dữ liệu môi trường từ widget
     const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
     const aqi = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText : "AQI Ổn";
-    
+
     // 2. Quét hồ sơ y tế cá nhân từ LocalStorage
     let userCondition = 'none';
     let userAge = 20;
@@ -2985,70 +2983,67 @@ catAssistant.addEventListener("dblclick", async function(e) {
 
     // 3. Giao diện Mèo "Đang suy nghĩ"
     if (isMangKinh) {
-        catBubble.style.backgroundColor = '#e3f2fd'; 
+        catBubble.style.backgroundColor = '#e3f2fd';
         catBubble.style.border = '2px solid #0d47a1';
     } else {
-        catBubble.style.backgroundColor = '#fdf8e4'; 
+        catBubble.style.backgroundColor = '#fdf8e4';
         catBubble.style.border = '2px solid #d4b895';
     }
     catBubble.innerText = "Đợi tí để Mèo xem nào...";
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+    isCatThinking = true;
 
-        // 4. CHUẨN BỊ PROMPT CHO GEMINI
-        // Dịch bệnh lý sang tiếng Việt cho AI dễ hiểu
-        let benhLyText = "Khỏe mạnh";
-        if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
-        else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
+    // 4. CHUẨN BỊ PROMPT CHO GEMINI
+    let benhLyText = "Khỏe mạnh";
+    if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
+    else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
 
-        const prompt = `Bạn là một con mèo trợ lý ảo. Tên của bạn là Mèo. Tính cách của bạn cực kỳ xéo xắt, mặn mòi, hơi chảnh nhưng thực ra rất quan tâm sức khỏe người dùng. 
-    Quy tắc xưng hô BẮT BUỘC: Luôn xưng là "Mèo", và gọi người dùng là "cậu". Không bao giờ xưng là tôi, tao, hay trẫm. 
-    Người dùng (cậu) đang tương tác với Mèo là một người ${userAge} tuổi, tình trạng sức khỏe: ${benhLyText}. 
-    Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn ${aqi}. 
-    Hành động: ${isMangKinh ? 'Mèo vừa được cậu đeo kính đen siêu ngầu' : 'Mèo vừa bị cậu lột kính ra'}.
-    Yêu cầu: Hãy khuyên bảo sức khỏe hoặc nhận xét thời tiết bằng MỘT câu duy nhất, ĐỘ DÀI TỐI ĐA 80 KÝ TỰ (tuyệt đối không được dài hơn). Giọng điệu khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
+    const prompt = `Bạn là một con mèo trợ lý ảo. Tên của bạn là Mèo. Tính cách của bạn cực kỳ xéo xắt, mặn mòi, hơi chảnh nhưng thực ra rất quan tâm sức khỏe người dùng. 
+Quy tắc xưng hô BẮT BUỘC: Luôn xưng là "Mèo", và gọi người dùng là "cậu". Không bao giờ xưng là tôi, tao, hay trẫm. 
+Người dùng (cậu) đang tương tác với Mèo là một người ${userAge} tuổi, tình trạng sức khỏe: ${benhLyText}. 
+Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn ${aqi}. 
+Hành động: ${isMangKinh ? 'Mèo vừa được cậu đeo kính đen siêu ngầu' : 'Mèo vừa bị cậu lột kính ra'}.
+Yêu cầu: Hãy khuyên bảo sức khỏe hoặc nhận xét thời tiết bằng MỘT câu duy nhất, ĐỘ DÀI TỐI ĐA 80 KÝ TỰ. Giọng điệu khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
 
-        // 5. GỌI API GEMINI (Bản nâng cấp mô hình 2.5 Flash qua giao thức REST)
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
+    // 5. GỌI API GEMINI 2.5 FLASH REST
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            // BẮT BỆNH NẾU GOOGLE VẪN CHẶN
-            if (data.error) {
-                console.error("Chi tiết lỗi từ Google:", data.error);
-                catBubble.innerText = `Google chặn: ${data.error.message.substring(0, 20)}... 😾`;
-                setTimeout(() => { catBubble.style.display = 'none'; isCatThinking = false; }, 4000);
-                return;
-            }
-
-            // BÓC TÁCH DỮ LIỆU CHUẨN XÁC BẰNG .at(0)
-            if (data.candidates && data.candidates.length > 0 && data.candidates.at(0).content && data.candidates.at(0).content.parts && data.candidates.at(0).content.parts.length > 0) {
-                let aiMessage = data.candidates.at(0).content.parts.at(0).text.trim();
-                catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu có
-            } else {
-                catBubble.innerText = "Mèo đang lag, cậu double tap lại coi sao 😿";
-            }
-        } catch (error) {
-            console.error("Lỗi AI:", error);
-            catBubble.innerText = "Đứt cáp rồi! Mèo không phân tích đc 😿";
+        // KIỂM TRA LỖI TỪ GOOGLE
+        if (data.error) {
+            console.error("Chi tiết lỗi từ Google:", data.error);
+            catBubble.innerText = `Google chặn: ${data.error.message.substring(0, 30)}... 😾`;
+        } 
+        // BÓC TÁCH DỮ LIỆU 
+        else if (data.candidates && data.candidates.length > 0 && data.candidates.at(0).content && data.candidates.at(0).content.parts && data.candidates.at(0).content.parts.length > 0) {
+            let aiMessage = data.candidates.at(0).content.parts.at(0).text.trim();
+            catBubble.innerText = aiMessage.replace(/\*/g, ''); 
+        } else {
+            catBubble.innerText = "Mèo đang lag, cậu double tap lại coi sao 😿";
         }
+    } catch (error) {
+        console.error("Lỗi AI:", error);
+        catBubble.innerText = "Đứt cáp rồi! Mèo không phân tích đc 😿";
+    }
 
-    // 6. Thu dọn khung chat sau 6 giây và mở lại họng cho nó
+    // 6. THU DỌN KHUNG CHAT VÀ MỞ KHÓA HỌNG
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => {
             catBubble.style.display = 'none';
-            isCatThinking = false; 
+            isCatThinking = false;
         }, 600);
     }, 6000);
-});;
+});
 
 // 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
 let shakeThreshold = 300; 

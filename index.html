@@ -3010,8 +3010,8 @@ catAssistant.addEventListener("dblclick", async function(e) {
             return; 
         }
 
-        if (data.candidates && data.candidates.length > 0 && data.candidates.content && data.candidates.content.parts && data.candidates.content.parts.length > 0) {
-            let aiMessage = data.candidates.content.parts.text.trim();
+        if (data.candidates && data.candidates.length > 0 && data.candidates'0'.content && data.candidates'0'.content.parts && data.candidates'0'.content.parts.length > 0) {
+            let aiMessage = data.candidates'0'.content.parts'0'.text.trim();;
             catBubble.innerText = aiMessage.replace(/\*/g, ''); // Bỏ dấu * markdown nếu có
         } else {
             catBubble.innerText = "Mèo đang lag, cậu double tap lại coi sao 😿";
@@ -3111,7 +3111,12 @@ function dragEnd(e) {
     if (!isCatDragging) return;
     const distanceMoved = Math.sqrt(Math.pow(currentX, 2) + Math.pow(currentY, 2));
 
-    initialX = currentX; initialY = currentY;
+    initialX = 0; 
+    initialY = 0; 
+    currentX = 0; 
+    currentY = 0; 
+    xOffset = 0; 
+    yOffset = 0;
     isCatDragging = false;
     catAssistant.classList.remove('dragging-cat');
     xOffset = 0; yOffset = 0;

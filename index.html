@@ -773,15 +773,19 @@
         </div>
     </div>
 </div>
-    <!-- MÀN HÌNH CHAT VỚI MÈO (NHẤN GIỮ ĐỂ MỞ) -->
+<!-- MÀN HÌNH CHAT VỚI MÈO (NHẤN GIỮ ĐỂ MỞ) -->
 <div id="cat-chat-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f0f2f5; z-index: 5000; flex-direction: column;">
     <!-- Header -->
     <div style="background: #004BAd; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; padding-top: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <img src="meo_ngau_det.png" style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #ffc107;">
-            <h3 style="margin: 0; font-size: 18px;">Trợ lý Mèo 😼</h3>
+            <h3 style="margin: 0; font-size: 18px;">Trợ lý Mèo oách xà lách siêu ngầu</h3>
         </div>
-        <button onclick="dongChatMeo()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer;">&times;</button>
+        <!-- Cụm nút công cụ -->
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button onclick="xoaLichSuChatMeo()" style="background: none; border: none; color: #ffc107; font-size: 22px; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'" title="Xóa lịch sử trò chuyện">🗑️</button>
+            <button onclick="dongChatMeo()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer;">&times;</button>
+        </div>
     </div>
     
     <!-- Lịch sử Chat (Cuộn) -->
@@ -3203,6 +3207,17 @@ function moChatMeo() {
 
 function dongChatMeo() {
     document.getElementById('cat-chat-screen').style.display = 'none';
+}
+
+function xoaLichSuChatMeo() {
+    if (confirm("Cậu có chắc muốn dọn sạch lịch sử dưa lê với Mèo không?")) {
+        const user = localStorage.getItem('currentUser') || "Khach";
+        // Xóa sổ dữ liệu trong Local Storage
+        localStorage.removeItem('cat_chat_' + user);
+        
+        // Cập nhật lại giao diện ngay lập tức
+        taiLichSuChat();
+    }
 }
 
 function taiLichSuChat() {

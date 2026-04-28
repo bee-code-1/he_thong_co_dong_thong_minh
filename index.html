@@ -3210,7 +3210,7 @@ function dongChatMeo() {
 }
 
 function xoaLichSuChatMeo() {
-    if (confirm("Cậu có chắc muốn dọn sạch lịch sử dưa lê với Mèo không?")) {
+    if (confirm("Xoá toàn bộ lịch sử chat với Mèo ?")) {
         const user = localStorage.getItem('currentUser') || "Khach";
         // Xóa sổ dữ liệu trong Local Storage
         localStorage.removeItem('cat_chat_' + user);

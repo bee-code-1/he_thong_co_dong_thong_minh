@@ -3285,39 +3285,29 @@ function dragEnd(e) {
     }
 }
 
-// === CƠ CHẾ GIAO DIỆN CHAT VÀ LƯU LOCAL STORAGE ===
+// === HỆ THỐNG MA TRẬN NHÁNH CÂY (DECISION TREE) BỞI ORCHESTRATOR AGENT ===
+
 function moChatMeo() {
     document.getElementById('cat-chat-screen').style.display = 'flex';
     taiLichSuChat();
+    capNhatGoiYTheoNguCanh(); // Gọi Tác nhân điều phối quét trạng thái
 }
 
 function dongChatMeo() {
     document.getElementById('cat-chat-screen').style.display = 'none';
 }
 
-function xoaLichSuChatMeo() {
-    if (confirm("Xoá toàn bộ lịch sử chat với Mèo ?")) {
-        const user = localStorage.getItem('currentUser') || "Khach";
-        // Xóa sổ dữ liệu trong Local Storage
-        localStorage.removeItem('cat_chat_' + user);
-        
-        // Cập nhật lại giao diện ngay lập tức
-        taiLichSuChat();
-    }
-}
-
 function taiLichSuChat() {
     const user = localStorage.getItem('currentUser') || "Khach";
     let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
     const container = document.getElementById('cat-chat-history');
-    if(!container) return; // Bảo vệ chống lỗi nếu chưa dán HTML
-    container.innerHTML = '';
+    if(!container) return;
     
+    container.innerHTML = '';
     if (history.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Bắt đầu trò chuyện với mèo...</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Bắt đầu trò chuyện với Mèo đi cậu...</div>`;
         return;
     }
-
     history.forEach(msg => {
         let align = msg.sender === 'user' ? 'flex-end' : 'flex-start';
         let bg = msg.sender === 'user' ? '#004BAd' : '#e4e6eb';
@@ -3326,7 +3316,7 @@ function taiLichSuChat() {
         
         container.innerHTML += `
             <div style="display: flex; justify-content: ${align}; width: 100%;">
-                <div style="background: ${bg}; color: ${color}; padding: 10px 15px; border-radius: ${radius}; max-width: 75%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <div style="background: ${bg}; color: ${color}; padding: 10px 15px; border-radius: ${radius}; font-size: 14px; max-width: 80%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 1.4;">
                     ${msg.text}
                 </div>
             </div>
@@ -3335,101 +3325,100 @@ function taiLichSuChat() {
     container.scrollTop = container.scrollHeight;
 }
 
-// === LOGIC XỬ LÝ CÂU HỎI GỢI Ý (KHÔNG TỐN API) ===
-// === LOGIC XỬ LÝ CÂU HỎI GỢI Ý (KHÔNG TỐN API, NHƯNG DIỄN NHƯ THẬT) ===
-function chonGoiYChat(cauHoi) {
+// 🧠 TÁC NHÂN ĐIỀU PHỐI TẦNG 1: QUÉT TRẠNG THÁI VẬN ĐỘNG VÀ MÔI TRƯỜNG
+function capNhatGoiYTheoNguCanh() {
+    const container = document.getElementById('cat-suggest-container');
+    if(!container) return;
+
+    let htmlNut = "";
+    let btnStyle = "white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;";
+
+    // Quét tình trạng GPS
+    let hasGPS = (latestLatLng !== null);
+
+    if (!hasGPS) {
+        // TRẠNG THÁI NGOẠI LỆ: Mù GPS
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Tắt định vị thì sao?')" style="${btnStyle}">📡 Mất GPS rồi Mèo</button>`;
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Tính BMI chay')" style="${btnStyle}">😼 Check body</button>`;
+    }
+    else if (!isTracking && totalDistanceMeter === 0) {
+        // TRẠNG THÁI CHUẨN BỊ (Đang ở nhà)
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Có nên ra ngoài lúc này?')" style="${btnStyle}">🏃 Có nên ra ngoài lúc này?</button>`;
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Hỏi Không khí')" style="${btnStyle}">🌫️ Hỏi Không khí</button>`;
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Dạo này tớ tập thế nào?')" style="${btnStyle}">📊 Xem tiến độ</button>`;
+    }
+    else if (isTracking && isPaused) {
+        // TRẠNG THÁI ĐANG TẬP NHƯNG BẤM TẠM DỪNG NGHỈ MỆT
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Mệt quá Mèo ơi!')" style="${btnStyle}">🥵 Mệt quá Mèo ơi!</button>`;
+    }
+    else if (!isTracking && totalDistanceMeter > 0) {
+        // TRẠNG THÁI KẾT THÚC BUỔI TẬP
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Đánh giá buổi tập hôm nay')" style="${btnStyle}">📊 Đánh giá buổi tập đi Mèo!</button>`;
+    } else {
+        // ĐANG CHẠY MÀ VẪN RẢNH TAY MỞ CHAT
+        htmlNut += `<button onclick="xuLyGoiYTuDong('Đang chạy mà mở chat')" style="${btnStyle}">🏃 Đang tập mà mở máy à?</button>`;
+    }
+
+    container.innerHTML = htmlNut;
+}
+
+//  TÁC NHÂN XỬ LÝ KỊCH BẢN (NẢY SỐ AI CỤC BỘ)
+function xuLyGoiYTuDong(cauHoi) {
     const user = localStorage.getItem('currentUser') || "Khach";
     let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
     
-    // 1. In câu hỏi của người dùng ra màn hình
+    // 1. In câu hỏi User
     history.push({ sender: 'user', text: cauHoi });
     localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
     taiLichSuChat();
 
-    // === TÍNH NĂNG MỚI: HIỆN BÓNG BÓNG "ĐANG BẤM PHÍM..." ===
+    // 2. Hiện bóng bóng Mèo đang gõ...
     const catChatContainer = document.getElementById('cat-chat-history');
     const typingId = "typing_goi_y_" + Date.now();
     catChatContainer.innerHTML += `
         <div id="${typingId}" style="display: flex; justify-content: flex-start; width: 100%;">
             <div style="background: #e4e6eb; color: black; padding: 10px 15px; border-radius: 15px 15px 15px 0; font-size: 14px; font-style: italic;">
-                Mèo đang bấm phím... 🐾
+                Mèo đang soạn tin nhắn... 🐾
             </div>
         </div>
     `;
     catChatContainer.scrollTop = catChatContainer.scrollHeight;
 
-    // 2. Kéo dữ liệu sức khỏe (để tính BMI) & môi trường
-    let userCondition = 'none';
-    let heightM = 1.7; // Mặc định 1m70
-    let weightKg = 65; // Mặc định 65kg
-    
-    let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
-    if (parsed) {
-        userCondition = parsed.condition || 'none';
-        if (parsed.height) heightM = parsed.height / 100; // Đổi cm sang m
-        if (parsed.weight) weightKg = parsed.weight;
-    }
-    
-    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "chưa rõ";
-    const aqiText = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText.replace('🔴 OFF', '').replace('🟢 ON', '').trim() : "chưa rõ AQI";
-    const aqiColor = window.currentAQIColor || "#28a745"; 
-
-    let aiMessage = "";
-
-    // 3. DIỄN SÂU: Đợi 1.5 giây cho giống API thật rồi mới nhả kết quả
+    // 3. DIỄN SÂU 1.5s ĐỂ XỬ LÝ LOGIC
     setTimeout(() => {
-        // Xóa ngay cái bóng bóng "đang bấm phím"
         if(document.getElementById(typingId)) document.getElementById(typingId).remove();
+        let aiMessage = "";
+        let nextButtonsHTML = ""; // Các nút của Tầng 2, Tầng 3
+        let btnStyle = "white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;";
 
-        // CÂU 1: CÓ NÊN RA NGOÀI?
-        if (cauHoi.includes('ra ngoài lúc này')) {
-            if (aqiColor === "#dc3545" || aqiColor === "#6f42c1" || aqiColor === "#7e0023") {
-                if (userCondition === 'asthma') {
-                    aiMessage = `Cậu bị viêm xoang/suyễn mà định ra đường lúc bụi đang ${aqiText} à? 😷 Tính hiến phổi cho khoa học hay gì? Ở nhà!!`;
-                } else {
-                    aiMessage = `Khê phết, ${aqiText}, thôi ở nhà cho Mèo được nhờ 🚬😼`;
-                }
-            } else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") {
-                if (userCondition === 'asthma' || userCondition === 'heart') {
-                    aiMessage = `Ra ngoài bây giờ cũng được thôi, cơ thể cậu hơi yếu thì nên đem theo khẩu trang nhé, tốt nhất thì đợi mát mẻ hơn hãy ra. enjoy ! 😷`;
-                } else {
-                    aiMessage = `Hơi bụi chút nhưng không sao, Mèo khuyên cậu nên ra công viên nhé 🌳🏃‍♂️`;
-                }
+        const temp = window.currentTemp || 25;
+        const aqiText = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText.replace('🔴 OFF', '').replace('🟢 ON', '').trim() : "chưa rõ AQI";
+
+        // === MA TRẬN NHÁNH: TẠM DỪNG NGHỈ MỆT ===
+        if (cauHoi === 'Mệt quá Mèo ơi!') {
+            if (totalDistanceMeter < 100) {
+                // Nhánh: Mới đi đã nghỉ
+                aiMessage = `Mới đi được có ${(totalDistanceMeter).toFixed(1)} mét mà đã kêu mệt? Bật app lên ngồi rung đùi à? Đứng dậy đi tiếp ngay cho Mèo! 😾`;
+                nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đi tiếp thì đi</button>`;
+            } else if (temp >= 30) {
+                // Nhánh: Nóng và mệt (Cardiac Drift)
+                aiMessage = `Nhiệt độ đang ${temp}°C. Thấy nhịp tim đập loạn xạ (Cardiac Drift) chưa? Tìm ngay chỗ bóng râm nghỉ ngơi và uống ngụm nước nhỏ đi! Cấm tu ừng ực đấy! 🌳💧`;
+                nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Đã uống nước')" style="${btnStyle}">✅ Đã uống nước và dãn cơ</button>`;
             } else {
-                aiMessage = `Nhiệt độ ${thoiTiet}, không khí xanh mướt! 🌿 Không xách mông lên đi tập ngay bây giờ thì định đợi đến bao giờ hả? Đi!!`;
+                // Nhánh: Bình thường
+                aiMessage = `Trời đang mát, nghỉ 2 phút thả lỏng cơ đi rồi chiến tiếp. Nhớ hít mũi thở miệng nhé! 🧘‍♂️`;
+                nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đã hồi mana, chiến!</button>`;
             }
-        } 
-        
-        // CÂU 2: CHẤT LƯỢNG KHÔNG KHÍ
-        else if (cauHoi.includes('Chất lượng không khí')) {
-            if (aqiColor === "#28a745") {
-                aiMessage = `Quá ngon luôn, ${aqiText} với nhiệt độ ${thoiTiet} thì còn gì sướng bằng ✨😸`;
-            } else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") {
-                aiMessage = `Trời đang ${thoiTiet}, đo được ${aqiText}. Cũng không tệ nhỉ? 🤷‍♂️`;
-            } else {
-                aiMessage = `Tệ lắm! Mèo đo được ${aqiText} và ${thoiTiet} này, có ra đường thì đừng quên khẩu trang và tránh đường nhiều khói bụi nhé 😾🌪️`;
-            }
-        } 
-        
-        // CÂU 3: KIỂM TRA THỂ TRẠNG VÀ TÍNH BMI
-        else if (cauHoi.includes('Thể trạng')) {
-            let bmi = weightKg / (heightM * heightM);
-            let kieuDang = "";
-
-            if (bmi < 16) kieuDang = "Khác gì bộ xương không☠️ gió thổi chắc bay lên trời mất !";
-            else if (bmi >= 16 && bmi < 18.5) kieuDang = "Hơi gầy đấy, ăn nhiều vào cho Mèo nhờ !";
-            else if (bmi >= 18.5 && bmi < 22) kieuDang = "Bình thường thôi, cứ duy trì thế này là chuẩn";
-            else if (bmi >= 22 && bmi < 25) kieuDang = "Rất tốt 💪 dáng chuẩn fitness luôn, Mèo ưng !";
-            else if (bmi >= 25 && bmi < 28) kieuDang = "Hơi mũm mĩm rồi nha, xách mông lên chạy bộ lẹ đi !";
-            else if (bmi >= 28 && bmi < 32) kieuDang = "Hơi thừa cân rồi đấy, chăm tập thể dục lên cho Mèo !";
-            else if (bmi >= 32 && bmi < 40) kieuDang = "Báo động béo phì rồi 🐋 cậu định lăn thay vì đi bộ à ? nhớ thể dục thể thao nhiều lên nha !";
-            else kieuDang = "đã đạt cảnh giới tự sinh ra trọng lực hấp dẫn các vật thể khác, Mèo chịu cậu rồi ";
-
-            aiMessage = `Hệ thống phân tích BMI của cậu là ${bmi.toFixed(1)}, nhìn chung là ${kieuDang}`;
-            
-            if (userCondition !== 'none') {
-                aiMessage += ` (Nhưng nhớ có bệnh nền nên tập luyện chú ý nhen!)`;
-            }
+        }
+        else if (cauHoi === 'Đã uống nước' || cauHoi === 'Chấp nhận chạy tiếp') {
+            aiMessage = `Tốt! Đóng khung chat lại, bấm "TIẾP TỤC" ở dưới và chạy cho đàng hoàng vào! Mèo vẫn đang giám sát đấy! 👀`;
+            nextButtonsHTML = ``; // ĐÓNG LUỒNG, không hiện nút Tầng 3 nữa
+        }
+        else if (cauHoi === 'Tắt định vị thì sao?') {
+            aiMessage = `Tắt GPS thì Mèo bị mù, biết cậu đang ở xó nào mà khuyên? 😾 Bật nút "▶ BẮT ĐẦU" xanh lè ở dưới lên hoặc tự thò đầu ra cửa sổ mà xem thời tiết nhé!`;
+        }
+        else {
+            aiMessage = `Hệ thống phân tầng cho câu hỏi này anh em dev đang mài dao mổ để gõ code. Cậu test nhánh "Tạm dừng" trước nhé! 😸`;
         }
 
         // 4. Lưu và in câu trả lời của Mèo
@@ -3438,9 +3427,12 @@ function chonGoiYChat(cauHoi) {
         localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
         taiLichSuChat();
 
-    }, 1500); // 🕒 Cố tình delay 1.5 giây cho giống API thật
-}
+        // 5. Cập nhật các Nút Gợi Ý Tầng 2 lên khung
+        const container = document.getElementById('cat-suggest-container');
+        if (container) container.innerHTML = nextButtonsHTML;
 
+    }, 1500); 
+}
 async function guiTinNhanMeo() {
     const input = document.getElementById('cat-chat-input');
     const text = input.value.trim();

@@ -3681,13 +3681,14 @@ map.on('click', function(e) {
     let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
     let btnHuyStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
 
-    // TRƯỜNG HỢP 1: Chưa có Điểm A -> Hiện 2 lựa chọn đầu tiên
+    // TRƯỜNG HỢP 1: Chưa có Điểm A -> Hiện Tùy chọn + Nút mở Điểm đã lưu
     if (!window.pointA) {
         let popupContent = `
             <div style="text-align:center;">
                 <h4 style="margin: 0 0 10px 0; color:#333;">Tùy chọn Điểm đến</h4>
                 <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${lat}, ${lng})">📍 Từ vị trí hiện tại đến đây</button>
                 <button style="${btnStyle} background:#28a745;" onclick="window.setPointA(${lat}, ${lng})">🟢 Chọn làm Điểm xuất phát (A)</button>
+                <button style="${btnStyle} background:#ffc107; color:#333;" onclick="window.moDanhSachDiaDiemLuu()">⭐ Mở Cẩm nang Điểm đã lưu</button>
             </div>
         `;
         L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
@@ -3755,11 +3756,12 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
         .then(res => res.json())
         .then(data => {
             if(data.routes && data.routes.length > 0) {
-                const route = data.routes;
+                const route = data.routes; // FIX 1: Đã chèn  lấy tuyến chính
                 const coords = route.geometry.coordinates; 
                 const totalDist = (route.distance / 1000).toFixed(1);
                 
                 for (let i = 0; i < coords.length - 1; i++) {
+                    // FIX 2: Đảo ngược [lng, lat] thành [lat, lng]
                     let p1 = [coords[i][2], coords[i]];     
                     let p2 = [coords[i+1][2], coords[i+1]];
 
@@ -3773,17 +3775,60 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                     }).addTo(window.routeLayerGroup);
                 }
 
+                // FIX 3: Khai báo mảng cho padding
                 const bounds = L.polyline(coords.map(c => [c[2], c])).getBounds();
-                map.fitBounds(bounds, { padding: [3] });
+                map.fitBounds(bounds, { padding: [1] });
 
+                // TÍCH HỢP TÍNH NĂNG LƯU ĐỊA ĐIỂM
                 L.popup()
                     .setLatLng([lat2, lng2])
-                    .setContent(`<div style="font-weight:bold; color:#004BAd;">Khoảng cách: ${totalDist} km<br><span style="font-size:12px; color:#555;">(Lộ trình đã được đánh giá chất lượng KK)</span></div>`)
+                    .setContent(`
+                        <div style="font-weight:bold; color:#004BAd; text-align:center;">
+                            Khoảng cách: ${totalDist} km<br>
+                            <span style="font-size:12px; color:#555;">(Lộ trình đã đánh giá AQI)</span><br>
+                            <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                ⭐ Lưu địa điểm này
+                            </button>
+                        </div>
+                    `)
                     .openOn(map);
-
             }
         })
         .catch(err => console.error("Lỗi vẽ đường OSRM:", err));
+};
+
+// === TÍNH NĂNG LƯU ĐỊA ĐIỂM CÁ NHÂN (0 BYTE FIREBASE) ===
+window.luuDiaDiemCaNhan = function(lat, lng) {
+    let tenDiaDiem = prompt("Cậu muốn đặt tên điểm này là gì? (VD: Quán cafe, Chỗ chạy mát...)");
+    if (!tenDiaDiem) return;
+
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
+    dsDiaDiem.push({ ten: tenDiaDiem, lat: lat, lng: lng });
+    localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(dsDiaDiem));
+
+    alert("✅ Đã lưu '" + tenDiaDiem + "' vào cẩm nang của cậu! 0 byte database luôn nhé! 😎");
+    map.closePopup();
+};
+
+window.moDanhSachDiaDiemLuu = function() {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
+
+    if (dsDiaDiem.length === 0) {
+        alert("Cậu chưa lưu địa điểm nào cả! Hãy vẽ lộ trình và lưu lại nhé.");
+        return;
+    }
+
+    let htmlList = `<h4 style="margin:0 0 10px 0; color:#004BAd; text-align:center;">⭐ Điểm Yêu Thích</h4>`;
+    dsDiaDiem.forEach((diem) => {
+        htmlList += `<button onclick="window.routeFromCurrentTo(${diem.lat}, ${diem.lng}); map.closePopup();" style="display:block; width:100%; padding:10px; margin-bottom:8px; background:#f8f9fa; border:1px solid #ccc; border-radius:8px; cursor:pointer; text-align:left; font-weight:bold; color:#333;">📍 ${diem.ten}</button>`;
+    });
+
+    L.popup()
+        .setLatLng(map.getCenter())
+        .setContent(`<div style="max-height: 250px; overflow-y: auto; padding-right:5px;">${htmlList}</div>`)
+        .openOn(map);
 };
 
 window.getSimulatedAQIColor = function(index, totalSegments) {

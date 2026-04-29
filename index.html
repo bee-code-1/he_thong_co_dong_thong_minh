@@ -408,11 +408,11 @@
 <!-- NÚT BẢN ĐỒ ĐỊA HÌNH (Đường bình độ - Bên phải) -->
 <button id="btn-dia-hinh" onclick="window.toggleDiaHinh()" style="position: absolute; top: 140px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #28a745; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.3s;">Địa hình<br>⛰️ OFF</button>
 
-<!-- NÚT BẬT MENU TIỆN ÍCH -->
-<button id="btn-poi-menu" onclick="window.togglePoiMenu(event)" style="position: absolute; top: 195px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #6f42c1; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: 0.3s;">Tiện ích<br>🏥 OFF</button>
+<<!-- NÚT BẬT MENU TIỆN ÍCH -->
+<button id="btn-poi-menu" onclick="window.togglePoiMenu(event)" style="position: absolute; top: 255px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #6f42c1; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: 0.3s;">Tiện ích<br>🏥 OFF</button>
 
 <!-- BẢNG MENU LỌC ĐỊA ĐIỂM (Animaton phình to) -->
-<div id="poi-panel" style="position: absolute; top: 245px; right: 15px; width: 160px; background: rgba(255, 255, 255, 0.98); border: 2px solid #6f42c1; border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 1001; opacity: 0; visibility: hidden; transform: scale(0.8); transform-origin: top right; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; text-align: left;">
+<div id="poi-panel" style="position: absolute; top: 310px; right: 15px; width: 160px; background: rgba(255, 255, 255, 0.98); border: 2px solid #6f42c1; border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 1001; opacity: 0; visibility: hidden; transform: scale(0.8); transform-origin: top right; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; text-align: left;">
     <span onclick="window.dongPoiMenu()" style="position: absolute; top: 5px; right: 12px; font-size: 24px; font-weight: bold; color: #888; cursor: pointer;">&times;</span>
     <h4 style="margin: 0 0 10px 0; color: #6f42c1; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">Chọn tiện ích</h4>
     
@@ -3874,6 +3874,23 @@ window.setPointB = function(lat, lng) {
     window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
+// LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
+map.on('click', function(e) {
+    if (!window.isRouteMode) return; // Nếu đang tắt chế độ Lộ trình thì không làm gì cả
+
+    let lat = e.latlng.lat;
+    let lng = e.latlng.lng;
+
+    if (!window.pointA) {
+        window.setPointA(lat, lng);
+    } else if (!window.pointB) {
+        window.setPointB(lat, lng);
+    } else {
+        if(confirm("Cậu đã chọn đủ 2 điểm rồi. Muốn chọn lại Điểm A tại đây không?")) {
+            window.setPointA(lat, lng);
+        }
+    }
+});    
 window.routeFromCurrentTo = function(tLat, tLng) {
     if (!latestLatLng) return alert("Chưa có tín hiệu GPS!");
     map.closePopup();

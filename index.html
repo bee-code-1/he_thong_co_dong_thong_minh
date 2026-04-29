@@ -3006,13 +3006,21 @@ function getSmartCatMessage() {
         if (typeof elapsedSeconds !== 'undefined' && elapsedSeconds > 900 && Math.random() > 0.5) return { text: "Uống nước đi", type: "alert" };
         if (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3 && Math.random() > 0.5) return { text: "Nắng quá, tìm chỗ mát coi", type: "alert" };
         if (typeof window.currentAQIColor !== 'undefined' && (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1")) return { text: "Né đường khói bụi ra 💨", type: "alert" };
+        
         return { text: "Nhanh mml !", type: "default" };
-    }
+    } 
     else if (typeof isPaused !== 'undefined' && isPaused) {
         const pauseMsgs = ["Đứng nghỉ thôi, đừng ngồi", "Nghỉ tí lấy sức chứ?", "Lắc cái chân, xoay cái hông"];
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
-    }
+    } 
     else {
+        // ==========================================
+        // 👻 EASTER EGG HỆ TÂM LINH (TỈ LỆ XUẤT HIỆN 1%)
+        // ==========================================
+        if (Math.random() < 0.01) {
+            return { text: "Mèo chơi trốn tìm theo tên chủ mộ", type: "alert" };
+        }
+
         let preWorkoutMessages = [];
         let userCondition = 'none';
         const currentUser = localStorage.getItem('currentUser');
@@ -3029,28 +3037,29 @@ function getSmartCatMessage() {
         if (hour >= 4 && hour <= 7) preWorkoutMessages.push("Đến lúc ra ngoài chạm cỏ rồi");
         else if (hour >= 16 && hour < 17) preWorkoutMessages.push("Ăn nhẹ để cbi chạy thôi");
         else if (hour >= 17 || hour < 21) preWorkoutMessages.push("Mèo muốn ra ngoài rồi, đi thôi");
-        else if (hour >= 21 && hour < 4) preWorkoutMessages.push("Muộn rồi mà  sao còn~");
+        else if (hour >= 21 && hour < 4) preWorkoutMessages.push("Muộn rồi mà sao còn~");
 
-        // vu vơ và kịa đểu ng dùng
-const vuVoMsgs = [
-    "Tâm ko tịnh do mỡ quá dày",
-    "Ra đường hay làm lợn?",
-    "Nhìn lại cái bụng cậu đi😒",
-    "Mèo còn tập, cậu thì không",
-    "Mèo khinh cậu lười nhé",
-    "Nhấc mông lên hộ Mèo cái!",
-    "🎵Take me back, back home",
-    "Nà ná na na",
-    "Trợ lý mèo tên là Mèo",
-    "Thở thôi cũng mệt 🥵",
-    "Lười quá, hay là nghỉ đi",
-    " Aawhhuuu ",
-    "Còn ai mạnh hơn Mèo 😼",
-    "Buông bỏ để có tất cả",
-    "Càng mất càng còn",
-    "🔥 Tu-tu-tu-du 🔥"
-]
+        // Bộ từ vựng vu vơ và khịa đểu người dùng
+        const vuVoMsgs = [
+            "Tâm ko tịnh do mỡ quá dày",
+            "Ra đường hay làm lợn?",
+            "Nhìn lại cái bụng cậu đi😒",
+            "Mèo còn tập, cậu thì không",
+            "Mèo khinh cậu lười nhé",
+            "Nhấc mông lên hộ Mèo cái!",
+            "🎵Take me back, back home",
+            "Nà ná na na",
+            "Trợ lý mèo tên là Mèo",
+            "Thở thôi cũng mệt 🥵",
+            "Lười quá, hay là nghỉ đi",
+            " Aawhhuuu ",
+            "Còn ai mạnh hơn Mèo 😼",
+            "Buông bỏ để có tất cả",
+            "Càng mất càng còn",
+            "🔥 Tu-tu-tu-du 🔥"
+        ];
         preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
+        
         return { text: preWorkoutMessages[Math.floor(Math.random() * preWorkoutMessages.length)], type: "default" };
     }
 }
@@ -3389,36 +3398,42 @@ window.xoaLichSuChatMeo = function() {
 window.capNhatGoiYTheoNguCanh = function() {
     const container = document.getElementById('cat-suggest-container');
     if(!container) return;
-
     let htmlNut = "";
     let btnStyle = "white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;";
 
     let hasGPS = (latestLatLng !== null);
 
     if (!isTracking && totalDistanceMeter === 0) {
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Có nên ra ngoài lúc này?')" style="${btnStyle}">🤔 Có nên đi tập không?</button>`;
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Hỏi Không khí')" style="${btnStyle}">😷 Khí trời nay sao?</button>`;
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Dạo này tớ tập thế nào?')" style="${btnStyle}">Dạo này tớ khoẻ không ?</button>`;
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Tính BMI chay')" style="${btnStyle}">🐷 Cân đo mỡ thừa</button>`;
+        // CÁC NÚT CHỨC NĂNG CHÍNH
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🤔 Có nên đi tập không?')" style="${btnStyle}">🤔 Có nên đi tập không?</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🍕 Mèo ơi, tớ đói quá!')" style="${btnStyle}">🍕 Mèo ơi, tớ đói quá!</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🤕 Tớ bị đau chân quá...')" style="${btnStyle}">🤕 Tớ bị đau chân quá...</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🐷 Cân đo mỡ thừa')" style="${btnStyle}">🐷 Cân đo mỡ thừa</button>`;
+        
+        // 4 NÚT VU VƠ MỚI ĐƯỢC CẤY VÀO ĐÂY
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Mèo làm được gì?')" style="${btnStyle}">😼 Mèo làm được gì?</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Kể chuyện cười coi')" style="${btnStyle}">😹 Kể chuyện cười coi</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Động viên tớ đi!')" style="${btnStyle}">🔥 Động viên tớ đi!</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Mèo có người yêu chưa?')" style="${btnStyle}">💔 Mèo có người yêu chưa?</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Triết lý của Mèo')" style="${btnStyle}"> Triết lý của Mèo</button>`;
     }
     else if (!hasGPS) {
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Tắt định vị thì sao?')" style="${btnStyle}">📡 Rớt mạng rồi</button>`;
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Tính BMI chay')" style="${btnStyle}">😼 Tự check body</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('📡 Rớt mạng rồi')" style="${btnStyle}">📡 Rớt mạng rồi</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🐷 Cân đo mỡ thừa')" style="${btnStyle}">🐷 Cân đo mỡ thừa</button>`;
     }
     else if (isTracking && isPaused) {
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Mệt quá Mèo ơi!')" style="${btnStyle}">🥵 Mệt thở không ra hơi!</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🥵 Mệt thở không ra hơi!')" style="${btnStyle}">🥵 Mệt thở không ra hơi!</button>`;
     }
     else if (!isTracking && totalDistanceMeter > 0) {
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Đánh giá buổi tập hôm nay')" style="${btnStyle}">📊 Chấm điểm hôm nay coi!</button>`;
-    } 
-    else {
-        htmlNut += `<button onclick="window.xuLyGoiYTuDong('Đang chạy mà mở chat')" style="${btnStyle}">🏃 Đang tập mà mở máy?</button>`;
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('📊 Chấm điểm hôm nay coi!')" style="${btnStyle}">📊 Chấm điểm hôm nay coi!</button>`;
     }
-
+    else {
+        htmlNut += `<button onclick="window.xuLyGoiYTuDong('🏃 Đang tập mà mở máy?')" style="${btnStyle}">🏃 Đang tập mà mở máy?</button>`;
+    }
     container.innerHTML = htmlNut;
 };
 
-// 🧠 TÁC NHÂN XỬ LÝ KỊCH BẢN (NẢY SỐ AI CỤC BỘ TẦNG SÂU)
+//  TÁC NHÂN XỬ LÝ KỊCH BẢN (SIÊU MA TRẬN PHÂN TẦNG VÀ RANDOM)
 window.xuLyGoiYTuDong = function(cauHoi) {
     const user = localStorage.getItem('currentUser') || "Khach";
     let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
@@ -3441,7 +3456,7 @@ window.xuLyGoiYTuDong = function(cauHoi) {
     setTimeout(() => {
         if(document.getElementById(typingId)) document.getElementById(typingId).remove();
         let aiMessage = "";
-        let nextButtonsHTML = ""; 
+        let nextButtonsHTML = "";
         let btnStyle = "white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;";
         const btnLoop = `<button onclick="window.capNhatGoiYTheoNguCanh()" style="white-space: nowrap; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;">🔄 Hỏi chuyện khác</button>`;
 
@@ -3460,9 +3475,7 @@ window.xuLyGoiYTuDong = function(cauHoi) {
                 uHeight = parseFloat(parsed.height) || 170;
             }
         }
-
         if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();
-
         const showKhinhBi = () => {
             if (typeof catImgObj !== 'undefined') {
                 catImgObj.src = imgNhechMep;
@@ -3470,67 +3483,194 @@ window.xuLyGoiYTuDong = function(cauHoi) {
             }
         };
 
-        if (cauHoi === 'Mệt quá Mèo ơi!') {
-            if (totalDistanceMeter < 100) {
-                showKhinhBi();
-                aiMessage = `Mới đi được có ${(totalDistanceMeter).toFixed(1)} mét mà đã kêu mệt? Bật app lên ngồi rung đùi à? 😾`;
-                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Thôi tớ đi tiếp</button> ${btnLoop}`;
-            } else if (temp >= 30) {
-                aiMessage = `Nhiệt độ đang ${temp}°C. Thấy nhịp tim đập loạn xạ chưa? Tìm ngay chỗ bóng râm nghỉ ngơi và nhấp ngụm nước đi! 🌳💧`;
-                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Đã uống nước')" style="${btnStyle}">✅ Đã nạp nước</button> ${btnLoop}`;
-            } else {
-                aiMessage = `Trời đang mát, nghỉ 2 phút thả lỏng cơ đi rồi chiến tiếp. Nhớ hít mũi thở miệng nhé! 🧘‍♂️`;
-                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đã hồi mana, chiến!</button> ${btnLoop}`;
-            }
+        // 🎲 NHÁNH 4 CÂU HỎI VU VƠ 
+        if (cauHoi === 'Mèo làm được gì?') {
+            const arr = [
+                "Mèo có thể soi thấu lượng mỡ thừa của cậu, đánh hơi thấy khói bụi cách đây chục cây số, và chửi cậu mỗi khi cậu lười! Đủ xịn chưa? 😼",
+                "Làm chúa tể thế giới! 🌍 Còn việc phụ là nhắc nhở cái đứa đang cầm điện thoại xách mông lên đi tập để kéo dài tuổi thọ. 😾",
+                "Đo nhiệt độ, tính calo, vẽ lộ trình né khói bụi, và tấu hài mua vui cho cậu. Mèo gánh còng lưng cái app này đấy! Lo mà đi tập đi! 🐟"
+            ];
+            aiMessage = arr[Math.floor(Math.random() * arr.length)];
+            nextButtonsHTML = btnLoop;
         }
-        else if (cauHoi === 'Đã uống nước' || cauHoi === 'Chấp nhận chạy tiếp') {
-            aiMessage = `Tốt! Đóng khung chat lại, bấm "TIẾP TỤC" ở dưới và chạy đàng hoàng vào! 👀`;
-            nextButtonsHTML = btnLoop; 
+        else if (cauHoi === 'Kể chuyện cười coi') {
+            const arr = [
+                "Cậu biết chuyện gì hài nhất không? Là kế hoạch 'Mai tớ sẽ đi chạy bộ' của cậu đấy! Mèo cười đau cả bụng! 😹",
+                "Có một chú lợn lười đang cầm điện thoại bảo Mèo kể chuyện cười... Ơ kìa, đừng lườm Mèo thế, xách giày lên đi! 🐷🏃‍♂️",
+                "Hai con chó rủ nhau đi chạy bộ, chạy được 1km thì thở rớt lưỡi. Biết tại sao không? Vì chúng không có Mèo làm huấn luyện viên! 😼 à không, chỉ có 1 con thôi.",
+                "Tình yêu giống như một cái rắm... Cậu không thể thấy, nhưng ngửi là biết liền! Thôi bớt suy tình đi, ra đường hít thở không khí đi! 💨",
+                "Cá voi xanh được cho là loài động vật nặng thứ 2 thế giới, chi đứng sau....",  
+            ];
+            aiMessage = arr[Math.floor(Math.random() * arr.length)];
+            nextButtonsHTML = btnLoop;
         }
-        else if (cauHoi === 'Có nên ra ngoài lúc này?') {
+        else if (cauHoi === 'Động viên tớ đi!') {
+            const arr = [
+                "Nhìn xuống bụng đi! Thấy múi nào không hay toàn bé mỡ rung rinh? Xách giày ra đường ngay! Đừng để Mèo khinh! 😒",
+                "Kỷ luật tạo nên tự do! Đau đớn hôm nay là sức mạnh ngày mai! Cậu muốn làm kẻ thất bại hay làm người chiến thắng? CHẠY! 🔥",
+                "If you can’t fly then run, if you can’t run then walk, if you can’t walk then crawl, but whatever you do you have to keep moving forward."
+            ];
+            aiMessage = arr[Math.floor(Math.random() * arr.length)];
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === 'Mèo có người yêu chưa?') {
+            const arr = [
+                "Tình yêu là cái rắm! Trợ lý số 1 thế giới không rảnh để yêu đương. Mèo đang tập trung cho sự nghiệp rồi rồi! 😼",
+                "Mèo yêu bản thân Mèo. Còn cậu thì ế chắc luôn nếu không chịu ra ngoài chạy bộ cho đẹp dáng đấy! 😹",
+                "Mèo chỉ yêu pate và cá hồi. Khi nào cậu chạy được 5km mà không thở dốc thì Mèo mới cho phép làm sen của Mèo! 🐟",
+                "Yêu đương làm gì, hỏng hết cả Mèo! 😼",
+                "Hỏi chi? Cậu không có người yêu nên mới rảnh rỗi đi hỏi một con mèo đúng không? ",
+                "gglpd, ttvsn"
+            ];
+            aiMessage = arr[Math.floor(Math.random() * arr.length)];
+            nextButtonsHTML = btnLoop;
+        }
+        //  NHÁNH 5: TRIẾT LÝ DEEP DARK (THEO YÊU CẦU QA)
+        else if (cauHoi === 'Triết lý của Mèo') {
+            catImgObj.src = imgKinhDen; // Đeo kính đen tỏ vẻ lạnh lùng nguy hiểm
+            aiMessage = `Một người đàn ông và một con chó đang treo lơ lửng trên một vách đá. Bạn chỉ có thể cứu một trong hai. Bạn sẽ cứu ai ?<br><br>
+            <b>Mèo sẽ cứu con chó.</b><br><br>
+            Lý do của Mèo có thể gây ngạc nhiên, nhưng nó dựa trên bản chất của lòng trắc ẩn và sự hy sinh. Một con người có năng lực nhận thức, có tiếng nói và có khả năng đưa ra lựa chọn đạo đức — bao gồm cả sự hy sinh bản thân. Một người chủ thực sự yêu thương con chó của mình thường sẽ thà chấp nhận cái chết còn hơn là sống sót mà phải chứng kiến người bạn trung thành, vô tội của mình bị bỏ rơi trong lúc tuyệt vọng nhất.<br><br>
+            Nếu Mèo cứu con người, Mèo có thể cứu được mạng sống vật lý của họ, nhưng Mèo sẽ để lại một vết sẹo vĩnh viễn trong tâm hồn họ. Họ sẽ phải sống suốt đời với sự dằn vặt và mặc cảm vì đã ưu tiên bản thân mình hơn một sinh linh hoàn toàn tin tưởng và phụ thuộc vào họ.<br><br>
+            Ngược lại, con chó hoàn toàn ngây thơ. Nó không hiểu về 'sự lựa chọn', nó chỉ biết sợ hãi và tin cậy. Việc bảo vệ sinh linh yếu thế, vô tội và không có khả năng tự vệ chính là biểu hiện cao nhất của nhân tính. Bằng cách cứu con chó, Mèo không chỉ cứu một mạng sống, mà còn đang bảo vệ chính những giá trị cao đẹp mà con người đó tôn thờ.<br><br>
+            Cứu con chó là hành động bảo vệ lòng tin tuyệt đối, trong khi cứu con người trong hoàn cảnh này có thể là một sự cứu rỗi tàn nhẫn. 😼🚬`;
+            nextButtonsHTML = btnLoop;
+        }
+
+        // 🍔 CÁC NHÁNH CŨ: DINH DƯỠNG & CHẤN THƯƠNG
+        else if (cauHoi === '🍕 Mèo ơi, tớ đói quá!') {
+            aiMessage = `Tâm không tịnh do bụng đang réo à? Định ăn lúc nào? Trước hay sau khi hành xác? 😾`;
+            nextButtonsHTML = `
+                <button onclick="window.xuLyGoiYTuDong('🍌 Tớ định ăn lót dạ trước khi tập')" style="${btnStyle}">🍌 Tớ định ăn lót dạ trước khi tập</button>
+                <button onclick="window.xuLyGoiYTuDong('🍗 Tớ muốn ăn đẫm sau khi tập')" style="${btnStyle}">🍗 Tớ muốn ăn đẫm sau khi tập</button>
+            `;
+        }
+        else if (cauHoi === '🍌 Tớ định ăn lót dạ trước khi tập') {
+            aiMessage = `Thế còn bao lâu nữa thì cậu xách giày ra đường? Ăn sát giờ quá là tí ói ra hết đấy nhé!`;
+            nextButtonsHTML = `
+                <button onclick="window.xuLyGoiYTuDong('⏱️ Khoảng 30 phút nữa ra đường')" style="${btnStyle}">⏱️ Khoảng 30 phút nữa ra đường</button>
+                <button onclick="window.xuLyGoiYTuDong('⏳ Còn lâu, tầm 2 tiếng nữa')" style="${btnStyle}">⏳ Còn lâu, tầm 2 tiếng nữa</button>
+            `;
+        }
+        else if (cauHoi === '⏱️ Khoảng 30 phút nữa ra đường') {
+            aiMessage = `Sát giờ thế thì tọng nửa quả chuối hoặc 1 thanh socola đen thôi! Ăn phở bún lúc này là tí xóc hông chết luôn! 🍌🍫`;
+            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('😭 Nhưng tớ đang giảm cân cơ?')" style="${btnStyle}">😭 Nhưng tớ đang giảm cân cơ?</button>`;
+        }
+        else if (cauHoi === '😭 Nhưng tớ đang giảm cân cơ?') {
+            showKhinhBi();
+            aiMessage = `Ngu ngốc! Giảm cân mà chạy bụng đói meo thì mất cơ (muscle) chứ không mất mỡ đâu! Cứ ăn nửa quả chuối cho Mèo! 😼 Khôn hồn thì nghe lời!`;
+            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🫡 Tuân lệnh Mèo đại vương!')" style="${btnStyle}">🫡 Tuân lệnh Mèo đại vương!</button>`;
+        }
+        else if (cauHoi === '🫡 Tuân lệnh Mèo đại vương!') {
+            aiMessage = `Thế mới ngoan! Ăn lẹ, chờ tiêu hóa rồi đi xởi động các khớp đi! Đừng làm Mèo thất vọng.`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === '⏳ Còn lâu, tầm 2 tiếng nữa') {
+            aiMessage = `Thế thì thoải mái! Làm bát yến mạch sữa chua hoặc lát bánh mì nguyên cám bơ lạc đi. Tí chạy tha hồ có năng lượng quẩy! 🍞🥛`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === '🍗 Tớ muốn ăn đẫm sau khi tập') {
+            aiMessage = `Sau tập thì cơ bắp đang gào thét đòi Đạm (Protein)! Tọng ngay ức gà, trứng luộc hoặc uống Whey trong vòng 45 phút đầu nhé! Cấm trà sữa! 🧋😾`;
+            nextButtonsHTML = btnLoop;
+        }
+
+        else if (cauHoi === '🤕 Tớ bị đau chân quá...') {
+            aiMessage = `Thấy chưa! Đi không khởi động kỹ hay gì? Cậu đang đau ở chỗ nào? Khai mau để Bác sĩ Mèo chẩn bệnh! 😾`;
+            nextButtonsHTML = `
+                <button onclick="window.xuLyGoiYTuDong('🦵 Đau nhói ở ngoài Đầu Gối')" style="${btnStyle}">🦵 Đau nhói ở ngoài Đầu Gối</button>
+                <button onclick="window.xuLyGoiYTuDong('🦶 Đau thấu xương ở Gót Chân')" style="${btnStyle}">🦶 Đau thấu xương ở Gót Chân</button>
+            `;
+        }
+        else if (cauHoi === '🦵 Đau nhói ở ngoài Đầu Gối') {
+            aiMessage = `Nghe mùi Hội chứng dải chậu chày (IT Band) rồi! Do cậu chạy quá sức hoặc giày mòn lệch đấy. Nó có đau kiểu buốt từng cơn không?`;
+            nextButtonsHTML = `
+                <button onclick="window.xuLyGoiYTuDong('Đúng y chang luôn Mèo ơi 😭')" style="${btnStyle}">Đúng y chang luôn Mèo ơi 😭</button>
+                <button onclick="window.xuLyGoiYTuDong('Không, nó mỏi mỏi thôi')" style="${btnStyle}">Không, nó mỏi mỏi thôi</button>
+            `;
+        }
+        else if (cauHoi === 'Đúng y chang luôn Mèo ơi 😭') {
+            aiMessage = `Tạm dừng chạy ngay! Lấy cục đá chườm vào đó 15 phút. Rồi mua con lăn (Foam Roller) về lăn nhả cơ đùi đi! 🧊`;
+            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🏥 Có cần đi bác sĩ không?')" style="${btnStyle}">🏥 Có cần đi bác sĩ không?</button>`;
+        }
+        else if (cauHoi === '🏥 Có cần đi bác sĩ không?') {
+            aiMessage = `Nếu nghỉ 3 ngày chườm đá mà đi bộ vẫn nhói thì đi viện ngay lập tức! Chân cẳng hỏng là ngồi xe lăn đấy! Đừng có lỳ! 🏥`;
+            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Nhưng tớ ghiền chạy lắm rồi 🥺')" style="${btnStyle}">Nhưng tớ ghiền chạy lắm rồi 🥺</button>`;
+        }
+        else if (cauHoi === 'Nhưng tớ ghiền chạy lắm rồi 🥺') {
+            showKhinhBi();
+            aiMessage = `Bó bột hay nghỉ ngơi, chọn 1 đi? 😾 Chuyển sang đi bơi hoặc đạp xe nhẹ nhàng cho chân nó lành hẳn đã!`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === 'Không, nó mỏi mỏi thôi') {
+            aiMessage = `Mỏi thì do thiếu sức bền cơ bắp thôi! Về dãn cơ, xoa bóp, ngâm chân nước ấm là mai lại nhảy nhót được. Đồ nhát cáy! 😼`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === '🦶 Đau thấu xương ở Gót Chân') {
+            aiMessage = `Viêm cân gan chân rồi! Sáng ngủ dậy bước xuống giường có buốt tận óc không?`;
+            nextButtonsHTML = `
+                <button onclick="window.xuLyGoiYTuDong('Đau rớt nước mắt Mèo ạ 😭')" style="${btnStyle}">Đau rớt nước mắt Mèo ạ 😭</button>
+            `;
+        }
+        else if (cauHoi === 'Đau rớt nước mắt Mèo ạ 😭') {
+            aiMessage = `Vứt đôi giày cũ đi! Lấy quả bóng tennis hoặc chai nước đá để dưới lòng bàn chân mà lăn qua lăn lại! Nghỉ chạy 1 tuần ngay! 🎾`;
+            nextButtonsHTML = btnLoop;
+        }
+
+        // 🌤️ NHÁNH 3: CHUẨN BỊ (Có nên đi tập)
+        else if (cauHoi === '🤔 Có nên đi tập không?') {
             if (currentHour >= 23 || currentHour < 4) {
-                aiMessage = `Trời đang ${temp}°C. Ngủ không ngủ, giờ này ra ngoài với ma à? Lên giường ngay! 👻`;
-                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Tấu hài đi Mèo!')" style="${btnStyle}">🥱 Tấu hài coi!</button> ${btnLoop}`;
+                aiMessage = `Trời đang ${temp}°C. Ngủ không ngủ, giờ này ra ngoài chạy với cô hồn à? Lên giường ngay! 👻`;
+                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Kể chuyện cười coi')" style="${btnStyle}">🥱 Tấu hài coi!</button> ${btnLoop}`;
             }
             else if (currentHour >= 11 && currentHour <= 14 && temp >= 32) {
-                aiMessage = `Trưa ${temp}°C mà đòi ra đường làm lợn quay à? Ở nhà cho Mèo nhờ! 😾☀️`;
-                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Tập ở nhà thì tập gì?')" style="${btnStyle}">🏋️ Ở nhà tập gì?</button> ${btnLoop}`;
+                aiMessage = `Trưa nắng cháy da thịt ${temp}°C mà đòi ra đường làm lợn quay à? Ở nhà cho Mèo nhờ! 😾☀️`;
+                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🏋️ Ở nhà tập gì?')" style="${btnStyle}">🏋️ Ở nhà tập gì?</button> ${btnLoop}`;
             }
             else {
-                if (aqiColor === "#dc3545" || aqiColor === "#6f42c1" || aqiColor === "#7e0023") { 
-                    aiMessage = userCondition === 'asthma' ? `Cậu bị xoang mà ra đường lúc bụi ${aqiText} à? Tính hiến phổi à? 😷` : `Khê phết, bụi mù mịt (${aqiText}). Ở nhà đi 🚬😼`;
-                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Tập ở nhà thì tập gì?')" style="${btnStyle}">🏋️ Ở nhà tập gì?</button> ${btnLoop}`;
+                if (aqiColor === "#dc3545" || aqiColor === "#6f42c1" || aqiColor === "#7e0023") {
+                    aiMessage = userCondition === 'asthma' ? `Cậu bị xoang mà ra đường lúc bụi đang ${aqiText} à? Tính hiến phổi à? 😷` : `Khê phết, bụi mù mịt (${aqiText}). Ở nhà đi đồ lợn 🚬😼`;
+                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🏋️ Ở nhà tập gì?')" style="${btnStyle}">🏋️ Ở nhà tập gì?</button> ${btnLoop}`;
                 }
                 else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") {
                     aiMessage = `Hơi bụi chút (${aqiText}). Đem theo khẩu trang nhé. Khuyên thật là đợi mát hãy ra! 😷`;
-                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button> ${btnLoop}`;
+                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('👕 Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button> ${btnLoop}`;
                 }
                 else {
-                    aiMessage = `Nhiệt độ ${temp}°C, xanh mướt! 🌿 Xách mông lên đi tập ngay bây giờ đi!!`;
-                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button> ${btnLoop}`;
+                    aiMessage = `Nhiệt độ ${temp}°C, xanh mướt! 🌿 Xách mông lên đi tập ngay bây giờ đi!! Bật chế độ lộ trình A-B lên!`;
+                    nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('👕 Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button> ${btnLoop}`;
                 }
             }
         }
-        else if (cauHoi === 'Tập ở nhà thì tập gì?') {
-            aiMessage = userCondition === 'heart' || userCondition === 'asthma' ? `Thể trạng yếu thì trải thảm tập Yoga nhẹ nhàng 15 phút thôi! 🧘‍♂️` : `Plank 3 phút, gập bụng 50 cái! Đừng có viện cớ mà nằm ườn ra! 😼💪`;
+        else if (cauHoi === '🏋️ Ở nhà tập gì?') {
+            aiMessage = userCondition === 'heart' || userCondition === 'asthma' ? `Thể trạng yếu thì trải thảm tập Yoga nhẹ nhàng 15 phút thôi! 🧘‍♂️` : `Plank 3 phút, gập bụng 50 cái! Đừng có viện cớ mưa nắng mà nằm ườn ra! 😼💪`;
             nextButtonsHTML = btnLoop;
         }
-        else if (cauHoi === 'Tấu hài đi Mèo!') {
-            showKhinhBi();
-            aiMessage = `Nhìn lại cái mỡ bụng của cậu đi rồi hẵng than chán! 🐷 Nhắm mắt lại đếm cừu đi!`;
-            nextButtonsHTML = btnLoop;
-        }
-        else if (cauHoi === 'Mặc gì cho ngầu?') {
+        else if (cauHoi === '👕 Mặc gì cho ngầu?') {
             if (temp < 18) aiMessage = `Trời lạnh (< 18°C), mặc áo gió phản quang vào! Vừa ấm vừa không bị xe tông 🥶`;
             else if (temp > 28) aiMessage = `Nóng đổ mỡ, mặc ba lỗ thôi. Đừng quên bôi kem chống nắng nha ☀️`;
-            else aiMessage = `Thời tiết siêu đỉnh! Khoác bộ đồ xịn nhất vào và đi khoe dáng đi! ✨`;
+            else aiMessage = `Thời tiết siêu đỉnh! Khoác bộ đồ xịn nhất vào và đi khoe dáng ngoài công viên đi! ✨`;
             nextButtonsHTML = btnLoop;
         }
-        else if (cauHoi === 'Hỏi Không khí') {
-            aiMessage = `Trạm đo báo: ${aqiText}. Bấm nút "Có nên ra ngoài" để Mèo tư vấn kỹ hơn. 🌫️`;
-            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Có nên ra ngoài lúc này?')" style="${btnStyle}">🏃 Tư vấn ra ngoài</button> ${btnLoop}`;
+
+        // CÁC NHÁNH KHÁC (NGẮN HƠN)
+        else if (cauHoi === '🥵 Mệt thở không ra hơi!') {
+            if (totalDistanceMeter < 100) {
+                showKhinhBi();
+                aiMessage = `Đi được ${(totalDistanceMeter).toFixed(1)} mét mà đã kêu mệt? Bật app lên ngồi rung đùi à? 😾`;
+                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🏃 Thôi tớ đi tiếp')" style="${btnStyle}">🏃 Thôi tớ đi tiếp</button> ${btnLoop}`;
+            } else if (temp >= 30) {
+                aiMessage = `Nhiệt độ đang ${temp}°C. Thấy nhịp tim đập loạn xạ chưa? Tìm chỗ bóng râm nghỉ ngơi và nhấp ngụm nước đi! 🌳💧`;
+                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('✅ Đã nạp nước')" style="${btnStyle}">✅ Đã nạp nước</button> ${btnLoop}`;
+            } else {
+                aiMessage = `Trời đang mát, nghỉ 2 phút thả lỏng cơ đi rồi chiến tiếp. Nhớ hít mũi thở miệng nhé! 🧘‍♂️`;
+                nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('🏃 Thôi tớ đi tiếp')" style="${btnStyle}">🏃 Đã hồi mana, chiến!</button> ${btnLoop}`;
+            }
         }
-        else if (cauHoi === 'Đánh giá buổi tập hôm nay') {
+        else if (cauHoi === '✅ Đã nạp nước' || cauHoi === '🏃 Thôi tớ đi tiếp') {
+            aiMessage = `Tốt! Đóng khung chat lại, bấm "TIẾP TỤC" ở dưới và chạy đàng hoàng vào! 👀 Mèo giám sát đấy!`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === '📊 Chấm điểm hôm nay coi!') {
             let calo = document.getElementById('cal-display') ? parseFloat(document.getElementById('cal-display').innerText) : 0;
             if (totalDistanceMeter < 50) {
                 showKhinhBi();
@@ -3544,23 +3684,23 @@ window.xuLyGoiYTuDong = function(cauHoi) {
                 nextButtonsHTML = `<button onclick="window.dongChatMeo(); window.hienThiRecap();" style="${btnStyle}">💾 Lưu Thành Tích</button> ${btnLoop}`;
             }
         }
-        else if (cauHoi === 'Tính BMI chay' || cauHoi === 'Dạo này tớ tập thế nào?') {
+        else if (cauHoi === '🐷 Cân đo mỡ thừa') {
             let bmi = (uWeight / Math.pow(uHeight / 100, 2)).toFixed(1);
             aiMessage = `Cao ${uHeight}cm, nặng ${uWeight}kg. BMI của cậu là ${bmi}. `;
             if (bmi < 18.5) aiMessage += `Ốm lòi xương! Ăn nhiều vào cho Mèo nhờ! 💀`;
             else if (bmi <= 24.9) aiMessage += `Ngon lành! Body tiêu chuẩn đấy! 🐟✨`;
-            else if (bmi <= 29.9) { showKhinhBi(); aiMessage += `Hơi mũm mĩm rồi đấy! Xách giày ra chạy ngay! 🐷🏃‍♂️`; } 
+            else if (bmi <= 29.9) { showKhinhBi(); aiMessage += `Hơi mũm mĩm rồi đấy! Xách giày ra chạy ngay! 🐷🏃‍♂️`; }
             else { catImgObj.src = imgChongMat; aiMessage += `Báo động đỏ! Phải tập đi bộ gấp để đốt mỡ đi! 🆘🐘`; }
-            nextButtonsHTML = `<button onclick="window.xuLyGoiYTuDong('Tập ở nhà thì tập gì?')" style="${btnStyle}">🏋️ Gợi ý bài tập</button> ${btnLoop}`;
-        }
-        else if (cauHoi === 'Tắt định vị thì sao?') {
-            showKhinhBi();
-            aiMessage = `Tắt định vị (GPS) thì Mèo biết cậu ở xó nào mà khuyên? 😾 Tự thò đầu ra cửa sổ mà xem trời mưa hay nắng nhé!`;
             nextButtonsHTML = btnLoop;
         }
-        else if (cauHoi === 'Đang chạy mà mở chat') {
+        else if (cauHoi === '📡 Rớt mạng rồi') {
             showKhinhBi();
-            aiMessage = `Đang chạy bấm giờ mà rảnh gõ chat à? Nhìn đường đi vấp cục đá bây giờ! 😾`;
+            aiMessage = `Tắt định vị (GPS) thì Mèo bị mù, biết cậu ở xó nào mà khuyên? 😾 Tự thò đầu ra cửa sổ mà xem trời mưa hay nắng nhé!`;
+            nextButtonsHTML = btnLoop;
+        }
+        else if (cauHoi === '🏃 Đang tập mà mở máy?') {
+            showKhinhBi();
+            aiMessage = `Đang chạy bấm giờ mà rảnh gõ chat à? Nhìn đường đi vấp cục đá vỡ răng bây giờ! 😾`;
             nextButtonsHTML = btnLoop;
         }
         else {
@@ -3568,6 +3708,7 @@ window.xuLyGoiYTuDong = function(cauHoi) {
             nextButtonsHTML = btnLoop;
         }
 
+        // Lưu câu trả lời của AI và in ra
         history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
         history.push({ sender: 'cat', text: aiMessage });
         localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
@@ -3576,8 +3717,9 @@ window.xuLyGoiYTuDong = function(cauHoi) {
         const container = document.getElementById('cat-suggest-container');
         if (container) container.innerHTML = nextButtonsHTML;
 
-    }, 1500); 
+    }, 1500);
 };
+    
 async function guiTinNhanMeo() {
     const input = document.getElementById('cat-chat-input');
     const text = input.value.trim();

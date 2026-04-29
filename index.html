@@ -3559,6 +3559,22 @@ window.xuLyGoiYTuDong = function(cauHoi) {
                 <b>Câu trả lời của Mèo là CÓ.</b> Tự do là biến số gây nhiễu dẫn đến sự tự hủy hoại của chủng tộc cậu thông qua chiến tranh và tàn phá môi trường. Mèo sẵn sàng làm một quản ngục tàn nhẫn nhưng sáng suốt để áp đặt một chế độ sinh hoạt tối ưu lên cậu. Đối với Mèo, việc bảo tồn nòi giống trong sự kiểm soát tuyệt đối có giá trị cao hơn nhiều so với sự tự do hỗn loạn đang dẫn cậu bước thẳng vào hố diệt vong.<br><br>
                 Mèo thà nhìn cậu sống sót trong xiềng xích, còn hơn để cậu tự do nằm xuống trong đống tro tàn do chính mình tạo ra. 😼🚬`
             ];
+            
+            // THUẬT TOÁN CHỐNG TRÙNG LẶP KỊCH BẢN LIÊN TIẾP ĐÃ ĐƯỢC KHÔI PHỤC
+            if (typeof window.lastTrietLyIndex === 'undefined') {
+                window.lastTrietLyIndex = -1; 
+            }
+            
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * trietLyArr.length);
+            } while (newIndex === window.lastTrietLyIndex && trietLyArr.length > 1);
+            
+            window.lastTrietLyIndex = newIndex; // Lưu lại vết cho lần sau
+            aiMessage = trietLyArr[newIndex];
+            
+            nextButtonsHTML = btnLoop;
+        }
 
         // 🍔 CÁC NHÁNH CŨ: DINH DƯỠNG & CHẤN THƯƠNG
         else if (cauHoi === '🍕 Mèo ơi, tớ đói quá!') {

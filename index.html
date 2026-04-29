@@ -3748,7 +3748,7 @@ window.routeFromCurrentTo = function(targetLat, targetLng) {
     window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
-// 4. VŨ KHÍ HẠT NHÂN: Vẽ OSRM và Tích hợp API AQI Thực Tế
+// 4. VŨ KHÍ HẠT NHÂN: Vẽ OSRM và Tích hợp API AQI Thực Tế (Bản miễn nhiễm lỗi nuốt ngoặc)
 window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers(); 
     
@@ -3762,13 +3762,12 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
         .then(res => res.json())
         .then(async data => {
             if(data.routes && data.routes.length > 0) {
-                // Đã được bọc giáp, dùng ngoặc vuông thoải mái
-                const route = data.routes; 
-                const coords = route.geometry.coordinates; // Mảng các tọa độ [lng, lat]
+                // SỬ DỤNG .at() TUYỆT ĐỐI ĐỂ LẤY DỮ LIỆU
+                const route = data.routes.at(0); 
+                const coords = route.geometry.coordinates; 
                 const totalDist = (route.distance / 1000).toFixed(1);
                 
                 // CHIẾN LƯỢC CHIA ĐOẠN LẤY AQI THỰC TẾ
-                // Tùy theo quãng đường, chia tối đa 5 đoạn để không bị API chặn IP
                 let numSegments = Math.min(5, Math.max(1, Math.ceil(totalDist / 2))); 
                 let segmentSize = Math.floor(coords.length / numSegments);
 
@@ -3779,8 +3778,9 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                     let midIndex = i * segmentSize + Math.floor(segmentSize / 2);
                     if (midIndex >= coords.length) midIndex = coords.length - 1;
                     
-                    let sampleLng = coords[midIndex];
-                    let sampleLat = coords[midIndex][1];
+                    // DÙNG .at() ĐỂ TRÁNH LỖI KHI BÓC TỌA ĐỘ
+                    let sampleLng = coords.at(midIndex).at(0);
+                    let sampleLat = coords.at(midIndex).at(1);
 
                     // Gọi API Open-Meteo cho từng điểm trích mẫu
                     let p = fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${sampleLat}&longitude=${sampleLng}&current=us_aqi`)
@@ -3797,12 +3797,13 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                 // VẼ CÁC ĐOẠN ĐƯỜNG VỚI MÀU AQI THỰC TẾ
                 for (let i = 0; i < numSegments; i++) {
                     let startIndex = i * segmentSize;
-                    let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1; // +1 để nét vẽ nối liền mạch
+                    let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1; 
                     let segmentCoords = coords.slice(startIndex, endIndex);
 
-                    let leafCoords = segmentCoords.map(c => [c[1], c]); // Đảo lại [lat, lng] cho Leaflet
+                    // Đảo lại [lat, lng] cho Leaflet vẽ
+                    let leafCoords = segmentCoords.map(c => [c.at(1), c.at(0)]); 
 
-                    let aqi = aqiResults[i];
+                    let aqi = aqiResults.at(i);
                     let aqiColor = "#28a745"; // Xanh (Tốt 0-50)
                     if (aqi > 50 && aqi <= 100) aqiColor = "#ffc107"; // Vàng
                     else if (aqi > 100 && aqi <= 150) aqiColor = "#fd7e14"; // Cam
@@ -3818,11 +3819,11 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                 }
 
                 // Căn giữa bản đồ vừa vặn với chuyến đi
-                const allLeafCoords = coords.map(c => [c[1], c]);
+                const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
                 const bounds = L.polyline(allLeafCoords).getBounds();
-                map.fitBounds(bounds, { padding: [2] });
+                map.fitBounds(bounds, { padding: L.point(20, 20) });
 
-                // HIỆN BẢNG TỔNG KẾT
+                // HIỆN BẢNG TỔNG KẾT & NÚT LƯU ĐỊA ĐIỂM
                 L.popup()
                     .setLatLng([lat2, lng2])
                     .setContent(`

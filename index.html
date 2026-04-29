@@ -2920,6 +2920,7 @@ const imgBinhThuong = "meo_binh_thuong.png";
 const imgNhamMat = "meo_nham_mat.png";       
 const imgChongMat = "meo_chong_mat.png";     
 const imgKinhDen = "meo_ngau_det.png"; 
+const imgNhechMep = "meo_nhech_mep.png";
 
 let isMangKinh = false;
 let isCatDragging = false;
@@ -3171,7 +3172,7 @@ window.addEventListener('devicemotion', function(e) {
         if (speed > shakeThreshold) {
             shakeCount++;
             if(shakeCount > 10) { 
-                catImgObj.src = imgChongMat; 
+                catImgObj.src = imgNhechMep;
                 catBubble.innerText = "Đừng lắc nữa, chóng mặt quá";
                 catBubble.style.backgroundColor = '#fdf8e4';
                 catBubble.style.border = '2px solid #d4b895';
@@ -3398,6 +3399,7 @@ function xuLyGoiYTuDong(cauHoi) {
         if (cauHoi === 'Mệt quá Mèo ơi!') {
             if (totalDistanceMeter < 100) {
                 // Nhánh: Mới đi đã nghỉ
+                catImgObj.src = imgNhechMep;
                 aiMessage = `Mới đi được có ${(totalDistanceMeter).toFixed(1)} mét mà đã kêu mệt? Bật app lên ngồi rung đùi à? Đứng dậy đi tiếp ngay cho Mèo! 😾`;
                 nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đi tiếp thì đi</button>`;
             } else if (temp >= 30) {
@@ -3411,6 +3413,7 @@ function xuLyGoiYTuDong(cauHoi) {
             }
         }
         else if (cauHoi === 'Đã uống nước' || cauHoi === 'Chấp nhận chạy tiếp') {
+            catImgObj.src = getAnhMacDinh();
             aiMessage = `Tốt! Đóng khung chat lại, bấm "TIẾP TỤC" ở dưới và chạy cho đàng hoàng vào! Mèo vẫn đang giám sát đấy! 👀`;
             nextButtonsHTML = ``; // ĐÓNG LUỒNG, không hiện nút Tầng 3 nữa
         }

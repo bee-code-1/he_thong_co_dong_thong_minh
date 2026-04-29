@@ -407,6 +407,28 @@
 <button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng kk <br>🔴 OFF</button>
 <!-- NÚT BẢN ĐỒ ĐỊA HÌNH (Đường bình độ - Bên phải) -->
 <button id="btn-dia-hinh" onclick="window.toggleDiaHinh()" style="position: absolute; top: 140px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #28a745; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.3s;">Địa hình<br>⛰️ OFF</button>
+<!-- NÚT TẠO LỘ TRÌNH A-B -->
+<button id="btn-route-ab" onclick="window.toggleRouteMode()" style="position: absolute; top: 195px; right: 15px; width: 50px; height: 50px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; padding: 5px; display: flex; justify-content: center; align-items: center; transition: all 0.3s;">
+    <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">
+        <!-- Hàm vẽ Đường cong vòng vèo (Bézier Curve) -->
+        <path d="M 28 65 C 5 105, 95 105, 72 65" stroke="#333" stroke-width="8" fill="none" stroke-linecap="round"/>
+        
+        <!-- Hàm vẽ Lộ trình nét đứt -->
+        <path d="M 28 65 L 72 65" stroke="#333" stroke-width="6" stroke-dasharray="6, 8" fill="none" stroke-linecap="round"/>
+        
+        <!-- Hàm Ma trận vẽ Ghim Xanh (Điểm A) -->
+        <g transform="translate(12, 25) scale(1)">
+            <path d="M16 0 C7.1 0 0 7.1 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.1 24.8 0 16 0 Z" fill="#004BAd" />
+            <circle cx="16" cy="15" r="6" fill="#fff" />
+        </g>
+        
+        <!-- Hàm Ma trận vẽ Ghim Đỏ (Điểm B) -->
+        <g transform="translate(55, 10) scale(1)">
+            <path d="M16 0 C7.1 0 0 7.1 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.1 24.8 0 16 0 Z" fill="#dc3545" />
+            <circle cx="16" cy="15" r="6" fill="#fff" />
+        </g>
+    </svg>
+</button>
 <!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
 <button id="btn-radar-share" onclick="window.toggleRadarAndShare()" style="position: absolute; bottom: 220px; left: 15px; background: #eaeaea; border: 4px solid #b0b0b0; border-radius: 50%; width: 55px; height: 55px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000; transition: all 0.3s;" title="Bật/Tắt Radar Cộng đồng">
     <svg viewBox="0 0 40 40" style="width: 32px; height: 32px;">
@@ -890,6 +912,12 @@ window.capNhatThoiTietAQI = function(lat, lng) {
         let lastTimestamp = 0; 
         let lopBuiMin = L.layerGroup().addTo(map);
         let isHienBui = false; // Trạng thái mặc định là Tắt bụi
+    // === BIẾN CHO TÍNH NĂNG LỘ TRÌNH A-B ===
+window.isRouteMode = false;
+window.pointA = null;
+window.pointB = null;
+window.routeLayerGroup = L.layerGroup(); 
+window.markerLayerGroup = L.layerGroup(); 
     // BỘ NÃO Y SINH & MÔI TRƯỜNG 
 window.currentTemp = 25; // Mặc định
 window.currentWBGT = 25;
@@ -3616,6 +3644,155 @@ async function guiTinNhanMeo() {
         taiLichSuChat();
     }
 }
+    // 🚀 TÍNH NĂNG ĐỊNH TUYẾN A-B KẾT HỢP AQI GRADIENT CHỐNG NHẦM LẪN
+// =========================================================================
+
+// 1. Bật/Tắt chế độ chọn đường
+window.toggleRouteMode = function() {
+    window.isRouteMode = !window.isRouteMode;
+    const btn = document.getElementById('btn-route-ab');
+    
+    if (window.isRouteMode) {
+        btn.style.backgroundColor = '#004BAd';
+        window.routeLayerGroup.addTo(map);
+        window.markerLayerGroup.addTo(map);
+        alert("📍 Đã bật chế độ Lộ trình! Hãy chạm vào một điểm trên bản đồ.");
+    } else {
+        btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        window.resetRouteData();
+        map.removeLayer(window.routeLayerGroup);
+        map.removeLayer(window.markerLayerGroup);
+    }
+};
+
+window.resetRouteData = function() {
+    window.pointA = null;
+    window.pointB = null;
+    window.routeLayerGroup.clearLayers();
+    window.markerLayerGroup.clearLayers();
+};
+
+// 2. Lắng nghe sự kiện Bấm trên bản đồ
+map.on('click', function(e) {
+    if (!window.isRouteMode) return; 
+    
+    let lat = e.latlng.lat;
+    let lng = e.latlng.lng;
+    let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+    let btnHuyStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+
+    // TRƯỜNG HỢP 1: Chưa có Điểm A -> Hiện 2 lựa chọn đầu tiên
+    if (!window.pointA) {
+        let popupContent = `
+            <div style="text-align:center;">
+                <h4 style="margin: 0 0 10px 0; color:#333;">Tùy chọn Điểm đến</h4>
+                <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${lat}, ${lng})">📍 Từ vị trí hiện tại đến đây</button>
+                <button style="${btnStyle} background:#28a745;" onclick="window.setPointA(${lat}, ${lng})">🟢 Chọn làm Điểm xuất phát (A)</button>
+            </div>
+        `;
+        L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
+    } 
+    // TRƯỜNG HỢP 2: Đã có Điểm A -> Hiện 2 lựa chọn tiếp theo cho Điểm B
+    else {
+        let popupContent = `
+            <div style="text-align:center;">
+                <h4 style="margin: 0 0 10px 0; color:#333;">Tùy chọn Lộ trình</h4>
+                <button style="${btnStyle} background:#dc3545;" onclick="window.setPointB(${lat}, ${lng})">🔴 Chọn làm Đích đến (B)</button>
+                <button style="${btnHuyStyle} background:#ff9800;" onclick="window.setPointA(${lat}, ${lng})">🔄 Hủy A cũ, Đặt lại A ở đây</button>
+            </div>
+        `;
+        L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
+    }
+});
+
+// 3. Các hàm Xử lý Popup
+window.setPointA = function(lat, lng) {
+    window.resetRouteData(); 
+    window.pointA = { lat: lat, lng: lng };
+    map.closePopup();
+    
+    let markerA = L.marker([lat, lng], {
+        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🟢</div>', iconSize: [1] })
+    }).addTo(window.markerLayerGroup);
+    
+    alert("🟢 Đã chốt Điểm A! Giờ hãy bấm vào nơi bạn muốn đến (Điểm B).");
+};
+
+window.setPointB = function(lat, lng) {
+    window.pointB = { lat: lat, lng: lng };
+    map.closePopup();
+    
+    let markerB = L.marker([lat, lng], {
+        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🔴</div>', iconSize: [1] })
+    }).addTo(window.markerLayerGroup);
+    
+    window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
+};
+
+window.routeFromCurrentTo = function(targetLat, targetLng) {
+    if (!latestLatLng) {
+        alert("Chưa có tín hiệu GPS hiện tại!");
+        return;
+    }
+    map.closePopup();
+    window.resetRouteData();
+    
+    window.pointA = { lat: latestLatLng.lat, lng: latestLatLng.lng };
+    window.pointB = { lat: targetLat, lng: targetLng };
+    
+    let markerB = L.marker([targetLat, targetLng], {
+        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🔴</div>', iconSize: [1] })
+    }).addTo(window.markerLayerGroup);
+
+    window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
+};
+
+// 4. VŨ KHÍ HẠT NHÂN: Vẽ OSRM và Băm nhỏ lộ trình tô màu AQI
+window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
+    window.routeLayerGroup.clearLayers(); 
+    
+    fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.routes && data.routes.length > 0) {
+                const route = data.routes;
+                const coords = route.geometry.coordinates; 
+                const totalDist = (route.distance / 1000).toFixed(1);
+                
+                for (let i = 0; i < coords.length - 1; i++) {
+                    let p1 = [coords[i][2], coords[i]];     
+                    let p2 = [coords[i+1][2], coords[i+1]];
+
+                    let aqiColor = window.getSimulatedAQIColor(i, coords.length); 
+
+                    L.polyline([p1, p2], {
+                        color: aqiColor,
+                        weight: 8,
+                        opacity: 0.65, 
+                        lineCap: 'round'
+                    }).addTo(window.routeLayerGroup);
+                }
+
+                const bounds = L.polyline(coords.map(c => [c[2], c])).getBounds();
+                map.fitBounds(bounds, { padding: [3] });
+
+                L.popup()
+                    .setLatLng([lat2, lng2])
+                    .setContent(`<div style="font-weight:bold; color:#004BAd;">Khoảng cách: ${totalDist} km<br><span style="font-size:12px; color:#555;">(Lộ trình đã được đánh giá chất lượng KK)</span></div>`)
+                    .openOn(map);
+
+            }
+        })
+        .catch(err => console.error("Lỗi vẽ đường OSRM:", err));
+};
+
+window.getSimulatedAQIColor = function(index, totalSegments) {
+    let ratio = index / totalSegments;
+    if (ratio < 0.3) return "#28a745"; // Xanh lá
+    if (ratio < 0.6) return "#ffc107"; // Vàng
+    if (ratio < 0.8) return "#fd7e14"; // Cam
+    return "#dc3545";                  // Đỏ
+};
 
 // === CÁC LỆNH LẮNG NGHE SỰ KIỆN CHỐT SỔ ĐÁY FILE ===
 catAssistant.addEventListener("touchstart", dragStart, { passive: false });

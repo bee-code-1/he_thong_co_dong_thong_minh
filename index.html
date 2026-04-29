@@ -393,15 +393,22 @@
         <img id="cat-real-img" src="meo_binh_thuong.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
     </div>
 </div>
-        <div id="info-panel" style="position: absolute; top: 15px; left: 15px; right: auto; pointer-events: auto;">
-            <!-- QUAN TRỌNG: Đã sửa id thành time-display để core cũ nhận diện -->
-            <div id="time-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00:00</div>
-            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
-                <li>Đã đi: <span id="dist-display">0.00</span> km</li>
-                <li>Số bước: <span id="step-display">0</span> bước</li>
-                <li>Tiêu thụ: <span id="cal-display">0.0</span> calo</li>
-            </ul>
-        </div>
+<!-- BẢNG THÀNH TỰU TÍCH LŨY (Góc trên trái) -->
+<div id="info-panel" style="position: absolute; top: 15px; left: 15px; background: rgba(255, 255, 255, 0.95); border: 2px solid #28a745; border-radius: 15px; padding: 10px; min-width: 170px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); pointer-events: auto;">
+    <div style="font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">
+        🏆 Tích lũy từ: <span id="ngay-bat-dau-tap" style="color: #004BAd;">Hôm nay</span>
+    </div>
+    
+    <!-- Đồng hồ bấm giờ khi chạy (Ẩn mặc định) -->
+    <div id="time-display" style="display: none; background: #00C853; color: white; border-radius: 10px; padding: 5px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00:00</div>
+    
+    <div style="font-size: 13px; line-height: 1.6; color: #333; font-weight: bold;">
+        📏 <span id="dist-display">0.0</span> km<br>
+        👟 <span id="step-display">0</span> bước<br>
+        🔥 <span id="cal-display">0.0</span> kcal<br>
+        ⏱️ <span id="total-time-display">0h 0m</span>
+    </div>
+</div>
 
 <!-- 2. NÚT BỤI MỊN  -->
 <button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng kk <br>🔴 OFF</button>
@@ -3653,7 +3660,7 @@ window.toggleRouteMode = function() {
     const btn = document.getElementById('btn-route-ab');
     
     if (window.isRouteMode) {
-        btn.style.backgroundColor = '#004BAd';
+        btn.style.backgroundColor = '#F5F5DC'; // Đổi sang màu Be (Beige) cho đỡ chói
         window.routeLayerGroup.addTo(map);
         window.markerLayerGroup.addTo(map);
         alert("📍 Đã bật chế độ Lộ trình! Hãy chạm vào một điểm trên bản đồ.");
@@ -3672,48 +3679,17 @@ window.resetRouteData = function() {
     window.markerLayerGroup.clearLayers();
 };
 
-// 2. Lắng nghe sự kiện Bấm trên bản đồ
-map.on('click', function(e) {
-    if (!window.isRouteMode) return; 
-    
-    let lat = e.latlng.lat;
-    let lng = e.latlng.lng;
-    let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
-    let btnHuyStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
-
-    // TRƯỜNG HỢP 1: Chưa có Điểm A -> Hiện Tùy chọn + Nút mở Điểm đã lưu
-    if (!window.pointA) {
-        let popupContent = `
-            <div style="text-align:center;">
-                <h4 style="margin: 0 0 10px 0; color:#333;">Tùy chọn Điểm đến</h4>
-                <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${lat}, ${lng})">📍 Từ vị trí hiện tại đến đây</button>
-                <button style="${btnStyle} background:#28a745;" onclick="window.setPointA(${lat}, ${lng})">🟢 Chọn làm Điểm xuất phát (A)</button>
-                <button style="${btnStyle} background:#ffc107; color:#333;" onclick="window.moDanhSachDiaDiemLuu()">⭐ Mở Cẩm nang Điểm đã lưu</button>
-            </div>
-        `;
-        L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
-    } 
-    // TRƯỜNG HỢP 2: Đã có Điểm A -> Hiện 2 lựa chọn tiếp theo cho Điểm B
-    else {
-        let popupContent = `
-            <div style="text-align:center;">
-                <h4 style="margin: 0 0 10px 0; color:#333;">Tùy chọn Lộ trình</h4>
-                <button style="${btnStyle} background:#dc3545;" onclick="window.setPointB(${lat}, ${lng})">🔴 Chọn làm Đích đến (B)</button>
-                <button style="${btnHuyStyle} background:#ff9800;" onclick="window.setPointA(${lat}, ${lng})">🔄 Hủy A cũ, Đặt lại A ở đây</button>
-            </div>
-        `;
-        L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
-    }
-});
-
-// 3. Các hàm Xử lý Popup
+// 2. Các hàm Xử lý Popup & Ghim Giọt Nước Chuẩn Tọa Độ
 window.setPointA = function(lat, lng) {
     window.resetRouteData(); 
     window.pointA = { lat: lat, lng: lng };
     map.closePopup();
     
-    let markerA = L.marker([lat, lng], {
-        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🟢</div>', iconSize: [1] })
+    // Icon Giọt nước Xanh lá - Mũi nhọn chạm đúng tọa độ (iconAnchor: [1, 2])
+    let pinA = `<svg viewBox="0 0 32 40" width="36" height="45" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#28a745" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
+    
+    L.marker([lat, lng], {
+        icon: L.divIcon({ className: '', html: pinA, iconSize: [3, 4], iconAnchor: [4, 5] })
     }).addTo(window.markerLayerGroup);
     
     alert("🟢 Đã chốt Điểm A! Giờ hãy bấm vào nơi bạn muốn đến (Điểm B).");
@@ -3723,26 +3699,28 @@ window.setPointB = function(lat, lng) {
     window.pointB = { lat: lat, lng: lng };
     map.closePopup();
     
-    let markerB = L.marker([lat, lng], {
-        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🔴</div>', iconSize: [1] })
+    // Icon Giọt nước Đỏ
+    let pinB = `<svg viewBox="0 0 32 40" width="36" height="45" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
+    
+    L.marker([lat, lng], {
+        icon: L.divIcon({ className: '', html: pinB, iconSize: [3, 4], iconAnchor: [4, 5] })
     }).addTo(window.markerLayerGroup);
     
     window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
 window.routeFromCurrentTo = function(targetLat, targetLng) {
-    if (!latestLatLng) {
-        alert("Chưa có tín hiệu GPS hiện tại!");
-        return;
-    }
+    if (!latestLatLng) return alert("Chưa có tín hiệu GPS hiện tại!");
     map.closePopup();
     window.resetRouteData();
     
     window.pointA = { lat: latestLatLng.lat, lng: latestLatLng.lng };
     window.pointB = { lat: targetLat, lng: targetLng };
     
-    let markerB = L.marker([targetLat, targetLng], {
-        icon: L.divIcon({ className: '', html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">🔴</div>', iconSize: [1] })
+    let pinB = `<svg viewBox="0 0 32 40" width="36" height="45" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
+    
+    L.marker([targetLat, targetLng], {
+        icon: L.divIcon({ className: '', html: pinB, iconSize: [3, 4], iconAnchor: [4, 5] })
     }).addTo(window.markerLayerGroup);
 
     window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
@@ -3889,7 +3867,50 @@ catAssistant.addEventListener("touchmove", drag, { passive: false });
 catAssistant.addEventListener("mousedown", dragStart);
 document.addEventListener("mouseup", dragEnd);
 document.addEventListener("mousemove", drag);
-    
+
+    // === HÀM TÍNH TỔNG THÀNH TỰU TÍCH LŨY ===
+window.capNhatBangTichLuy = function() {
+    let username = localStorage.getItem('currentUser');
+    if (!username || typeof window.db === 'undefined') return;
+
+    window.db.ref('tien_trinh_tap_luyen/' + username).once('value').then(snap => {
+        const dataObj = snap.val();
+        if (!dataObj) return;
+
+        let tongKm = 0, tongBuoc = 0, tongCalo = 0, tongPhut = 0;
+        let ngaySomNhat = Date.now();
+
+        Object.values(dataObj).forEach(tienTrinh => {
+            tongKm += parseFloat(tienTrinh.quang_duong) || 0;
+            tongBuoc += parseInt(tienTrinh.buoc_chan) || 0;
+            tongCalo += parseFloat(tienTrinh.calo) || 0;
+            
+            // Xử lý thời gian (phút)
+            let thoiGianStr = tienTrinh.thoi_gian || "00:00";
+            let parts = thoiGianStr.split(':');
+            if (parts.length === 2) {
+                tongPhut += parseInt(parts.at(0)) * 60 + parseInt(parts.at(1));
+            }
+
+            if (tienTrinh.timestamp < ngaySomNhat) ngaySomNhat = tienTrinh.timestamp;
+        });
+
+        // Đổ dữ liệu lên UI
+        const dateStr = new Date(ngaySomNhat).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
+        document.getElementById('ngay-bat-dau-tap').innerText = dateStr;
+        document.getElementById('dist-display').innerText = tongKm.toFixed(1);
+        document.getElementById('step-display').innerText = tongBuoc;
+        document.getElementById('cal-display').innerText = tongCalo.toFixed(1);
+        
+        let gio = Math.floor(tongPhut / 60);
+        let phut = tongPhut % 60;
+        document.getElementById('total-time-display').innerText = `${gio}h ${phut}m`;
+    });
+};
+
+// Gọi hàm khi vừa mở app
+window.addEventListener('load', () => { setTimeout(window.capNhatBangTichLuy, 2000); });
+
 </script>
 </body>
 </html>

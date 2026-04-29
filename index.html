@@ -3363,12 +3363,12 @@ function capNhatGoiYTheoNguCanh() {
     container.innerHTML = htmlNut;
 }
 
-//  TÁC NHÂN XỬ LÝ KỊCH BẢN (NẢY SỐ AI CỤC BỘ)
+// 🧠 TÁC NHÂN XỬ LÝ KỊCH BẢN (NẢY SỐ AI CỤC BỘ TẦNG SÂU)
 function xuLyGoiYTuDong(cauHoi) {
     const user = localStorage.getItem('currentUser') || "Khach";
     let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
     
-    // 1. In câu hỏi User
+    // 1. In câu hỏi ra
     history.push({ sender: 'user', text: cauHoi });
     localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
     taiLichSuChat();
@@ -3379,49 +3379,191 @@ function xuLyGoiYTuDong(cauHoi) {
     catChatContainer.innerHTML += `
         <div id="${typingId}" style="display: flex; justify-content: flex-start; width: 100%;">
             <div style="background: #e4e6eb; color: black; padding: 10px 15px; border-radius: 15px 15px 15px 0; font-size: 14px; font-style: italic;">
-                Mèo đang soạn tin nhắn... 🐾
+                Mèo đang suy nghĩ... 
             </div>
         </div>
     `;
     catChatContainer.scrollTop = catChatContainer.scrollHeight;
 
-    // 3. DIỄN SÂU 1.5s ĐỂ XỬ LÝ LOGIC
+    // 3. delay chat 1.5s
     setTimeout(() => {
         if(document.getElementById(typingId)) document.getElementById(typingId).remove();
         let aiMessage = "";
-        let nextButtonsHTML = ""; // Các nút của Tầng 2, Tầng 3
+        let nextButtonsHTML = ""; // Các nút của t2 t3
         let btnStyle = "white-space: nowrap; background: #e3f2fd; color: #004BAd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; cursor: pointer;";
 
+        // Lấy thông số môi trường & hệ thống
         const temp = window.currentTemp || 25;
-        const aqiText = document.getElementById('widget-bui-min') ? document.getElementById('widget-bui-min').innerText.replace('🔴 OFF', '').replace('🟢 ON', '').trim() : "chưa rõ AQI";
+        const aqiTextObj = document.getElementById('widget-bui-min');
+        const aqiText = aqiTextObj ? aqiTextObj.innerText.replace('🔴 OFF', '').replace('🟢 ON', '').trim() : "chưa rõ AQI";
+        const aqiColor = window.currentAQIColor || "#28a745";
+        const currentHour = new Date().getHours();
 
-        // === MA TRẬN NHÁNH: TẠM DỪNG NGHỈ MỆT ===
+        // Lấy hồ sơ của người dùng
+        let userCondition = 'none';
+        let uWeight = 65, uHeight = 170;
+        if (user !== "Khach") {
+            let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
+            if (parsed) {
+                userCondition = parsed.condition || 'none';
+                uWeight = parseFloat(parsed.weight) || 65;
+                uHeight = parseFloat(parsed.height) || 170;
+            }
+        }
+
+        if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();
+
+
+        //  NHÁNH 1: TẠM DỪNG NGHỈ MỆT (During-activity)
+
         if (cauHoi === 'Mệt quá Mèo ơi!') {
             if (totalDistanceMeter < 100) {
-                // Nhánh: Mới đi đã nghỉ
-                catImgObj.src = imgNhechMep;
+                if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
                 aiMessage = `Mới đi được có ${(totalDistanceMeter).toFixed(1)} mét mà đã kêu mệt? Bật app lên ngồi rung đùi à? Đứng dậy đi tiếp ngay cho Mèo! 😾`;
                 nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đi tiếp thì đi</button>`;
             } else if (temp >= 30) {
-                // Nhánh: Nóng và mệt (Cardiac Drift)
                 aiMessage = `Nhiệt độ đang ${temp}°C. Thấy nhịp tim đập loạn xạ (Cardiac Drift) chưa? Tìm ngay chỗ bóng râm nghỉ ngơi và uống ngụm nước nhỏ đi! Cấm tu ừng ực đấy! 🌳💧`;
                 nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Đã uống nước')" style="${btnStyle}">✅ Đã uống nước và dãn cơ</button>`;
             } else {
-                // Nhánh: Bình thường
                 aiMessage = `Trời đang mát, nghỉ 2 phút thả lỏng cơ đi rồi chiến tiếp. Nhớ hít mũi thở miệng nhé! 🧘‍♂️`;
                 nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Chấp nhận chạy tiếp')" style="${btnStyle}">🏃 Đã hồi mana, chiến!</button>`;
             }
         }
         else if (cauHoi === 'Đã uống nước' || cauHoi === 'Chấp nhận chạy tiếp') {
-            catImgObj.src = getAnhMacDinh();
+            if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();
             aiMessage = `Tốt! Đóng khung chat lại, bấm "TIẾP TỤC" ở dưới và chạy cho đàng hoàng vào! Mèo vẫn đang giám sát đấy! 👀`;
-            nextButtonsHTML = ``; // ĐÓNG LUỒNG, không hiện nút Tầng 3 nữa
         }
+
+
+        // 🏃‍♂️ NHÁNH 2: CHUẨN BỊ HOẠT ĐỘNG (Pre-activity)
+
+        else if (cauHoi === 'Có nên ra ngoài lúc này?') {
+            if (currentHour >= 23 || currentHour < 4) {
+                aiMessage = `Trời đang ${temp}°C, đo được ${aqiText}. Ngủ không ngủ, giờ này ra ngoài với ma à? Lên giường ngay! 👻`;
+                nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Tấu hài đi Mèo!')" style="${btnStyle}">🥱 Không ngủ được, tấu hài coi!</button>`;
+            }
+            else if (currentHour >= 11 && currentHour <= 14 && temp >= 32) {
+                aiMessage = `Giữa trưa nhiệt độ đang ${temp}°C mà đòi ra đường làm lợn quay à? Ở nhà cho Mèo nhờ! 😾☀️`;
+                nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Tập ở nhà thì tập gì?')" style="${btnStyle}">🏋️ Vậy ở nhà tập gì?</button>`;
+            }
+            else { // Các giờ bình thường
+                if (aqiColor === "#dc3545" || aqiColor === "#6f42c1" || aqiColor === "#7e0023") { // Đỏ/Tím/Nâu
+                    if (userCondition === 'asthma') {
+                        aiMessage = `Cậu bị viêm xoang/suyễn mà định ra đường lúc bụi đang ${aqiText} à? 😷 Tính hiến phổi cho khoa học hay gì? Ở nhà!!`;
+                    } else {
+                        aiMessage = `Khê phết, bụi mù mịt (${aqiText}). Thôi ở nhà cho Mèo được nhờ 🚬😼`;
+                    }
+                    nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Tập ở nhà thì tập gì?')" style="${btnStyle}">🏋️ Vậy ở nhà tập gì?</button>`;
+                }
+                else if (aqiColor === "#ffc107" || aqiColor === "#fd7e14") { // Vàng/Cam
+                    if (userCondition === 'asthma' || userCondition === 'heart') {
+                        aiMessage = `Hơi bụi chút (${aqiText}). Cơ thể cậu yếu (Tim/Suyễn) nên đem theo khẩu trang nhé. Khuyên thật là đợi mát hãy ra! 😷`;
+                    } else {
+                        aiMessage = `Hơi bụi chút (${aqiText}) nhưng không sao, Mèo khuyên cậu nên ra công viên tập nhẹ nhàng nhé 🌳🏃‍♂️`;
+                    }
+                    nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button>
+                                       <button onclick="xuLyGoiYTuDong('Có ai đang chạy quanh đây không?')" style="${btnStyle}">📡 Ai đang chạy quanh đây?</button>`;
+                }
+                else { // Xanh lá
+                    aiMessage = `Nhiệt độ ${temp}°C, không khí xanh mướt! 🌿 Không xách mông lên đi tập ngay bây giờ thì định đợi đến bao giờ hả? Đi!!`;
+                    nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Mặc gì cho ngầu?')" style="${btnStyle}">👕 Mặc gì cho ngầu?</button>
+                                       <button onclick="xuLyGoiYTuDong('Có ai đang chạy quanh đây không?')" style="${btnStyle}">📡 Ai đang chạy quanh đây?</button>`;
+                }
+            }
+        }
+        // Sub-nhánh của Chuẩn bị hoạt động
+        else if (cauHoi === 'Tập ở nhà thì tập gì?') {
+            if (userCondition === 'heart' || userCondition === 'asthma') {
+                aiMessage = `Thể trạng tim mạch/hô hấp yếu thì trải thảm ra tập Yoga hoặc dãn cơ nhẹ nhàng 15 phút thôi. Bật YouTube lên! 🧘‍♂️`;
+            } else {
+                aiMessage = `Plank 3 phút, gập bụng 50 cái, hít đất 30 cái! Đừng có viện cớ thời tiết mà nằm ườn ra đấy! 😼💪`;
+            }
+        }
+        else if (cauHoi === 'Tấu hài đi Mèo!') {
+            if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+            aiMessage = `Nhìn lại cái mỡ bụng của cậu đi rồi hẵng than chán! 🐷 Khuya rồi nhắm mắt lại đếm cừu đi!`;
+        }
+        else if (cauHoi === 'Mặc gì cho ngầu?') {
+            if (temp < 18) aiMessage = `Trời lạnh đấy (< 18°C), mặc áo gió phản quang vào! Vừa ấm vừa không bị xe tông 🥶`;
+            else if (temp > 28) aiMessage = `Nóng đổ mỡ, mặc áo ba lỗ hoặc thun lạnh thôi. Đừng quên bôi kem chống nắng nha cậu ☀️`;
+            else aiMessage = `Thời tiết siêu đỉnh! Khoác bộ đồ thể thao xịn nhất của cậu vào và đi khoe dáng đi! ✨`;
+        }
+        else if (cauHoi === 'Có ai đang chạy quanh đây không?') {
+            if (!window.isSharingLocation) {
+                if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+                aiMessage = `Cậu đang TẮT chia sẻ vị trí (Radar) mà đòi đi dòm ngó người khác à? Khôn như cậu quê Mèo đầy! Bật nút Radar lên! 📡😾`;
+            } else {
+                aiMessage = `Radar đang bật! Mở màn hình One Connect (nút 🗺️) lên xem có bạn bè nào đang online không thì ra chạy ké! 🏃‍♂️💨`;
+            }
+        }
+        else if (cauHoi === 'Hỏi Không khí') {
+            aiMessage = `Trạm đo báo: ${aqiText}. Tùy màu (Xanh, Vàng, Đỏ) ở ngoài widget mà tự biết thân biết phận nhé! Bấm nút "Có nên ra ngoài" để Mèo tư vấn kỹ hơn.`;
+            nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Có nên ra ngoài lúc này?')" style="${btnStyle}">🏃 Quay lại tư vấn ra ngoài</button>`;
+        }
+
+ 
+        // 🏁 NHÁNH 3: PHÂN TÍCH SAU TẬP 
+  
+        else if (cauHoi === 'Đánh giá buổi tập hôm nay') {
+            let calo = 0;
+            if (document.getElementById('cal-display')) calo = parseFloat(document.getElementById('cal-display').innerText);
+
+            if (totalDistanceMeter < 50) {
+                if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+                aiMessage = `Đi được ${(totalDistanceMeter).toFixed(1)} mét mà cũng đòi đánh giá á? Tập như gãi ngứa! Về ăn salad đi, cấm đụng vào trà sữa! 🧋😾`;
+            } else if (calo > 300) {
+                aiMessage = `Đỉnh chóp! Nay đốt mỡ khét đấy 🔥 (${calo.toFixed(1)} kcal). Về nhà nhớ ngâm chân nước ấm và bổ sung đạm nạp lại cơ nhé, cấm nhịn ăn! 🍗`;
+            } else {
+                if (currentHour >= 21) {
+                    aiMessage = `Người chua lét rồi! Về nghỉ cho ráo mồ hôi rồi tắm nước ấm nhé, đêm khuya cấm tắm nước lạnh! 🚿🌃`;
+                } else if (currentHour >= 4 && currentHour <= 9) {
+                    aiMessage = `Khởi đầu ngày mới cháy quá! Đốt được ${calo.toFixed(1)} kcal. Ăn sáng đủ chất rồi đi làm/đi học thôi. Hôm nay cậu tuyệt vời! ✨🍞`;
+                } else {
+                    aiMessage = `Tập khá lắm! Mèo ghi nhận nỗ lực của cậu. Nhớ dãn cơ đùi kĩ vào, mai lê lết Mèo không đỡ đâu! 😼`;
+                }
+            }
+            // Chỉ đưa nút nếu đi trên 50m 
+            if (totalDistanceMeter >= 50) {
+                nextButtonsHTML = `<button onclick="window.dongChatMeo(); window.hienThiRecap();" style="${btnStyle}">💾 Hiện bảng Recap để Lưu</button>`;
+            } else {
+                 nextButtonsHTML = `<button onclick="window.dongChatMeo();" style="${btnStyle}">Đóng chat đi nhục quá</button>`;
+            }
+        }
+
+
+        // 🩺 NHÁNH 4: SỨC KHỎE DÀI HẠN 
+
+        else if (cauHoi === 'Tính BMI chay' || cauHoi === 'Dạo này tớ tập thế nào?') {
+            let bmi = (uWeight / Math.pow(uHeight / 100, 2)).toFixed(1);
+            aiMessage = `Cao ${uHeight}cm, nặng ${uWeight}kg. BMI của cậu là ${bmi}. `;
+            
+            if (bmi < 18.5) {
+                aiMessage += `Ốm lòi xương! Ăn nhiều vào cho Mèo nhờ! Có sức mới đi tập được! 💀`;
+            } else if (bmi >= 18.5 && bmi <= 24.9) {
+                aiMessage += `Ngon lành! Body tiêu chuẩn đấy, cố gắng duy trì phong độ này nhé! 🐟✨`;
+            } else if (bmi >= 25 && bmi <= 29.9) {
+                if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+                aiMessage += `Hơi mũm mĩm rồi đấy! Tướng này xách giày ra chạy ngay còn kịp! 🐷🏃‍♂️`;
+            } else {
+                if (typeof catImgObj !== 'undefined') catImgObj.src = imgChongMat;
+                aiMessage += `Báo động đỏ! Trọng lượng chèn ép xương khớp rồi! Phải tập Cardio đi bộ gấp để đốt mỡ đi! 🆘🐘`;
+            }
+        }
+
+
+        // 🚨 NHÁNH 5: LỖI NGOẠI LỆ (Graceful Failure)
+            
         else if (cauHoi === 'Tắt định vị thì sao?') {
-            aiMessage = `Tắt GPS thì Mèo bị mù, biết cậu đang ở xó nào mà khuyên? 😾 Bật nút "▶ BẮT ĐẦU" xanh lè ở dưới lên hoặc tự thò đầu ra cửa sổ mà xem thời tiết nhé!`;
+            if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+            aiMessage = `Tắt định vị (GPS) thì Mèo biết cậu đang ở xó nào trên Trái Đất mà khuyên? 😾 Bật nút xanh "BẮT ĐẦU" lên hoặc tự thò đầu ra cửa sổ mà xem trời mưa hay nắng nhé!`;
+            nextButtonsHTML = `<button onclick="xuLyGoiYTuDong('Tính BMI chay')" style="${btnStyle}">😼 Vậy xem thể trạng chay đi</button>`;
+        }
+        else if (cauHoi === 'Đang chạy mà mở chat') {
+            if (typeof catImgObj !== 'undefined') catImgObj.src = imgNhechMep;
+            aiMessage = `Đang chạy bấm giờ mà tay còn rảnh gõ chat à? Nhìn đường đi cẩn thận vấp cục đá bây giờ! 😾 Tắt chat đi!`;
         }
         else {
-            aiMessage = `Hệ thống phân tầng cho câu hỏi này anh em dev đang mài dao mổ để gõ code. Cậu test nhánh "Tạm dừng" trước nhé! 😸`;
+            aiMessage = `Chà, ngoài luồng rồi. Double tap vào Mèo để kết nối nhé! 😼`;
         }
 
         // 4. Lưu và in câu trả lời của Mèo

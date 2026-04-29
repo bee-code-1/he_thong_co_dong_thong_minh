@@ -1322,57 +1322,112 @@ window.hienThiRecap = function() {
     if (typeof isPaused !== 'undefined') isPaused = true;
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
 
+    // =========================================================
+    // 🛑 BÀN TAY SẮT: TRỪNG PHẠT KẺ LƯỜI BIẾNG (TƯỚC QUYỀN RECAP)
+    // =========================================================
+    // Note: Tớ đang set tạm là chạy > 5 giây mà đi < 15 mét để cậu dễ test. 
+    // Sau khi test ok, cậu có thể tự sửa thành > 300 (5 phút) và < 50 mét nhé!
+    if (elapsedSeconds > 5 && totalDistanceMeter < 15) {
+        
+        // 1. Giấu tiệt cái bảng Recap đi
+        const rModal = document.getElementById('recap-modal');
+        if(rModal) rModal.style.display = 'none';
+
+        // 2. Gọi Mèo ra chửi và đổi mặt tức giận
+        if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
+            catImgObj.src = imgChongMat; // Cho cái mặt chóng mặt tức giận lên
+            catBubble.innerText = `Đi được ${(totalDistanceMeter).toFixed(1)}m mà đòi lưu thành tích à? Bật app tốn pin! Mèo hủy kết quả buổi này! 😾`;
+            
+            catBubble.style.backgroundColor = '#ffebee';
+            catBubble.style.border = '2px solid #dc3545';
+            catBubble.style.color = '#dc3545';
+            catBubble.style.display = 'block';
+            setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+            setTimeout(() => {
+                catBubble.classList.remove('show-bubble');
+                setTimeout(() => {
+                    catBubble.style.display = 'none';
+                    catImgObj.src = getAnhMacDinh(); // Trả lại mặt bình thường
+                }, 600);
+            }, 6000);
+        }
+
+        // 3. Hủy diệt chứng cứ (Reset toàn bộ số liệu về 0)
+        totalDistanceMeter = 0;
+        elapsedSeconds = 0;
+        if (typeof pathLatLngs !== 'undefined') pathLatLngs = [];
+        if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
+
+        // Reset hiển thị trên màn hình
+        if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
+        if(document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
+        if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
+        if(document.getElementById('time-display')) {
+            document.getElementById('time-display').innerText = "00:00";
+            document.getElementById('time-display').style.display = 'none'; // Giấu đồng hồ đi
+        }
+
+        // Trả các nút về trạng thái CHƯA TẬP
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('pause-btn').style.display = 'none';
+        document.getElementById('end-btn').style.display = 'none';
+        isTracking = false;
+
+        return; //  Chặn ở đây, k chạy các code hiện Recap ở phía dưới nữa!
+    }
+
+    // NẾU NG DÙNG CÓ CHẠY THẬT THÌ CHẠY TIẾP CODE RECAP :
     const pauseBtnObj = document.getElementById('pause-btn');
     if(pauseBtnObj) {
         pauseBtnObj.innerText = "▶ TIẾP TỤC";
         pauseBtnObj.style.backgroundColor = "#4CAF50";
     }
 
-    if(document.getElementById('recap-time') && document.getElementById('time-display')) 
+    if(document.getElementById('recap-time') && document.getElementById('time-display'))
         document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
-    if(document.getElementById('recap-distance') && document.getElementById('dist-display')) 
+
+    if(document.getElementById('recap-distance') && document.getElementById('dist-display'))
         document.getElementById('recap-distance').innerText = document.getElementById('dist-display').innerText + " km";
-    if(document.getElementById('recap-steps') && document.getElementById('step-display')) 
+
+    if(document.getElementById('recap-steps') && document.getElementById('step-display'))
         document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
-    if(document.getElementById('recap-calo') && document.getElementById('cal-display')) 
+
+    if(document.getElementById('recap-calo') && document.getElementById('cal-display'))
         document.getElementById('recap-calo').innerText = document.getElementById('cal-display').innerText;
 
-    //  TÍNH VẬN TỐC TRUNG BÌNH km/h
     let speedKmH = 0;
     if (elapsedSeconds > 0 && totalDistanceMeter > 0) {
         speedKmH = (totalDistanceMeter / 1000) / (elapsedSeconds / 3600);
     }
     const rSpeed = document.getElementById('recap-speed');
-    if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2); 
+    if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
 
-const rModal = document.getElementById('recap-modal');
-if(rModal) {
-    rModal.style.display = 'flex';
-    
-    // Đánh thức Mèo Ảo để chúc mừng sau tập
-    if (typeof catBubble !== 'undefined') {
-        const postMsgs = [
-            "Đỉnh đấy! Mèo khen cậu 🐟",
-            "Recap xịn, cho Mèo ké tí",
-            "Người hôi rồi, tắm đi cậu",
-            "Đến giờ đớp rồi 😋"
-        ];
-        catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
-        
-        // MÀU CHO TRẠNG THÁI CHÚC MỪNG
-        catBubble.style.backgroundColor = '#fff9c4';  // Đổi màu nền ở đây
-        catBubble.style.border = '2px solid #ffc107'; // Đổi màu viền ở đây
-        catBubble.style.color = '#333';               // Đổi màu chữ ở đây
-        
-        catBubble.style.display = 'block';
-        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        
-        setTimeout(() => {
-            catBubble.classList.remove('show-bubble');
-            setTimeout(() => catBubble.style.display = 'none', 600); 
-        }, 6000);
+    const rModal = document.getElementById('recap-modal');
+    if(rModal) {
+        rModal.style.display = 'flex';
+
+        // Đánh thức Mèo Ảo để chúc mừng sau tập 
+        if (typeof catBubble !== 'undefined') {
+            const postMsgs = [
+                "Đỉnh đấy! Mèo khen cậu ",
+                "Recap xịn, cho Mèo ké tí",
+                "Người hôi rồi, tắm đi cậu",
+                "Đến giờ đớp rồi 😋"
+            ];
+            catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
+            catBubble.style.backgroundColor = '#fff9c4';  
+            catBubble.style.border = '2px solid #ffc107'; 
+            catBubble.style.color = '#333';               
+            catBubble.style.display = 'block';
+            setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+
+            setTimeout(() => {
+                catBubble.classList.remove('show-bubble');
+                setTimeout(() => catBubble.style.display = 'none', 600);
+            }, 6000);
+        }
     }
-}
 };
 
 // === HÀM LƯU TIẾN TRÌNH  ===

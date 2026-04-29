@@ -3748,7 +3748,7 @@ window.routeFromCurrentTo = function(targetLat, targetLng) {
     window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
-// 4. VŨ KHÍ HẠT NHÂN: Vẽ OSRM và Băm nhỏ lộ trình tô màu AQI
+// 4.  Vẽ OSRM và Băm nhỏ lộ trình tô màu AQI
 window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers(); 
     
@@ -3756,14 +3756,18 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
         .then(res => res.json())
         .then(data => {
             if(data.routes && data.routes.length > 0) {
-                const route = data.routes; // FIX 1: Đã chèn  lấy tuyến chính
+                // FIX CHÍ MẠNG: Dùng .at(0) thay vì ngoặc vuông để không bị hệ thống nuốt chữ
+                const route = data.routes.at(0); 
                 const coords = route.geometry.coordinates; 
                 const totalDist = (route.distance / 1000).toFixed(1);
                 
                 for (let i = 0; i < coords.length - 1; i++) {
-                    // FIX 2: Đảo ngược [lng, lat] thành [lat, lng]
-                    let p1 = [coords[i][2], coords[i]];     
-                    let p2 = [coords[i+1][2], coords[i+1]];
+                    let currentCoord = coords.at(i);
+                    let nextCoord = coords.at(i + 1);
+
+                    // Đảo ngược từ [lng, lat] sang [lat, lng] cho Leaflet vẽ
+                    let p1 = [ currentCoord.at(1), currentCoord.at(0) ];     
+                    let p2 = [ nextCoord.at(1), nextCoord.at(0) ];
 
                     let aqiColor = window.getSimulatedAQIColor(i, coords.length); 
 
@@ -3775,11 +3779,12 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                     }).addTo(window.routeLayerGroup);
                 }
 
-                // FIX 3: Khai báo mảng cho padding
-                const bounds = L.polyline(coords.map(c => [c[2], c])).getBounds();
-                map.fitBounds(bounds, { padding: [1] });
+                // Tính toán Bounds để camera tự động zoom vừa vặn với tuyến đường
+                const leafCoords = coords.map(c => [ c.at(1), c.at(0) ]);
+                const bounds = L.polyline(leafCoords).getBounds();
+                map.fitBounds(bounds, { padding: L.point(20, 20) });
 
-                // TÍCH HỢP TÍNH NĂNG LƯU ĐỊA ĐIỂM
+                // HIỆN POPUP CHỨA NÚT LƯU ĐỊA ĐIỂM
                 L.popup()
                     .setLatLng([lat2, lng2])
                     .setContent(`

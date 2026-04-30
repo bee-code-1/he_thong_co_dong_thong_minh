@@ -3802,10 +3802,9 @@ async function guiTinNhanMeo() {
         localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
         taiLichSuChat();
     }
-}
-// ==========================================
+    
 // 1. TÍNH TOÁN BẢNG TÍCH LŨY Ở TAB 2 & SẮP XẾP LỊCH SỬ
-// ==========================================
+
 window.capNhatBangTichLuy = function(dataObj) {
     if (!dataObj) return;
     let tongKm = 0, tongBuoc = 0, tongCalo = 0, tongPhut = 0;

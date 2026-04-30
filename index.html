@@ -1058,7 +1058,49 @@ function processAuth(mode) {
         });
     }
 } 
+// === HÀM LƯU HỒ SƠ TÂN BINH (ONBOARDING) ===
+window.saveProfile = function(isSkip) {
+    const user = localStorage.getItem('currentUser');
+    if (!user) return;
 
+    if (isSkip) {
+        document.getElementById('onboarding-modal').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+        return;
+    }
+
+    const gender = document.getElementById('gender').value;
+    const age = parseInt(document.getElementById('age').value) || 20;
+    const height = parseFloat(document.getElementById('height').value) || 170;
+    const weight = parseFloat(document.getElementById('weight').value) || 65;
+    const condition = document.getElementById('health-condition').value || 'none';
+
+    // Tính độ dài sải chân mặc định (khoảng 0.415 * chiều cao theo mét)
+    const strideLength = (height / 100) * 0.415;
+
+    // Cập nhật biến toàn cục để tính Calo và Bước chân
+    window.userWeight = weight;
+    window.stepsPerMeter = 1 / strideLength;
+
+    // 1. Lưu tạm vào máy
+    const userData = { gender, age, height, weight, condition, strideLength };
+    localStorage.setItem("appUser_" + user, JSON.stringify(userData));
+
+    // 2. Đẩy luôn thông tin lên Database của Firebase
+    if (typeof window.db !== 'undefined') {
+        window.db.ref('nguoi_dung/' + user).update({
+            gioi_tinh: gender,
+            tuoi: age,
+            chieu_cao: height,
+            can_nang: weight,
+            benh_ly: condition
+        });
+    }
+
+    // 3. Đóng bảng Onboarding, Mở App chính
+    document.getElementById('onboarding-modal').style.display = 'none';
+    document.getElementById('app-container').style.display = 'block';
+};
     let isFirstLocation = true; 
 
     //  gọi bản đồ bay về vị trí hiện tại

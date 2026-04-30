@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>con chó</title>
     <link rel="icon" type="image/png" href="meo_binh_thuong.png">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> <!-- MỚI ADD VÀO ĐÂY -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -998,115 +999,64 @@ window.tinhCaloThucTe = function(khoangCachMet, giayTroiQua) {
 function processAuth(mode) {
     const user = document.getElementById(mode === 'login' ? 'login-user' : 'reg-user').value.trim();
     const pass = document.getElementById(mode === 'login' ? 'login-pass' : 'reg-pass').value.trim();
+    
     if(!user || !pass) return alert("Nhập đủ thông tin!");
-    // Giới hạn 8 ký tự và không chứa khoảng trắng
-    if (user.length > 8) return alert("Tên tài khoản không được vượt quá 8 ký tự!");
+    if (user.length > 15) return alert("Tên tài khoản không được vượt quá 15 ký tự!");
     if (user.includes(" ")) return alert("Tên tài khoản không được chứa khoảng trắng!");
 
+    // THỦ THUẬT: Biến username thành email ảo để xài Firebase Auth
+    const fakeEmail = user.toLowerCase() + "@meo.app";
+
     if (mode === 'register') {
-        // KIỂM TRA TRÙNG TÊN TRÊN TOÀN CẦU (FIREBASE)
-        if (typeof db !== 'undefined') {
-            db.ref('nguoi_dung/' + user).once('value').then(function(snapshot) {
-                if (snapshot.exists()) {
-                    alert("Tên tài khoản '" + user + "' đã có người sử dụng. Vui lòng chọn tên khác!");
-                } else {
-                    localStorage.setItem("appUser_" + user, JSON.stringify({ password: pass }));
-                    currentUser = user;
-                    localStorage.setItem('currentUser', user);
+        window.auth.createUserWithEmailAndPassword(fakeEmail, pass)
+        .then((userCredential) => {
+            // Đăng ký thành công
+            currentUser = user;
+            localStorage.setItem('currentUser', user);
 
-                    // 💡 FIX LỖI CHỮ "US" KHI VỪA TẠO TÀI KHOẢN XONG
-                    let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
-                    let btnImg = document.getElementById('avatar-btn-img');
-                    if (btnImg) btnImg.src = avtUrl;
+            let avtUrl = `https://ui-avatars.com/api/?name=${user}&background=random`;
+            let btnImg = document.getElementById('avatar-btn-img');
+            if (btnImg) btnImg.src = avtUrl;
 
-                    db.ref('nguoi_dung/' + user).set({
-                        trang_thai: "Vừa tạo tài khoản",
-                        thoi_gian_cap_nhat: Date.now()
-                    });
-                    document.getElementById('auth-modal').style.display = 'none';
-                    document.getElementById('onboarding-modal').style.display = 'flex';
-                }
-            }).catch(function(error) {
-                alert("Lỗi kết nối mạng: Không thể kiểm tra dữ liệu!");
+            // Khởi tạo data cơ sở trên Realtime Database để map bạn bè
+            window.db.ref('nguoi_dung/' + user).set({
+                trang_thai: "Vừa tạo tài khoản",
+                thoi_gian_cap_nhat: Date.now(),
+                avatar: avtUrl
             });
-        } else {
-            alert("Hệ thống chưa kết nối được với máy chủ Firebase!");
-        }
+
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('onboarding-modal').style.display = 'flex';
+        })
+        .catch((error) => {
+            if (error.code === 'auth/email-already-in-use') alert("Tên tài khoản '" + user + "' đã bị lấy mất rồi!");
+            else if (error.code === 'auth/weak-password') alert("Mật khẩu quá yếu (phải từ 6 ký tự trở lên)!");
+            else alert("Lỗi đăng ký: " + error.message);
+        });
     } else {
-        //  LOGIC ĐĂNG NHẬP
-        const data = JSON.parse(localStorage.getItem("appUser_" + user));
-        if (!data || data.password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
-        currentUser = user;
-        userWeight = data.weight || 65;
-        stepsPerMeter = 1 / (data.strideLength || 0.7);
-        localStorage.setItem('currentUser', user); 
+        // ĐĂNG NHẬP
+        window.auth.signInWithEmailAndPassword(fakeEmail, pass)
+        .then((userCredential) => {
+            currentUser = user;
+            localStorage.setItem('currentUser', user);
 
-        // 💡 FIX LỖI CHỮ "US" KHI VỪA BẤM ĐĂNG NHẬP
-        let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
-        let btnImg = document.getElementById('avatar-btn-img');
-        if (btnImg) btnImg.src = avtUrl;
+            // Kéo chỉ số cơ thể từ LocalStorage (hoặc mây) về
+            const localData = JSON.parse(localStorage.getItem("appUser_" + user)) || {};
+            userWeight = localData.weight || 65;
+            stepsPerMeter = 1 / (localData.strideLength || 0.7);
 
-        document.getElementById('auth-modal').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
-    }
-}
-
-//  tự động log in nếu f5
-window.addEventListener('load', function() {
-    let savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        const data = JSON.parse(localStorage.getItem("appUser_" + savedUser));
-        if (data) {
-            currentUser = savedUser;
-            userWeight = data.weight || 65;
-            stepsPerMeter = 1 / (data.strideLength || 0.7);
-            
-            // 💡 FIX LỖI CHỮ "US" KHI F5 TẢI LẠI TRANG
-            let avtUrl = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
+            let avtUrl = localStorage.getItem("avatar_" + user) || `https://ui-avatars.com/api/?name=${user}&background=random`;
             let btnImg = document.getElementById('avatar-btn-img');
             if (btnImg) btnImg.src = avtUrl;
 
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
-        }
-    }
-});
-
-function saveProfile(skip) {
-    const a = skip ? 20 : parseInt(document.getElementById('age').value) || 20;
-    const h = skip ? 170 : parseFloat(document.getElementById('height').value) || 170;
-    const w = skip ? 65 : parseFloat(document.getElementById('weight').value) || 65;
-    const c = skip ? 'none' : document.getElementById('health-condition').value;
-    const g = skip ? 'male' : document.getElementById('gender').value;
-
-    userWeight = w; stepsPerMeter = 1 / ((h / 100) * 0.415);
-    const data = JSON.parse(localStorage.getItem("appUser_" + currentUser)) || {};
-    data.age = a; data.gender = g; data.weight = w; data.height = h;
-    data.condition = c; data.strideLength = (h / 100) * 0.415;
-    
-    localStorage.setItem("appUser_" + currentUser, JSON.stringify(data));
-    
-    // Đồng bộ lên Firebase để AI phân tích
-    if (typeof window.db !== 'undefined') {
-        window.db.ref('nguoi_dung/' + currentUser).update({
-            tuoi: a, gioi_tinh: g, chieu_cao: h, can_nang: w, benh_ly: c
+        })
+        .catch((error) => {
+            alert("Sai tài khoản hoặc mật khẩu rùi bạn êi!");
+            console.error("Lỗi đăng nhập:", error);
         });
     }
-    document.getElementById('onboarding-modal').style.display = 'none';
-    document.getElementById('app-container').style.display = 'block';
-}
-
-    //  UI CONTROLS 
-    function toggleLightbulbMenu() { 
-        const menu = document.getElementById('fog-menu'); 
-        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; 
-    }
-    function toggleFog() { 
-        fogEnabled = !fogEnabled; 
-        document.getElementById('fog-layer').style.opacity = fogEnabled ? '1' : '0'; 
-    }
-    function changeOpacity(val) { 
-        if(fogEnabled) document.getElementById('fog-layer').style.backgroundColor = `rgba(0, 0, 0, ${val})`; 
 } 
 
     let isFirstLocation = true; 
@@ -1306,8 +1256,10 @@ try {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
-    window.db = firebase.database();
-    console.log("Đã cắm điện Firebase và Nhà kho thành công!");
+        window.db = firebase.database();
+        window.auth = firebase.auth();       // Khởi tạo Auth
+        window.storage = firebase.storage(); // Khởi tạo Storage
+        console.log("Đã cắm điện Firebase, Auth và Nhà kho thành công!");
 } catch(e) { 
     console.error("Lỗi Firebase:", e); 
 }
@@ -1864,22 +1816,29 @@ window.thayDoiAnh = function(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Image = e.target.result;
-            const preview = document.getElementById('hs-avatar-preview');
-            const btnImg = document.getElementById('avatar-btn-img');
-            if(preview) preview.src = base64Image;
-            if(btnImg) btnImg.src = base64Image;
-
+            // Thay đổi tức thì trên giao diện
+            document.getElementById('hs-avatar-preview').src = base64Image;
+            const avtBtn = document.getElementById('avatar-btn-img');
+            if (avtBtn) avtBtn.src = base64Image;
+            
             const user = localStorage.getItem('currentUser');
             if (user) {
+                // Lưu tạm máy để load nhanh
                 localStorage.setItem("avatar_" + user, base64Image);
-                if (typeof window.db !== 'undefined') {
-                    window.db.ref('nguoi_dung/' + user).update({
-                        avatar: base64Image
-                    }).then(() => {
-                        console.log("Đã đồng bộ Avatar lên Đám mây thành công!");
-                    }).catch((err) => {
-                        console.error("Lỗi đồng bộ ảnh:", err);
-                    });
+                
+                // ĐẨY LÊN FIREBASE STORAGE
+                if (typeof window.storage !== 'undefined' && typeof window.db !== 'undefined') {
+                    const fileName = 'avatars/' + user + '_avt.jpg';
+                    const storageRef = window.storage.ref().child(fileName);
+                    
+                    storageRef.putString(base64Image, 'data_url')
+                    .then((snapshot) => snapshot.ref.getDownloadURL())
+                    .then((downloadURL) => {
+                        // Cầm URL link thật về cập nhật profile
+                        window.db.ref('nguoi_dung/' + user).update({ avatar: downloadURL });
+                        console.log("Đã đồng bộ Avatar sang Firebase Storage!");
+                    })
+                    .catch((err) => console.error("Lỗi lưu ảnh:", err));
                 }
             }
         };
@@ -2591,43 +2550,29 @@ window.huyDangBai = function() {
 };
 
 // 3. ĐĂNG BÀI CHÍNH THỨC
-window.xacNhanDangBai = function() {
-    const user = localStorage.getItem('currentUser');
-    if (!user || !window.db) return alert("Vui lòng đăng nhập!");
-    
-    const captionObj = document.getElementById('draft-caption');
-    const caption = captionObj ? captionObj.value.trim() : '';
-    
-    if (cheDoDangBai === 'text') {
-        const noteObj = document.getElementById('note-input');
-        const noteContent = noteObj ? noteObj.value.trim() : '';
-        
-        if (!noteContent) return window.huyDangBai();
-        
-        document.getElementById('draft-overlay').style.display = 'none';
-        dayLenFirebase('text', noteContent, caption);
-        
-        if (noteObj) noteObj.value = ''; //  Reset nội dung sau đăng
-        cheDoDangBai = null; //  Reset trạng thái
-        
     } else if (cheDoDangBai === 'image') {
         document.getElementById('draft-overlay').style.display = 'none';
-        cheDoDangBai = null; // Thêm dòng này để reset trạng thái
-        
-        console.log("Đang nén và đẩy ảnh lên ImgBB...");
-        const IMGBB_API_KEY = "94e4aff7681643164421e790fc2f6e89";
-        const base64Data = anhDangCho.split(',')[1]; 
-        const formData = new FormData(); 
-        formData.append("image", base64Data);
-        
-        fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData })
-        .then(res => res.json())
-        .then(result => {
-            if(result.success) dayLenFirebase('image', result.data.url, caption);
-            else throw new Error("ImgBB Error");
-        }).catch(err => { 
-            alert("Lỗi tải ảnh!"); 
-            window.huyDangBai(); 
+        cheDoDangBai = null; 
+
+        console.log("Đang đẩy ảnh lên Firebase Storage...");
+        // 1. Tạo đường dẫn file xịn xò trong Storage
+        const fileName = 'locket_images/' + user + '_' + Date.now() + '.jpg';
+        const storageRef = window.storage.ref().child(fileName);
+
+        // 2. Upload thẳng chuỗi Base64 cực cháy
+        storageRef.putString(anhDangCho, 'data_url')
+        .then((snapshot) => {
+            // Lấy URL thực tế
+            return snapshot.ref.getDownloadURL();
+        })
+        .then((downloadURL) => {
+            // 3. Đưa URL vào Database hiển thị
+            dayLenFirebase('image', downloadURL, caption);
+        })
+        .catch((error) => {
+            console.error("Lỗi Storage:", error);
+            alert("Mạng lag! Không thể tải ảnh lên đám mây!");
+            window.huyDangBai();
         });
     }
 };

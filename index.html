@@ -2556,23 +2556,34 @@ window.huyDangBai = function() {
 };
 
 // 3. ĐĂNG BÀI CHÍNH THỨC
+window.xacNhanDangBai = function() {
+    const caption = document.getElementById('draft-caption') ? document.getElementById('draft-caption').value.trim() : '';
+
+    // -- Trạng thái 1: Đăng Ghi chú (Text) --
+    if (cheDoDangBai === 'text') {
+        const noteText = document.getElementById('note-input').value.trim();
+        if (!noteText) { alert("Cậu chưa viết gì kìa!"); return; }
+        
+        document.getElementById('draft-overlay').style.display = 'none';
+        cheDoDangBai = null;
+        dayLenFirebase('text', noteText, caption);
+
+    // -- Trạng thái 2: Đăng Ảnh (Firebase Storage) --
     } else if (cheDoDangBai === 'image') {
         document.getElementById('draft-overlay').style.display = 'none';
         cheDoDangBai = null; 
 
         console.log("Đang đẩy ảnh lên Firebase Storage...");
-        // 1. Tạo đường dẫn file xịn xò trong Storage
+        const user = localStorage.getItem('currentUser') || 'Khach';
         const fileName = 'locket_images/' + user + '_' + Date.now() + '.jpg';
         const storageRef = window.storage.ref().child(fileName);
 
-        // 2. Upload thẳng chuỗi Base64 cực cháy
+        // Upload thẳng chuỗi Base64 
         storageRef.putString(anhDangCho, 'data_url')
         .then((snapshot) => {
-            // Lấy URL thực tế
             return snapshot.ref.getDownloadURL();
         })
         .then((downloadURL) => {
-            // 3. Đưa URL vào Database hiển thị
             dayLenFirebase('image', downloadURL, caption);
         })
         .catch((error) => {

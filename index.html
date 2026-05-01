@@ -373,6 +373,19 @@
     display: block !important;
     animation: popBubble 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
+
+/* HIỆU ỨNG MÈO PHÁT SÁNG & RUNG RINH */
+@keyframes catPulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 10px #ffeb3b); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 25px #ff9800); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 10px #ffeb3b); }
+}
+/* HIỆU ỨNG CON MÈO TELEPORT*/
+.cat-teleporting {
+    transition: opacity 0.2s, transform 0.2s;
+    opacity: 0;
+    transform: scale(0);
+}
          
     </style>
 </head>
@@ -398,6 +411,18 @@
         <img id="cat-real-img" src="meo_binh_thuong.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
     </div>
 </div>
+
+<!-- TỜ GIẤY NOTE KHI MÈO BỎ NHÀ ĐI (Mặc định ẩn) -->
+<div id="cat-missing-note" style="display: none; position: absolute; top: 15px; right: 15px; z-index: 2000; flex-direction: column; align-items: flex-end;">
+    <div style="background: #fff9c4; border: 1px solid #d4b895; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); transform: rotate(5deg); text-align: center; width: 90px;">
+        <span style="font-size: 24px;">😿</span>
+        <div style="font-size: 11px; font-weight: bold; color: #d32f2f; margin-top: 5px;">Mèo đi bụi rồi!</div>
+    </div>
+    <button onclick="window.moManHinhBatMeo()" style="margin-top: 10px; background: #dc3545; color: white; border: 2px solid white; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: catPulse 1.5s infinite;">
+        🔍 ĐI TÌM NGAY
+    </button>
+</div>
+    
 <!-- BẢNG ĐẾM REAL TIME -->
 <div id="info-panel" style="position: absolute; top: 15px; left: 15px; right: auto; pointer-events: auto; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 10px 15px; width: 170px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
     <div id="time-display" style="display: none; background: #00C853; color: white; border-radius: 20px; padding: 5px 15px; font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 16px;">00:00</div>
@@ -887,6 +912,46 @@
         
         <!-- Khu vực nút tương tác động -->
         <div id="public-action-btn"></div>
+    </div>
+</div>
+
+<!-- MÀN HÌNH MINIGAME AR BẮT MÈO -->
+<div id="ar-catch-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #000; z-index: 8000; overflow: hidden;">
+    <!-- Nền Camera -->
+    <video id="ar-camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;"></video>
+    
+    <!-- Lớp phủ Radar Scan -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(0, 50, 0, 0.4) 100%); pointer-events: none; z-index: 2;"></div>
+    
+    <!-- Cảnh báo góc nhìn -->
+    <div id="ar-angle-warning" style="position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(220, 53, 69, 0.9); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; text-align: center; z-index: 5; transition: opacity 0.3s; white-space: nowrap;">
+        👇 Hãy chĩa camera xuống mặt đường!
+    </div>
+
+    <!-- CON MÈO ẢO TẠI ĐÂY -->
+    <div id="ar-cat-target" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; width: 100px; height: 100px; display: none; cursor: pointer; transition: top 0.3s ease, left 0.3s ease;">
+        <!-- Viền sáng thần thánh -->
+        <img src="meo_binh_thuong.png" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px #ffeb3b) drop-shadow(0 0 40px #ff9800); pointer-events: none; animation: catPulse 1.5s infinite;">
+        
+        <!-- Vòng loading khi bấm giữ -->
+        <svg id="catch-progress-ring" viewBox="0 0 100 100" style="position: absolute; top: -10px; left: -10px; width: 120px; height: 120px; transform: rotate(-90deg); display: none; pointer-events: none;">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="8"></circle>
+            <circle id="catch-progress-circle" cx="50" cy="50" r="45" fill="none" stroke="#28a745" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="283" style="transition: stroke-dashoffset 1s linear;"></circle>
+        </svg>
+    </div>
+
+    <!-- Nút Hủy bỏ -->
+    <button onclick="window.dongARCat()" style="position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: 2px solid white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; z-index: 20;">&times;</button>
+
+    <!-- POPUP THÀNH CÔNG & PHÁO HOA -->
+    <div id="ar-success-popup" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 30; justify-content: center; align-items: center; flex-direction: column;">
+        <canvas id="fireworks-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+        <div style="background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 0 30px #ffc107; position: relative; z-index: 31; animation: popBubble 0.5s ease-out;">
+            <span style="font-size: 60px;">😻</span>
+            <h2 style="color: #28a745; margin: 10px 0;">TÓM ĐƯỢC RỒI!</h2>
+            <p style="color: #555; font-weight: bold;">Mèo đã ngoan ngoãn chui vào balo. Nó sẽ ở nhà ít nhất 24 giờ tới!</p>
+            <button onclick="window.hoanThanhBatMeo()" style="margin-top: 15px; background: #004BAd; color: white; padding: 12px 25px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">VỀ NHÀ THÔI</button>
+        </div>
     </div>
 </div>
     
@@ -4486,6 +4551,173 @@ window.guiTinNhanNguoi = function() {
 
     input.value = '';
 };
+
+// HỆ THỐNG AR BẮT MÈO (FAKE GROUND & PARTICLE FIREWORKS)
+// ==========================================
+let arStream = null;
+let catchTimer = null;
+let isCatching = false;
+let catX = 50, catY = 50; 
+
+// 1. MỞ CAMERA VÀ BẬT AR
+window.moManHinhBatMeo = async function() {
+    document.getElementById('ar-catch-screen').style.display = 'block';
+    document.getElementById('ar-success-popup').style.display = 'none';
+    const video = document.getElementById('ar-camera-video');
+    
+    // Bật Camera Sau
+    try {
+        arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = arStream;
+    } catch (err) { alert("Không mở được camera sau! Nhớ cấp quyền nhé!"); }
+
+    // Kích hoạt Gyroscope để mô phỏng mặt đất
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', handleOrientation);
+    }
+    
+    // Random vị trí xuất hiện ban đầu
+    teleportCat();
+};
+
+window.dongARCat = function() {
+    document.getElementById('ar-catch-screen').style.display = 'none';
+    if (arStream) { arStream.getTracks().forEach(track => track.stop()); arStream = null; }
+    window.removeEventListener('deviceorientation', handleOrientation);
+};
+
+// 2. GYROSCOPE: CHỈ HIỆN MÈO KHI NHÌN XUỐNG ĐẤT
+function handleOrientation(event) {
+    let tilt = event.beta; // Trục dọc (X-axis)
+    const catTarget = document.getElementById('ar-cat-target');
+    const warning = document.getElementById('ar-angle-warning');
+    
+    // Khi điện thoại nghiêng từ 45 đến 110 độ (Chĩa xuống đất)
+    if (tilt > 45 && tilt < 110) {
+        catTarget.style.display = 'block';
+        warning.style.opacity = '0';
+    } else {
+        catTarget.style.display = 'none';
+        warning.style.opacity = '1';
+    }
+}
+
+// 3. LOGIC BẤM GIỮ ĐỂ BẮT (1 GIÂY)
+const arCatTarget = document.getElementById('ar-cat-target');
+const progressRing = document.getElementById('catch-progress-ring');
+const progressCircle = document.getElementById('catch-progress-circle');
+
+function startCatching(e) {
+    e.preventDefault();
+    isCatching = true;
+    progressRing.style.display = 'block';
+    
+    // Kích hoạt hiệu ứng chạy viền tròn 1 giây
+    setTimeout(() => { progressCircle.style.strokeDashoffset = "0"; }, 50);
+
+    catchTimer = setTimeout(() => {
+        if (isCatching) {
+            // THÀNH CÔNG!
+            isCatching = false;
+            progressRing.style.display = 'none';
+            document.getElementById('ar-success-popup').style.display = 'flex';
+            bungPhaoHoa();
+            if (navigator.vibrate) navigator.vibrate(); 
+        }
+    }, 1000);
+}
+
+function stopCatching(e) {
+    if (!isCatching) return;
+    isCatching = false;
+    clearTimeout(catchTimer);
+    
+    // Bắt hụt! Reset vòng tròn và Teleport mèo
+    progressCircle.style.transition = "none";
+    progressCircle.style.strokeDashoffset = "283";
+    progressRing.style.display = 'none';
+    
+    setTimeout(() => { progressCircle.style.transition = "stroke-dashoffset 1s linear"; }, 50);
+    
+    if (document.getElementById('ar-success-popup').style.display !== 'flex') {
+        arCatTarget.classList.add('cat-teleporting');
+        setTimeout(() => {
+            teleportCat();
+            arCatTarget.classList.remove('cat-teleporting');
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 200);
+    }
+}
+
+function teleportCat() {
+    catX = 15 + Math.random() * 70; // X từ 15% đến 85%
+    catY = 30 + Math.random() * 50; // Y từ 30% đến 80%
+    arCatTarget.style.left = catX + '%';
+    arCatTarget.style.top = catY + '%';
+}
+
+arCatTarget.addEventListener('touchstart', startCatching, {passive: false});
+arCatTarget.addEventListener('touchend', stopCatching);
+arCatTarget.addEventListener('touchcancel', stopCatching);
+arCatTarget.addEventListener('mousedown', startCatching);
+document.addEventListener('mouseup', stopCatching);
+
+// 4. KẾT THÚC VÀ ĐƯA MÈO VỀ NHÀ
+window.hoanThanhBatMeo = function() {
+    window.dongARCat();
+    document.getElementById('cat-missing-note').style.display = 'none';
+    const cat = document.getElementById('cat-assistant');
+    if(cat) {
+        cat.style.display = 'block';
+    }
+    alert("Bắt Mèo thành công! Nó sẽ ngoan ngoãn ở nhà!");
+};
+
+// 5. HIỆU ỨNG PHÁO HOA BẰNG CANVAS TỰ CODE
+function bungPhaoHoa() {
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    
+    let particles = [];
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+
+    for (let i = 0; i < 100; i++) {
+        particles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 0.5) * 20 - 5,
+            radius: Math.random() * 4 + 2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeParticles = 0;
+        particles.forEach(p => {
+            if (p.alpha <= 0) return;
+            activeParticles++;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.5; // Trọng lực rớt xuống
+            p.alpha -= 0.015; // Phai màu dần
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${hexToRgb(p.color)}, ${p.alpha})`;
+            ctx.fill();
+        });
+        if (activeParticles > 0) requestAnimationFrame(draw);
+    }
+    
+    function hexToRgb(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        return `${(bigint >> 16) & 255}, ${(bigint >> 8) & 255}, ${bigint & 255}`;
+    }
+    draw();
+}
 
 </script>
 </body>

@@ -385,6 +385,62 @@
     opacity: 0;
     transform: scale(0);
 }
+
+/* ======== DYNAMIC ISLAND - BỘ LỚP BẢN ĐỒ ============== */
+#dynamic-layer-island {
+    position: absolute; top: 140px; right: 15px;
+    width: 50px; height: 50px;
+    background: rgba(250, 250, 255, 0.85); /* Kính mờ trắng đục sang trọng */
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 0, 0, 0.08); /* Viền siêu mảnh 1px */
+    border-radius: 25px; /* Bo tròn thành viên nhộng */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden; z-index: 1000;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* Hiệu ứng nảy đàn hồi */
+}
+
+#dynamic-layer-island.expanded {
+    height: 200px; /* Nở dọc xuống chứa đủ 4 nút */
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+
+.island-btn {
+    width: 50px; height: 50px; flex-shrink: 0;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 20px; cursor: pointer; color: #888; /* Trạng thái TẮT: Màu xám chìm */
+    transition: color 0.3s, transform 0.3s, background 0.3s;
+    border-radius: 50%;
+}
+
+#btn-main-island { z-index: 2; background: transparent; font-size: 24px; color: #28a745; }
+#dynamic-layer-island.expanded #btn-main-island {
+    transform: rotate(180deg); color: #dc3545; /* Đỏ cảnh báo nút Đóng */
+}
+
+.island-items {
+    display: flex; flex-direction: column; opacity: 0;
+    transform: translateY(-30px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+#dynamic-layer-island.expanded .island-items { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* Trạng thái BẬT của từng nút (Màu tương phản) */
+.island-btn.active-poi { color: #6f42c1; background: rgba(111, 66, 193, 0.1); }
+.island-btn.active-route { color: #004BAd; background: rgba(0, 75, 173, 0.1); }
+.island-btn.active-terrain { color: #28a745; background: rgba(40, 167, 69, 0.1); font-size: 22px; }
+
+/* BẢNG MENU POI ĐƯỢC LÀM LẠI CHO HỢP TONE */
+#poi-panel {
+    position: absolute; right: 75px; width: 230px;
+    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+    border: 1px solid rgba(111, 66, 193, 0.3); border-radius: 20px;
+    padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1001; 
+    opacity: 0; visibility: hidden; transform: scale(0.8) translateX(20px); 
+    transform-origin: right bottom; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#poi-panel.show { opacity: 1; visibility: visible; transform: scale(1) translateX(0); }
          
     </style>
 </head>
@@ -448,49 +504,51 @@
 
 <!-- 2. NÚT BỤI MỊN  -->
 <button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng kk <br>🔴 OFF</button>
-<!-- NÚT BẢN ĐỒ ĐỊA HÌNH (Đường bình độ - Bên phải) -->
-<button id="btn-dia-hinh" onclick="window.toggleDiaHinh()" style="position: absolute; top: 140px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #28a745; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.3s;">Địa hình<br>⛰️ OFF</button>
-
-<<!-- NÚT BẬT MENU TIỆN ÍCH -->
-<button id="btn-poi-menu" onclick="window.togglePoiMenu(event)" style="position: absolute; top: 255px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #6f42c1; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; transition: 0.3s;">Tiện ích<br>🏥 OFF</button>
-
-<!-- BẢNG MENU LỌC ĐỊA ĐIỂM (Animaton phình to) -->
-<div id="poi-panel" style="position: absolute; top: 310px; right: 15px; width: 160px; background: rgba(255, 255, 255, 0.98); border: 2px solid #6f42c1; border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 1001; opacity: 0; visibility: hidden; transform: scale(0.8); transform-origin: top right; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; text-align: left;">
-    <span onclick="window.dongPoiMenu()" style="position: absolute; top: 5px; right: 12px; font-size: 24px; font-weight: bold; color: #888; cursor: pointer;">&times;</span>
-    <h4 style="margin: 0 0 10px 0; color: #6f42c1; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">Chọn tiện ích</h4>
-    
-    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-weight: bold; color: #333;">
-        <label><input type="checkbox" class="poi-filter" value="park"> 🌳 Công viên</label>
-        <label><input type="checkbox" class="poi-filter" value="hospital"> 🏥 Bệnh viện</label>
-        <label><input type="checkbox" class="poi-filter" value="school"> 🏫 Trường học</label>
-        <label><input type="checkbox" class="poi-filter" value="drinking_water"> 🚰 Trạm nước</label>
+<!-- ==========================================
+     HỆ THỐNG DYNAMIC ISLAND (LỚP BẢN ĐỒ BÊN PHẢI)
+=========================================== -->
+<div id="dynamic-layer-island">
+    <!-- Nút Lõi (Đầu viên nhộng) -->
+    <div id="btn-main-island" class="island-btn" onclick="window.toggleIslandMenu(event)" title="Lớp bản đồ">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5zm0 7.5l-10-5v2.5l10 5 10-5V9.5l-10 5zm0 5l-10-5v2.5l10 5 10-5V14.5l-10 5z"/>
+        </svg>
     </div>
-    
-    <button onclick="window.taiLopBanDoChonLoc()" style="margin-top: 15px; width: 100%; background: #6f42c1; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Xác nhận</button>
+    <!-- 3 Nút Chức Năng (Bụng viên nhộng) -->
+    <div class="island-items">
+        <div id="btn-dia-hinh" class="island-btn" onclick="window.toggleDiaHinh(event)" title="Địa hình">⛰️</div>
+        <div id="btn-route-ab" class="island-btn" onclick="window.toggleRouteMode(event)" title="Lộ trình A-B" style="font-weight: 900; font-size: 15px;">A-B</div>
+        <div id="btn-poi-menu" class="island-btn" onclick="window.togglePoiMenu(event)" title="Tiện ích">🏥</div>
+    </div>
 </div>
-        
-<!-- NÚT TẠO LỘ TRÌNH A-B -->
-<button id="btn-route-ab" onclick="window.toggleRouteMode()" style="position: absolute; top: 195px; right: 15px; width: 50px; height: 50px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000; padding: 5px; display: flex; justify-content: center; align-items: center; transition: all 0.3s;">
-    <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">
-        <!-- Hàm vẽ Đường cong vòng vèo (Bézier Curve) -->
-        <path d="M 28 65 C 5 105, 95 105, 72 65" stroke="#333" stroke-width="8" fill="none" stroke-linecap="round"/>
-        
-        <!-- Hàm vẽ Lộ trình nét đứt -->
-        <path d="M 28 65 L 72 65" stroke="#333" stroke-width="6" stroke-dasharray="6, 8" fill="none" stroke-linecap="round"/>
-        
-        <!-- Hàm Ma trận vẽ Ghim Xanh (Điểm A) -->
-        <g transform="translate(12, 25) scale(1)">
-            <path d="M16 0 C7.1 0 0 7.1 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.1 24.8 0 16 0 Z" fill="#004BAd" />
-            <circle cx="16" cy="15" r="6" fill="#fff" />
-        </g>
-        
-        <!-- Hàm Ma trận vẽ Ghim Đỏ (Điểm B) -->
-        <g transform="translate(55, 10) scale(1)">
-            <path d="M16 0 C7.1 0 0 7.1 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.1 24.8 0 16 0 Z" fill="#dc3545" />
-            <circle cx="16" cy="15" r="6" fill="#fff" />
-        </g>
-    </svg>
-</button>
+
+<!-- BẢNG MENU LỌC ĐỊA ĐIỂM (Căn đáy theo icon Tiện ích) -->
+<div id="poi-panel">
+    <span onclick="window.dongPoiMenu()" style="position: absolute; top: 5px; right: 12px; font-size: 24px; font-weight: bold; color: #888; cursor: pointer;">&times;</span>
+    <h4 style="margin: 0 0 10px 0; color: #6f42c1; border-bottom: 1px dashed #eee; padding-bottom: 5px;">Chọn tiện ích</h4>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; color: #444; max-height: 250px; overflow-y: auto;">
+        <!-- Leisure (Giải trí/Thư giãn) -->
+        <label><input type="checkbox" class="poi-filter" value="park"> 🌳 Công viên</label>
+        <label><input type="checkbox" class="poi-filter" value="pitch"> ⚽ Sân bóng</label>
+        <label><input type="checkbox" class="poi-filter" value="sports_centre"> 🏋️ Thể thao</label>
+        <label><input type="checkbox" class="poi-filter" value="fitness_centre"> 🤸 Phòng Gym</label>
+        <!-- Amenity (Tiện ích sinh hoạt) -->
+        <label><input type="checkbox" class="poi-filter" value="hospital"> 🏥 Bệnh viện</label>
+        <label><input type="checkbox" class="poi-filter" value="pharmacy"> 💊 Nhà thuốc</label>
+        <label><input type="checkbox" class="poi-filter" value="drinking_water"> 🚰 Nước uống</label>
+        <label><input type="checkbox" class="poi-filter" value="cafe"> ☕ Cafe</label>
+        <label><input type="checkbox" class="poi-filter" value="restaurant"> 🍽️ Nhà hàng</label>
+        <label><input type="checkbox" class="poi-filter" value="fast_food"> 🍔 Đồ ăn nhanh</label>
+        <label><input type="checkbox" class="poi-filter" value="toilets"> 🚽 WC</label>
+        <label><input type="checkbox" class="poi-filter" value="parking"> 🅿️ Bãi đỗ xe</label>
+        <label><input type="checkbox" class="poi-filter" value="fuel"> ⛽ Cây xăng</label>
+        <label><input type="checkbox" class="poi-filter" value="atm"> 🏧 Trạm ATM</label>
+        <label><input type="checkbox" class="poi-filter" value="bank"> 🏦 Ngân hàng</label>
+        <label><input type="checkbox" class="poi-filter" value="school"> 🏫 Trường học</label>
+    </div>
+    <button onclick="window.taiLopBanDoChonLoc()" style="margin-top: 15px; width: 100%; background: #6f42c1; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(111,66,193,0.3);">Bật hiển thị</button>
+</div>
 <!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
 <button id="btn-radar-share" onclick="window.toggleRadarAndShare()" style="position: absolute; bottom: 220px; left: 15px; background: #eaeaea; border: 4px solid #b0b0b0; border-radius: 50%; width: 55px; height: 55px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000; transition: all 0.3s;" title="Bật/Tắt Radar Cộng đồng">
     <svg viewBox="0 0 40 40" style="width: 32px; height: 32px;">
@@ -1594,6 +1652,10 @@ window.hienThiRecap = function() {
         document.getElementById('pause-btn').style.display = 'none';
         document.getElementById('end-btn').style.display = 'none';
         isTracking = false;
+            //  HIỆN LẠI VIÊN NHỘNG LỚP BẢN ĐỒ
+        if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
+
+
 
         return; //  Chặn ở đây, k chạy các code hiện Recap ở phía dưới nữa!
     }
@@ -1716,6 +1778,9 @@ window.luuTienTrinh = function() {
     if (nav) nav.classList.remove('nav-hidden');
     const timer = document.getElementById('time-display');
     if (timer) timer.style.display = 'none';
+    //  HIỆN LẠI VIÊN NHỘNG LỚP BẢN ĐỒ
+    if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
+
 };
 
 // === BIẾN TOÀN CỤC CHO TÍNH NĂNG NHẤN GIỮ ===
@@ -2202,7 +2267,10 @@ window.startRunningProxy = function() {
     
     // 3. Hiện đồng hồ 
     document.getElementById('time-display').style.display = 'block';
-    
+
+        //  CHO TÀNG HÌNH VIÊN NHỘNG LỚP BẢN ĐỒ
+    if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'none';
+
     // 4. Kích hoạt Hàm theo dõi GPS lõi cũ
     if (typeof startTrackingAction === 'function') {
         startTrackingAction();
@@ -5054,6 +5122,147 @@ window.batDauDiTimMeo = function() {
     alert("📍 Đã dò ra vị trí Mèo! Đường đi đã được vẽ. Hãy xách giày lên đi bộ đến đó, khi nào cách Mèo dưới 20m, nút Camera sẽ mở khóa!");
 };
 
+// NÃO BỘ DYNAMIC ISLAND VÀ LỚP BẢN ĐỒ
+// ==========================================
+let isIslandOpen = false;
+
+window.toggleIslandMenu = function(e) {
+    if(e) e.stopPropagation();
+    isIslandOpen = !isIslandOpen;
+    const island = document.getElementById('dynamic-layer-island');
+    if (isIslandOpen) {
+        island.classList.add('expanded');
+    } else {
+        island.classList.remove('expanded');
+        window.dongPoiMenu(); // Tắt luôn bảng POI nếu đang mở
+    }
+};
+
+// Đóng viên nhộng khi chạm ra ngoài
+document.addEventListener('click', function(e) {
+    const island = document.getElementById('dynamic-layer-island');
+    const poiPanel = document.getElementById('poi-panel');
+    if (isIslandOpen && island && !island.contains(e.target) && (!poiPanel || !poiPanel.contains(e.target))) {
+        window.toggleIslandMenu();
+    }
+});
+
+// 1. CHUYỂN MÀU NÚT ĐỊA HÌNH
+window.toggleDiaHinh = function(e) {
+    if(e) e.stopPropagation();
+    window.isHienDiaHinh = !window.isHienDiaHinh;
+    const btn = document.getElementById('btn-dia-hinh');
+    if (window.isHienDiaHinh) {
+        btn.classList.add('active-terrain');
+        if (!lopDiaHinh) lopDiaHinh = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 });
+        if (typeof map !== 'undefined') lopDiaHinh.addTo(map);
+    } else {
+        btn.classList.remove('active-terrain');
+        if (lopDiaHinh && typeof map !== 'undefined') map.removeLayer(lopDiaHinh);
+    }
+};
+
+// 2. CHUYỂN MÀU NÚT LỘ TRÌNH A-B
+window.toggleRouteMode = function(e) {
+    if(e) e.stopPropagation();
+    window.isRouteMode = !window.isRouteMode;
+    const btn = document.getElementById('btn-route-ab');
+    if (window.isRouteMode) {
+        btn.classList.add('active-route');
+        window.routeLayerGroup.addTo(map); window.markerLayerGroup.addTo(map);
+        alert("📍 Bật chế độ Lộ trình A-B! Bấm vào bản đồ để chọn điểm.");
+    } else {
+        btn.classList.remove('active-route');
+        window.pointA = null; window.pointB = null;
+        if(window.markerA) map.removeLayer(window.markerA);
+        if(window.markerB) map.removeLayer(window.markerB);
+        window.routeLayerGroup.clearLayers(); window.markerLayerGroup.clearLayers();
+        map.removeLayer(window.routeLayerGroup); map.removeLayer(window.markerLayerGroup);
+    }
+};
+
+// 3. MỞ BẢNG POI VÀ CĂN ĐÁY VỚI VIÊN NHỘNG
+window.togglePoiMenu = function(e) {
+    if(e) e.stopPropagation();
+    const menu = document.getElementById('poi-panel');
+    const island = document.getElementById('dynamic-layer-island');
+    
+    if (menu.classList.contains('show')) { window.dongPoiMenu(); return; }
+    
+    // Thuật toán dóng mép đáy bảng bằng mép đáy viên nhộng
+    if (island) {
+        const rect = island.getBoundingClientRect();
+        menu.style.top = 'auto';
+        menu.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+    }
+    menu.classList.add('show');
+};
+
+window.dongPoiMenu = function() {
+    const menu = document.getElementById('poi-panel');
+    if(menu) menu.classList.remove('show');
+};
+
+// 4. LOAD GEOJSON FULL ĐỊA ĐIỂM
+window.taiLopBanDoChonLoc = function() {
+    window.dongPoiMenu();
+    const btn = document.getElementById('btn-poi-menu');
+    let selectedFilters = Array.from(document.querySelectorAll('.poi-filter:checked')).map(cb => cb.value);
+    
+    if (selectedFilters.length === 0) {
+        map.removeLayer(window.poiLayerGroup); window.poiLayerGroup.clearLayers();
+        btn.classList.remove('active-poi');
+        return;
+    }
+    
+    btn.classList.add('active-poi');
+    window.poiLayerGroup.clearLayers(); window.poiLayerGroup.addTo(map);
+    
+    fetch('diem_cong_cong.geojson')
+    .then(res => res.json())
+    .then(data => {
+        L.geoJSON(data, {
+            filter: function (feature) { 
+                return selectedFilters.includes(feature.properties.leisure) || selectedFilters.includes(feature.properties.amenity); 
+            },
+            pointToLayer: function (feature, latlng) {
+                let iconStr = "📍";
+                let nameStr = feature.properties.name || "Tiện ích cộng đồng";
+                
+                const propL = feature.properties.leisure;
+                const propA = feature.properties.amenity;
+                
+                if (propL === 'park') iconStr = "🌳";
+                else if (propL === 'pitch') iconStr = "⚽";
+                else if (propL === 'sports_centre') iconStr = "🏋️";
+                else if (propL === 'fitness_centre') iconStr = "🤸";
+                else if (propA === 'hospital') iconStr = "🏥";
+                else if (propA === 'pharmacy') iconStr = "💊";
+                else if (propA === 'drinking_water') iconStr = "🚰";
+                else if (propA === 'cafe') iconStr = "☕";
+                else if (propA === 'restaurant') iconStr = "🍽️";
+                else if (propA === 'fast_food') iconStr = "🍔";
+                else if (propA === 'toilets') iconStr = "🚽";
+                else if (propA === 'parking') iconStr = "🅿️";
+                else if (propA === 'fuel') iconStr = "⛽";
+                else if (propA === 'atm') iconStr = "🏧";
+                else if (propA === 'bank') iconStr = "🏦";
+                else if (propA === 'school') iconStr = "🏫";
+                
+                let iconHtml = L.divIcon({ className: '', html: `<div style="font-size:24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));">${iconStr}</div>`, iconSize: L.point(30, 30), iconAnchor: L.point(15, 30) });
+                let marker = L.marker(latlng, { icon: iconHtml });
+                
+                marker.on('click', function() {
+                    let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+                    let actionButtons = window.isRouteMode ? (!window.pointA ? `<button style="${btnStyle} background:#28a745;" onclick="window.setPointA(${latlng.lat}, ${latlng.lng})">🟢 Chọn làm Điểm A</button>` : `<button style="${btnStyle} background:#dc3545;" onclick="window.setPointB(${latlng.lat}, ${latlng.lng})">🔴 Chọn làm Điểm B</button>`) : `<button style="${btnStyle} background:#004BAd;" onclick="window.routeFromCurrentTo(${latlng.lat}, ${latlng.lng})">📍 Chỉ đường đến đây</button>`;
+                    marker.bindPopup(`<div style="text-align:center; min-width: 150px;"><div style="font-size:24px;">${iconStr}</div><strong style="color:#004BAd;">${nameStr}</strong><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">${actionButtons}</div>`).openPopup();
+                });
+                return marker;
+            }
+        }).addTo(window.poiLayerGroup);
+    }).catch(e => console.warn("Lỗi tải POI GeoJSON"));
+};
+    
 </script>
 </body>
 </html>

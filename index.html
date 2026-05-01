@@ -2342,10 +2342,15 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
                     document.getElementById(distId).innerHTML = "Không tìm thấy đường";
                 }
             })
-            .catch(err => {
-                console.error("Lỗi OSRM:", err);
-                document.getElementById(distId).innerHTML = "Lỗi tuyến đường";
-            });
+        .catch(err => {
+        console.warn("Lỗi OSRM:", err);
+        // Thất bại duyên dáng: Nối đường chim bay nét đứt
+        const fallbackCoords = [[myLat, myLng], [friendLat, friendLng]];
+        const polyline = L.polyline(fallbackCoords, { color: '#9E9E9E', weight: 5, dashArray: '6, 6' }).addTo(mMap);
+        mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
+        const khoangCachAo = (mMap.distance([myLat, myLng], [friendLat, friendLng]) / 1000).toFixed(1);
+        document.getElementById(distId).innerHTML = `~ ${khoangCachAo} km`;
+    });
         }
         setTimeout(() => { if(window.miniMaps[mapId]) window.miniMaps[mapId].invalidateSize(); }, 400);
     };
@@ -4136,7 +4141,25 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                     </div>
                 `).openOn(map);
         }
-    }).catch(err => console.error(err));
+    }).catch(err => {
+    console.warn("Vệ tinh OSRM sập:", err);
+    // UX/UI: Thất bại duyên dáng 
+    let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
+    let khoangCachAo = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1);
+    
+    L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
+    map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
+
+    L.popup().setLatLng([lat2, lng2]).setContent(`
+        <div style="font-weight:bold; color:#dc3545; text-align:center;">
+        📡 Máy chủ định tuyến đang nghẽn!<br>
+        Khoảng cách chim bay: ~${khoangCachAo} km<br>
+        <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+        ⭐ Lưu địa điểm này
+        </button>
+        </div>
+    `).openOn(map);
+});
 };
 
 window.luuDiaDiemCaNhan = function(lat, lng) {

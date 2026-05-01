@@ -4053,16 +4053,21 @@ window.setPointB = function(lat, lng) {
 // LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
 map.on('click', function(e) {
     if (!window.isRouteMode) return; // Nếu đang tắt chế độ Lộ trình thì không làm gì cả
-
     let lat = e.latlng.lat;
     let lng = e.latlng.lng;
-
+    
     if (!window.pointA) {
         window.setPointA(lat, lng);
     } else if (!window.pointB) {
         window.setPointB(lat, lng);
     } else {
-        if(confirm("Cậu đã chọn đủ 2 điểm rồi. Muốn chọn lại Điểm A tại đây không?")) {
+        if(confirm("Cậu đã chọn đủ 2 điểm rồi. Muốn xóa lộ trình cũ và chọn lại Điểm A tại đây không?")) {
+            // Dọn dẹp sạch sẽ tàn dư cũ trên bản đồ
+            window.routeLayerGroup.clearLayers();
+            window.markerLayerGroup.clearLayers();
+            window.pointB = null; // Reset lại điểm B
+            
+            // Cắm lại ghim A mới tinh
             window.setPointA(lat, lng);
         }
     }

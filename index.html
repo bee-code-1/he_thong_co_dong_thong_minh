@@ -620,24 +620,13 @@
     <h4 style="margin: 0 0 10px 0; color: #6f42c1; border-bottom: 1px dashed #eee; padding-bottom: 5px;">Chọn tiện ích</h4>
     
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; color: #444; max-height: 250px; overflow-y: auto;">
-        <!-- Leisure (Giải trí/Thư giãn) -->
+        <!-- Tiện ích sinh tồn cơ bản -->
         <label><input type="checkbox" class="poi-filter" value="park"> 🌳 Công viên</label>
-        <label><input type="checkbox" class="poi-filter" value="pitch"> ⚽ Sân bóng</label>
         <label><input type="checkbox" class="poi-filter" value="sports_centre"> 🏋️ Thể thao</label>
-        <label><input type="checkbox" class="poi-filter" value="fitness_centre"> 🤸 Phòng Gym</label>
-        <!-- Amenity (Tiện ích sinh hoạt) -->
         <label><input type="checkbox" class="poi-filter" value="hospital"> 🏥 Bệnh viện</label>
         <label><input type="checkbox" class="poi-filter" value="pharmacy"> 💊 Nhà thuốc</label>
         <label><input type="checkbox" class="poi-filter" value="drinking_water"> 🚰 Nước uống</label>
-        <label><input type="checkbox" class="poi-filter" value="cafe"> ☕ Cafe</label>
-        <label><input type="checkbox" class="poi-filter" value="restaurant"> 🍽️ Nhà hàng</label>
-        <label><input type="checkbox" class="poi-filter" value="fast_food"> 🍔 Đồ ăn nhanh</label>
         <label><input type="checkbox" class="poi-filter" value="toilets"> 🚽 WC</label>
-        <label><input type="checkbox" class="poi-filter" value="parking"> 🅿️ Bãi đỗ xe</label>
-        <label><input type="checkbox" class="poi-filter" value="fuel"> ⛽ Cây xăng</label>
-        <label><input type="checkbox" class="poi-filter" value="atm"> 🏧 Trạm ATM</label>
-        <label><input type="checkbox" class="poi-filter" value="bank"> 🏦 Ngân hàng</label>
-        <label><input type="checkbox" class="poi-filter" value="school"> 🏫 Trường học</label>
     </div>
     <button onclick="window.taiLopBanDoChonLoc()" style="margin-top: 15px; width: 100%; background: #6f42c1; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(111,66,193,0.3);">Bật hiển thị</button>
 </div>
@@ -5388,21 +5377,11 @@ window.taiLopBanDoChonLoc = function() {
                 const propA = feature.properties.amenity;
                 
                 if (propL === 'park') iconStr = "🌳";
-                else if (propL === 'pitch') iconStr = "⚽";
-                else if (propL === 'sports_centre') iconStr = "🏋️";
-                else if (propL === 'fitness_centre') iconStr = "🤸";
+                else if (propL === 'sports_centre' || propL === 'pitch' || propL === 'fitness_centre') iconStr = "🏋️";
                 else if (propA === 'hospital') iconStr = "🏥";
                 else if (propA === 'pharmacy') iconStr = "💊";
                 else if (propA === 'drinking_water') iconStr = "🚰";
-                else if (propA === 'cafe') iconStr = "☕";
-                else if (propA === 'restaurant') iconStr = "🍽️";
-                else if (propA === 'fast_food') iconStr = "🍔";
                 else if (propA === 'toilets') iconStr = "🚽";
-                else if (propA === 'parking') iconStr = "🅿️";
-                else if (propA === 'fuel') iconStr = "⛽";
-                else if (propA === 'atm') iconStr = "🏧";
-                else if (propA === 'bank') iconStr = "🏦";
-                else if (propA === 'school') iconStr = "🏫";
                 
                 let iconHtml = L.divIcon({ className: '', html: `<div style="font-size:24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));">${iconStr}</div>`, iconSize: L.point(30, 30), iconAnchor: L.point(15, 30) });
                 let marker = L.marker(latlng, { icon: iconHtml });

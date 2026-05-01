@@ -423,14 +423,16 @@
     </div>
 </div>
 
-<!-- TỜ GIẤY NOTE KHI MÈO BỎ NHÀ ĐI (Mặc định ẩn) -->
+<!-- TỜ GIẤY NOTE KHI MÈO BỎ NHÀ ĐI (Có đếm ngược) -->
 <div id="cat-missing-note" style="display: none; position: absolute; top: 15px; right: 15px; z-index: 2000; flex-direction: column; align-items: flex-end;">
-    <div style="background: #fff9c4; border: 1px solid #d4b895; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); transform: rotate(5deg); text-align: center; width: 90px;">
-        <span style="font-size: 24px;">🐾</span>
-        <div style="font-size: 11px; font-weight: bold; color: #d32f2f; margin-top: 5px;">Mèo đi bụi rồi!</div>
+    <div style="background: #fff9c4; border: 1px solid #d4b895; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); transform: rotate(5deg); text-align: center; width: 110px;">
+        <span style="font-size: 24px;">😿</span>
+        <div style="font-size: 11px; font-weight: bold; color: #333; margin-top: 5px;">Mèo đi bụi rồi!</div>
+        <div id="cat-countdown-timer" style="font-size: 13px; font-weight: 900; color: #dc3545; margin-top: 2px;">23:59:59</div>
     </div>
-    <button onclick="window.moManHinhBatMeo()" style="margin-top: 10px; background: #dc3545; color: white; border: 2px solid white; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: catPulse 1.5s infinite;">
-        🔍 ĐI TÌM NGAY
+    <!-- Nút này sẽ biến đổi tùy theo khoảng cách -->
+    <button id="btn-radar-meo" onclick="window.batDauDiTimMeo()" style="margin-top: 10px; background: #dc3545; color: white; border: 2px solid white; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: catPulse 1.5s infinite;">
+        🔍 ĐI TÌM MÈO
     </button>
 </div>
     
@@ -1331,6 +1333,30 @@ function initGPS() {
         
         const currentLatLng = L.latLng(lat, lng);
         latestLatLng = currentLatLng;
+        // === RADAR BẮT MÈO 20M ===
+        if (localStorage.getItem('meo_bo_nha') === 'true') {
+            let catLat = localStorage.getItem('toa_do_meo_lat');
+            let catLng = localStorage.getItem('toa_do_meo_lng');
+            if (catLat && catLng) {
+                // Đo khoảng cách chim bay từ Cậu đến Mèo
+                let khoangCachMeo = map.distance(currentLatLng, L.latLng(catLat, catLng));
+                let btnRadar = document.getElementById('btn-radar-meo');
+                
+                if (btnRadar) {
+                    if (khoangCachMeo <= 20) {
+                        // VÀO VÙNG PHỤC KÍCH! MỞ NÚT AR!
+                        btnRadar.innerHTML = "📸 MỞ CAM BẮT MÈO";
+                        btnRadar.style.background = "#28a745"; 
+                        btnRadar.onclick = window.moManHinhBatMeo;
+                    } else {
+                        // CHƯA TỚI NƠI! Hiện khoảng cách
+                        btnRadar.innerHTML = `Đang dò... (${khoangCachMeo.toFixed(0)}m)`;
+                        btnRadar.style.background = "#dc3545"; 
+                        btnRadar.onclick = window.batDauDiTimMeo;
+                    }
+                }
+            }
+        }
         
         const startBtn = document.getElementById('start-btn');
         if (startBtn && startBtn.innerText === "ĐANG KẾT NỐI GPS...") {
@@ -3328,17 +3354,17 @@ window.duoiMeo = function(e) {
     if(e) e.stopPropagation();
     if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
         window.dongMenuMeo();
-        localStorage.setItem('meo_bo_nha', 'true');
         
         // Hiệu ứng dọn đồ bay đi mất
-        catAssistant.style.transition = "transform 1s ease-in, opacity 1s ease";
-        catAssistant.style.transform = "translateY(-200px) scale(0)";
-        catAssistant.style.opacity = "0";
+        const cat = document.getElementById('cat-assistant');
+        if(cat) {
+            cat.style.transition = "transform 1s ease-in, opacity 1s ease";
+            cat.style.transform = "translateY(-200px) scale(0)";
+            cat.style.opacity = "0";
+        }
+        
         setTimeout(() => {
-            catAssistant.style.display = 'none';
-            // Bật Tờ giấy note lên (Nếu đã có code)
-            const note = document.getElementById('cat-missing-note');
-            if (note) note.style.display = 'flex';
+            window.hieuUngMeoBoNha(); // GỌI LUỒNG LOGIC VÀ ĐẾM NGƯỢC
         }, 1000);
     }
 };
@@ -4898,6 +4924,88 @@ window.xoaDiaDiemCaNhan = function(index) {
     ds.splice(index, 1); // Xóa phần tử tại vị trí index
     localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(ds));
     window.fetchRealFriends(); // Cập nhật lại giao diện One Connect ngay lập tức
+};
+
+// HỆ THỐNG RADAR TÌM MÈO BỎ TRỐN (GPS + BẢN ĐỒ 2D)
+// ==========================================
+let catCountdownInterval = null;
+
+// HÀM NÀY SẼ CHẠY KHI BẠN BẤM "ĐUỔI MÈO" TRONG MENU
+window.hieuUngMeoBoNha = function() {
+    localStorage.setItem('meo_bo_nha', 'true');
+    
+    // Hẹn giờ 20 tiếng sau (20 * 60 * 60 * 1000 mili-giây)
+    let thoiGianVe = Date.now() + (20 * 60 * 60 * 1000);
+    localStorage.setItem('meo_ve_nha_luc', thoiGianVe);
+
+    // Random tọa độ Mèo lẩn trốn (Cách khoảng 1 - 2.5km)
+    // Tạm thời lấy GPS hiện tại cộng/trừ ngẫu nhiên một lượng độ (0.01 ~ 1.1km)
+    if (typeof latestLatLng !== 'undefined' && latestLatLng) {
+        let catLat = latestLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
+        let catLng = latestLatLng.lng + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
+        localStorage.setItem('toa_do_meo_lat', catLat);
+        localStorage.setItem('toa_do_meo_lng', catLng);
+    }
+    
+    // Chuyển UI sang Tờ Giấy Note
+    const cat = document.getElementById('cat-assistant');
+    const note = document.getElementById('cat-missing-note');
+    if(cat) cat.style.display = 'none';
+    if(note) note.style.display = 'flex';
+    
+    window.chayDemNguocMeo();
+};
+
+window.chayDemNguocMeo = function() {
+    if (catCountdownInterval) clearInterval(catCountdownInterval);
+    
+    catCountdownInterval = setInterval(() => {
+        let thoiGianVe = parseInt(localStorage.getItem('meo_ve_nha_luc'));
+        let conLai = thoiGianVe - Date.now();
+        
+        if (conLai <= 0) {
+            // HẾT GIỜ! Mèo tự mò về
+            clearInterval(catCountdownInterval);
+            localStorage.setItem('meo_bo_nha', 'false');
+            alert("Mèo đi hoang chán rồi đã tự mò về nhà!");
+            document.getElementById('cat-missing-note').style.display = 'none';
+            document.getElementById('cat-assistant').style.display = 'block';
+            if(window.catMarker2D) map.removeLayer(window.catMarker2D);
+            if(window.routeLayerGroup) window.routeLayerGroup.clearLayers();
+        } else {
+            // Cập nhật đồng hồ
+            let h = Math.floor((conLai / (1000 * 60 * 60)) % 24);
+            let m = Math.floor((conLai / 1000 / 60) % 60);
+            let s = Math.floor((conLai / 1000) % 60);
+            document.getElementById('cat-countdown-timer').innerText = 
+                `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+    }, 1000);
+};
+
+window.catMarker2D = null;
+window.batDauDiTimMeo = function() {
+    let catLat = localStorage.getItem('toa_do_meo_lat');
+    let catLng = localStorage.getItem('toa_do_meo_lng');
+    
+    if (!catLat || !catLng || !latestLatLng) {
+        alert("Chưa dò được sóng GPS của Mèo! Hãy di chuyển thêm chút nữa!");
+        return;
+    }
+    
+    // Sử dụng thuật toán vẽ đường AQI có sẵn của anh em mình
+    window.routeFromCurrentTo(catLat, catLng);
+    
+    // Vẽ cái mặt mèo lấp lánh lên bản đồ 2D
+    if (window.catMarker2D) map.removeLayer(window.catMarker2D);
+    let catIcon = L.divIcon({ 
+        className:'', 
+        html: `<div style="font-size:35px; filter: drop-shadow(0 0 10px #ffeb3b); animation: catPulse 1.5s infinite;">😼</div>`, 
+        iconSize: L.point(40,40), iconAnchor: L.point(20,20) 
+    });
+    window.catMarker2D = L.marker([catLat, catLng], { icon: catIcon }).addTo(map);
+    
+    alert("📍 Đã đánh dấu vị trí của Mèo trên bản đồ! Hãy tới đó, nút Bắt Mèo sẽ mở khóa!");
 };
 
 </script>

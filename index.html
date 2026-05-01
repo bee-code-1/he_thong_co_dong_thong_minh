@@ -1734,36 +1734,27 @@ window.hienThiRecap = function() {
     const rSpeed = document.getElementById('recap-speed');
     if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
 
-    // KỊCH BẢN MORPHING BAY LÊN TRUNG TÂM VÀ NHÈ BẢNG RECAP
-    const endBtn = document.getElementById('end-btn');
-    if (endBtn) endBtn.innerText = "🎉 CHÚC MỪNG 🎉";
-    const btnContainer = document.getElementById('action-btns-container');
-    btnContainer.classList.add('morphing');
-
-    // Đợi 600ms cho Viên thuốc bay tới giữa màn hình rồi bung lụa
-    setTimeout(() => {
-        btnContainer.style.opacity = '0'; // Tàng hình viên thuốc
-        const rModal = document.getElementById('recap-modal');
-        if(rModal) {
-            rModal.style.display = 'flex';
-            setTimeout(() => rModal.classList.add('show'), 50); // Nảy bảng ra
-            
-            // Mèo chúc mừng
-            if (typeof catBubble !== 'undefined') {
-                const postMsgs = ["Đỉnh đấy! Mèo khen cậu ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi cậu", "Đến giờ đớp rồi 😋"];
-                catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
-                catBubble.style.backgroundColor = '#fff9c4';
-                catBubble.style.border = '2px solid #ffc107';
-                catBubble.style.color = '#333';
-                catBubble.style.display = 'block';
-                setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-                setTimeout(() => {
-                    catBubble.classList.remove('show-bubble');
-                    setTimeout(() => catBubble.style.display = 'none', 600);
-                }, 6000);
-            }
+    // HIỆN BẢNG RECAP
+    const rModal = document.getElementById('recap-modal');
+    if(rModal) {
+        rModal.style.display = 'flex';
+        setTimeout(() => rModal.classList.add('show'), 50); // Nảy bảng ra
+        
+        // Mèo chúc mừng
+        if (typeof catBubble !== 'undefined') {
+            const postMsgs = ["Đỉnh đấy! Mèo khen cậu ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi cậu", "Đến giờ đớp rồi 😋"];
+            catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
+            catBubble.style.backgroundColor = '#fff9c4';
+            catBubble.style.border = '2px solid #ffc107';
+            catBubble.style.color = '#333';
+            catBubble.style.display = 'block';
+            setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+            setTimeout(() => {
+                catBubble.classList.remove('show-bubble');
+                setTimeout(() => catBubble.style.display = 'none', 600);
+            }, 6000);
         }
-    }, 600);
+    }
 };
 
 // === HÀM LƯU TIẾN TRÌNH  ===
@@ -1808,24 +1799,18 @@ window.luuTienTrinh = function() {
         }).catch(err => console.error("Lỗi lưu tiến trình:", err));
     }
 
-    // KỊCH BẢN THU HỒI BẢNG RECAP THÀNH VIÊN THUỐC VÀ RỚT XUỐNG
+    // KỊCH BẢN ĐÓNG RECAP RỒI MỚI GỘP NÚT
     const rModal = document.getElementById('recap-modal');
     if (rModal) rModal.classList.remove('show'); // Thu nhỏ bảng lại
 
-    // Đợi 400ms cho bảng biến mất hẳn
+    // Đợi 400ms cho bảng biến mất hẳn rồi mới gộp 2 nút thành 1
     setTimeout(() => {
         if (rModal) rModal.style.display = 'none';
         
         const btnContainer = document.getElementById('action-btns-container');
         if (btnContainer) {
-            btnContainer.style.opacity = '1'; // Hiện lại viên thuốc ở giữa màn hình
-            btnContainer.classList.remove('morphing'); // Rớt xuống đáy
-            
-            // Đợi nó rớt xuống đáy (600ms) rồi gộp lại thành nút BẮT ĐẦU
-            setTimeout(() => {
-                btnContainer.classList.remove('running');
-                document.getElementById('end-btn').innerText = "⏹ KẾT THÚC"; // Trả lại text
-            }, 600);
+            btnContainer.classList.remove('running'); // Thu 2 nút thành nút Bắt Đầu
+            document.getElementById('end-btn').innerText = "⏹ KẾT THÚC"; // Trả lại text phòng hờ
         }
     }, 400);
 
@@ -2331,7 +2316,13 @@ window.startRunningProxy = function() {
     // 2. Đổi giao diện nút 
     //  KÍCH HOẠT ANIMATION TÁCH NÚT
     document.getElementById('action-btns-container').classList.add('running');
-
+    // Tẩy sạch màu và chữ cũ của nút Tạm Dừng do chặng trước để lại
+    const pBtn = document.getElementById('pause-btn');
+    if (pBtn) {
+        pBtn.innerText = '⏸ TẠM DỪNG';
+        pBtn.style.backgroundColor = '';
+        pBtn.style.color = '';
+    }
     
     // 3. Hiện đồng hồ 
     document.getElementById('time-display').style.display = 'block';

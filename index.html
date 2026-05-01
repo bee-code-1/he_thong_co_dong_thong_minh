@@ -2182,46 +2182,47 @@ window.capNhatStoryBanBe = function(allUsers) {
 // 2. VẼ BẢNG TIN (FEED) TRÊN TAB 4
 window.veBangTinCongDong = function(allUsers) {
     const feedContainer = document.getElementById('danh-sach-cong-dong');
+    if (!feedContainer) return;
     const currentUser = localStorage.getItem('currentUser');
-    if (!allUsers || !currentUser) return;
-
     let html = '';
-    // Lấy tọa độ hiện tại của bản thân để tính khoảng cách
-    let myLat = (typeof latestLatLng !== 'undefined' && latestLatLng) ? latestLatLng.lat : null;
-    let myLng = (typeof latestLatLng !== 'undefined' && latestLatLng) ? latestLatLng.lng : null;
 
     for (const u in allUsers) {
         if (u === currentUser) continue; // Bỏ qua bản thân
-        
         const data = allUsers[u];
         const isFriend = window.danhSachBanBeThuc.includes(u);
-const now = Date.now();
-const lastUpdate = data.thoi_gian_cap_nhat || now;
-const diffMinutes = Math.floor((now - lastUpdate) / 60000);
-const isOnline = diffMinutes < 10; // Dưới 10 phút tính là Online
 
-// Cài đặt màu chấm trạng thái
-const dotColor = isOnline ? "#00C853" : "#9E9E9E";
-let statusText = "";
+        // BỘ NÃO TÍNH THỜI GIAN THỰC TỪ FIREBASE
+        const now = Date.now();
+        const lastUpdate = data.thoi_gian_cap_nhat || now;
+        const diffMinutes = Math.floor((now - lastUpdate) / 60000);
+        const isOnline = diffMinutes < 10; // Dưới 10 phút tính là Online
 
-if (isOnline) {
-    if (data.toa_do_lat && data.toa_do_lng && myLat && myLng) {
-        const khoangCach = L.latLng(myLat, myLng).distanceTo(L.latLng(data.toa_do_lat, data.toa_do_lng));
-        statusText = "📍 Cách bạn: " + (khoangCach / 1000).toFixed(1) + " km";
-    } else {
-        statusText = "Đang hoạt động";
-    }
-} else {
-    // Hiển thị thời gian thực ng dùng off
-    if (diffMinutes < 60) statusText = `Hoạt động ${diffMinutes} phút trước`;
-    else if (diffMinutes < 1440) statusText = `Hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
-    else statusText = `Hoạt động ${Math.floor(diffMinutes / 1440)} ngày trước`;
-}
-}
+        // Cài đặt màu chấm trạng thái
+        const dotColor = isOnline ? "#00C853" : "#9E9E9E";
+        let statusText = "";
+
+        if (isOnline) {
+            // Lấy tọa độ GPS thật để tính khoảng cách
+            let myLat = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lat : null;
+            let myLng = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lng : null;
+
+            if (data.toa_do_lat && data.toa_do_lng && myLat && myLng) {
+                const khoangCach = L.latLng(myLat, myLng).distanceTo(L.latLng(data.toa_do_lat, data.toa_do_lng));
+                statusText = "📍 Cách bạn: " + (khoangCach / 1000).toFixed(1) + " km";
+            } else {
+                statusText = "Đang hoạt động";
+            }
+        } else {
+            // Hiển thị thời gian thực người ta off
+            if (diffMinutes < 60) statusText = `Hoạt động ${diffMinutes} phút trước`;
+            else if (diffMinutes < 1440) statusText = `Hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
+            else statusText = `Hoạt động ${Math.floor(diffMinutes / 1440)} ngày trước`;
+        }
 
         const pinColor = isFriend ? "#004BAd" : "#dc3545"; // Bạn bè viền xanh, người lạ viền đỏ
         const avatarUrl = data.avatar ? data.avatar : `https://ui-avatars.com/api/?name=${u}&background=random`;
 
+        // GIAO DIỆN MẠNG XÃ HỘI MỚI NHẤT
         html += `
         <div onclick="window.moHoSoCongKhai('${u}')" style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
             <!-- Cụm Avatar kiểu Pin Bản đồ -->
@@ -2229,9 +2230,7 @@ if (isOnline) {
                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
                     <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
                 </svg>
-                <!-- ẢNH AVATAR  -->
                 <img src="${avatarUrl}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
-                <!-- CHẤM TRẠNG THÁI  -->
                 <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
             </div>
             
@@ -2247,7 +2246,7 @@ if (isOnline) {
     }
     
     feedContainer.innerHTML = html === '' ? '<div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Chưa có ai quanh đây...</div>' : html;
-};
+}
 
 // 3. LOGIC GỬI LỜI MỜI KẾT BẠN
 window.guiLoiMoiKetBan = function() {

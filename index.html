@@ -565,23 +565,26 @@
 <!-- LAYER TAB 4: CỘNG ĐỒNG -->
 <div id="tab-4" class="tab-screen" style="background-color: #fff1e6; overflow-y: auto; padding-bottom: 100px; pointer-events: auto;">
     
-        <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Cố định khi cuộn) -->
+        <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Giao diện Mạng Xã Hội) -->
         <div style="position: sticky; top: 0; background: #fff1e6; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <!-- Thanh tìm kiếm -->
+            <!-- Thanh tìm kiếm (Ấn Enter để tìm hồ sơ) -->
             <div style="flex: 1; position: relative;">
                 <span style="position: absolute; left: 10px; top: 8px; color: #888;">🔍</span>
-                <input type="text" id="tim-kiem-user" placeholder="Tìm tên kết bạn..." style="width: 100%; padding: 8px 10px 8px 35px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; background: #eaeaea; font-weight: bold; color: #333;">
+                <input type="text" id="tim-kiem-user" placeholder="Tìm người dùng..." onkeypress="if(event.key === 'Enter') window.timVaMoHoSo()" style="width: 100%; padding: 8px 10px 8px 35px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; background: #eaeaea; font-weight: bold; color: #333;">
             </div>
-
-            <!-- Nút Tìm & Thêm -->
-            <button onclick="window.guiLoiMoiKetBan()" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Thêm</button>
-
-            <!-- Nút Danh sách Bạn bè -->
-            <div onclick="window.moDanhSachBanBe()" style="background: #eaeaea; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center;" title="Danh sách bạn bè">
-                👥
+            
+            <!-- Nút Messenger Hub (Danh sách Bạn bè & Chat) -->
+            <div onclick="window.moMessengerHub()" style="background: #28a745; color: white; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Tin nhắn & Bạn bè">
+                💬
             </div>
-
-            <!-- NÚT HỒ SƠ CÁ NHÂN (Thay thế vị trí của nút Thông báo) -->
+            
+            <!-- Nút Thông Báo (Dời từ Tab 5 sang) -->
+            <div onclick="window.moThongBao()" style="background: #eaeaea; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 18px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; position: relative;" title="Thông báo">
+                🔔
+                <span id="cham-do-thong-bao" style="display: none; position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; border: 2px solid white;"></span>
+            </div>
+            
+            <!-- NÚT HỒ SƠ CÁ NHÂN -->
             <div onclick="window.moHoSo()" style="min-width: 40px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #007bff; cursor: pointer; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; background: white;" title="Cài đặt tài khoản">
                 <img id="avatar-btn-img" src="https://ui-avatars.com/api/?name=User" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" />
             </div>
@@ -2201,33 +2204,26 @@ window.veBangTinCongDong = function(allUsers) {
         const avatarUrl = data.avatar ? data.avatar : `https://ui-avatars.com/api/?name=${u}&background=random`;
 
         html += `
-        <div style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
-            
+        <div onclick="window.moHoSoCongKhai('${u}')" style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
             <!-- Cụm Avatar kiểu Pin Bản đồ -->
-            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px;">
+            <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
                     <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />
                 </svg>
-                
                 <!-- ẢNH AVATAR  -->
                 <img src="${avatarUrl}" style="position: absolute; top: 4px; left: 5px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box;" />
-                
                 <!-- CHẤM TRẠNG THÁI  -->
                 <span style="position: absolute; bottom: 8px; right: -2px; width: 14px; height: 14px; background: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 5;"></span>
             </div>
-
+            
             <!-- Thông tin -->
-            <div style="flex: 1;">
+            <div style="flex: 1; text-align: left;">
                 <div style="font-weight: bold; font-size: 16px; color: #333; margin-bottom: 5px;">${u}</div>
                 <div style="font-size: 13px; font-weight: bold; color: #555; background: #dcdcdc; display: inline-block; padding: 3px 8px; border-radius: 10px;">${statusText}</div>
             </div>
-
-            <!-- Nút kết bạn (Nếu là người lạ) -->
-            ${!isFriend ? `
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <button onclick="window.guiLoiMoiKetBanCho('${u}')" style="background: rgba(255,255,255,0.7); border: none; border-radius: 8px; padding: 5px; cursor: pointer; font-size: 16px;">👤+</button>
-            </div>
-            ` : ''}
+            
+            <!-- Nút biểu tượng (Chỉ để trang trí vì nhấn toàn khung sẽ mở Hồ Sơ) -->
+            ${!isFriend ? `<div style="color: #28a745; font-size: 20px;">👤+</div>` : `<div style="color: #004BAd; font-size: 20px;">💬</div>`}
         </div>`;
     }
     

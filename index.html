@@ -15,6 +15,9 @@
      <style>
         /* 1. QUẢN LÝ HIỂN THỊ CÁC LAYER TAB (LỚP NỀN) */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+         #human-chat-screen, #messenger-hub-screen, #cat-chat-screen {
+    pointer-events: auto !important;
+}
         .tab-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
         .tab-screen.active-tab { display: block; z-index: 10; }
         .tab-screen.active-tab * { pointer-events: auto; }

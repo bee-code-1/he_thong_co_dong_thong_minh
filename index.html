@@ -3088,14 +3088,20 @@ function showRandomCatMessage() {
 setInterval(showRandomCatMessage, 15000);
 
 // 3. TƯƠNG TÁC DOUBLE TAP VỚI BỘ NÃO AI GEMINI
-let GEMINI_API_KEY = "AIzaSyDXXkHNTguCJnVO7AOpFbejJ6b67l5fZv4";
-let luotDungAI = 0; // Biến lưu số câu đã chat trên toàn server
+let GEMINI_API_KEY = "";
+let luotDungAI = 0; // số câu đã chat trên toàn server
 
-// Tự động Lắng nghe thanh năng lượng từ Firebase
+// Tự động kéo API Key và Lắng nghe thanh năng lượng từ firebase
 window.addEventListener('load', function() {
     setTimeout(() => {
         if (typeof window.db !== 'undefined') {
-            // Đã cấy trực tiếp API Key ở trên, bỏ qua bước kéo từ Firebase
+            // 1. Kéo Key AI từ két sắt Firebase về (Qua mặt bot GitHub)
+            window.db.ref('cai_dat_he_thong/gemini_key').once('value').then(snap => {
+                if(snap.exists()) {
+                    GEMINI_API_KEY = snap.val().trim();
+                    console.log("Đã tải xong não AI từ Firebase xuống!");
+                }
+            });
 
             // 2. Lắng nghe thanh năng lượng (Làm liên tục)
             window.db.ref('cai_dat_he_thong/luot_dung_ai').on('value', snap => {

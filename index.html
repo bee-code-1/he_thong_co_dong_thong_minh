@@ -3821,8 +3821,8 @@ async function guiTinNhanMeo() {
         let aiMessage = "Google nó chặn họng Mèo rồi 😿";
 
         // BÓC TÁCH BẰNG NGOẶC VUÔNG CHUẨN XÁC 1000% CHỐNG LỖI (BẢN FIX)
-        if (data.candidates && data.candidates.length > 0 && data.candidates.content && data.candidates.content.parts && data.candidates.content.parts.length > 0) {
-            aiMessage = data.candidates.content.parts.text.trim().replace(/\*/g, '');
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+            aiMessage = data.candidates[0].content.parts[0].text.trim().replace(/\*/g, '');
             // TRỪ MÁU TRÊN FIREBASE KHI CHAT THÀNH CÔNG
             if (window.db && typeof luotDungAI !== 'undefined') {
                 window.db.ref('cai_dat_he_thong/luot_dung_ai').set(luotDungAI + 1);

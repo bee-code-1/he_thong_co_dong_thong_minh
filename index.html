@@ -4932,20 +4932,23 @@ let catCountdownInterval = null;
 
 // HÀM NÀY SẼ CHẠY KHI BẠN BẤM "ĐUỔI MÈO" TRONG MENU
 window.hieuUngMeoBoNha = function() {
+    // 🛑 BỘ LỌC CHỐNG LỖI: Bắt buộc phải có GPS mới cho đuổi Mèo
+    if (typeof latestLatLng === 'undefined' || !latestLatLng) {
+        alert("📡 Khoan đã! GPS chưa chốt được vị trí của cậu. Đợi xíu cho cái mũi tên đỏ bản đồ hiện lên rồi hẵng đuổi Mèo đi, không là tịt đường tìm nó luôn đấy!");
+        return; // Đóng sập cửa, không cho đuổi!
+    }
+
     localStorage.setItem('meo_bo_nha', 'true');
     
     // Hẹn giờ 20 tiếng sau (20 * 60 * 60 * 1000 mili-giây)
     let thoiGianVe = Date.now() + (20 * 60 * 60 * 1000);
     localStorage.setItem('meo_ve_nha_luc', thoiGianVe);
 
-    // Random tọa độ Mèo lẩn trốn (Cách khoảng 1 - 2.5km)
-    // Tạm thời lấy GPS hiện tại cộng/trừ ngẫu nhiên một lượng độ (0.01 ~ 1.1km)
-    if (typeof latestLatLng !== 'undefined' && latestLatLng) {
-        let catLat = latestLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
-        let catLng = latestLatLng.lng + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
-        localStorage.setItem('toa_do_meo_lat', catLat);
-        localStorage.setItem('toa_do_meo_lng', catLng);
-    }
+    // Random tọa độ Mèo lẩn trốn (Cách khoảng 1 - 2.5km) dựa trên GPS hiện tại
+    let catLat = latestLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
+    let catLng = latestLatLng.lng + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);
+    localStorage.setItem('toa_do_meo_lat', catLat);
+    localStorage.setItem('toa_do_meo_lng', catLng);
     
     // Chuyển UI sang Tờ Giấy Note
     const cat = document.getElementById('cat-assistant');

@@ -627,22 +627,13 @@
         </div>
     </div>
 </div>
-<!-- LAYER TAB 5: THÔNG BÁO & CÀI ĐẶT -->
-<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 100px;">
-    <div style="padding: 20px; text-align: left;">
-        
-       <!-- Header Tab 5 -->
-        <div style="border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px; text-align: center;">
-            <h2 style="color: #dc3545; margin: 0; font-size: 24px;">🔔 Thông báo</h2>
-        </div>
-
-        <!-- Danh sách thông báo tự động nhồi vào đây -->
-        <div id="list-thong-bao-content" style="color: #555; font-style: italic; text-align: center; margin-top: 20px;">
-            Không có thông báo mới.
-        </div>
-        
+<!-- LAYER TAB 5: ĐÌNH CÔNG -->
+<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto;">
+    <div style="padding: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+        <span style="font-size: 60px; filter: grayscale(1);">🚧</span>
+        <h2 style="color: #6c757d; margin-top: 15px;">Khu vực đang đình công</h2>
+        <p style="color: #888; font-size: 14px;">Nhà phát triển đang chuẩn bị đóng apk rồi nhé.</p>
     </div>
-</div>
 </div>
 <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
 <div id="bottom-nav" class="bottom-nav">
@@ -4208,6 +4199,199 @@ catAssistant.addEventListener("touchmove", drag, { passive: false });
 catAssistant.addEventListener("mousedown", dragStart);
 document.addEventListener("mouseup", dragEnd);
 document.addEventListener("mousemove", drag);
+
+// HỆ THỐNG MẠNG LƯỚI & HỒ SƠ CÔNG KHAI
+// ==========================================
+
+// 1. Mở màn hình Messenger Hub Toàn màn hình
+window.moMessengerHub = function() {
+    document.getElementById('messenger-hub-screen').style.display = 'flex';
+    const container = document.getElementById('messenger-hub-list');
+    
+    if (window.danhSachBanBeThuc.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Cậu chưa có bạn bè nào. Tìm kiếm và kết bạn đi!</div>';
+        return;
+    }
+    
+    let html = '';
+    window.danhSachBanBeThuc.forEach(b => {
+        const avt = window.mapAvatars[b] || `https://ui-avatars.com/api/?name=${b}&background=random`;
+        html += `
+        <div onclick="window.moKhungChatNguoi('${b}')" style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; margin-bottom: 10px;">
+            <img src="${avt}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ddd; object-fit: cover; margin-right: 15px;">
+            <div style="flex: 1; text-align: left;">
+                <div style="font-weight: bold; font-size: 16px; color: #333;">${b}</div>
+                <div style="font-size: 13px; color: #888;">Chạm để nhắn tin...</div>
+            </div>
+            <div style="color: #28a745; font-size: 20px;">💬</div>
+        </div>`;
+    });
+    container.innerHTML = html;
+};
+
+// 2. Click vào Feed bảng tin -> Mở Hồ Sơ Công Khai thay vì Mở Chat
+window.moHoSoCongKhai = function(username) {
+    if (!window.db) return;
+    const currentUser = localStorage.getItem('currentUser');
+    if (username === currentUser) { window.moHoSo(); return; } // Nếu là mình thì mở profile cá nhân
+
+    window.db.ref('nguoi_dung/' + username).once('value').then(snap => {
+        if (!snap.exists()) return alert("Không tìm thấy người dùng này!");
+        const data = snap.val();
+        
+        document.getElementById('public-avatar').src = data.avatar || `https://ui-avatars.com/api/?name=${username}&background=random`;
+        document.getElementById('public-name').innerText = username;
+        document.getElementById('public-km').innerText = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000).toFixed(1) : "0.0";
+        document.getElementById('public-calo').innerText = data.calo_tieu_thu ? data.calo_tieu_thu.toFixed(1) : "0";
+        
+        // Cập nhật trạng thái Online
+        const isOnline = (Date.now() - (data.thoi_gian_cap_nhat || 0)) < 600000;
+        const sttDiv = document.getElementById('public-status');
+        sttDiv.innerText = isOnline ? "Đang hoạt động" : "Ngoại tuyến";
+        sttDiv.style.color = isOnline ? "#28a745" : "#6c757d";
+        sttDiv.style.background = isOnline ? "#e8f5e9" : "#e9ecef";
+
+        // Cập nhật nút bấm (Kết bạn hoặc Chat)
+        const isFriend = window.danhSachBanBeThuc.includes(username);
+        const actionBtnContainer = document.getElementById('public-action-btn');
+        if (isFriend) {
+            actionBtnContainer.innerHTML = `<button onclick="document.getElementById('public-profile-modal').style.display='none'; window.moKhungChatNguoi('${username}')" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #004BAd; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">💬 Nhắn tin</button>`;
+        } else {
+            actionBtnContainer.innerHTML = `<button onclick="window.guiLoiMoiKetBanCho('${username}'); document.getElementById('public-profile-modal').style.display='none';" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #28a745; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">👤+ Kết bạn</button>`;
+        }
+        
+        document.getElementById('public-profile-modal').style.display = 'flex';
+    });
+};
+
+// 3. Thanh tìm kiếm cũng gọi ra Hồ Sơ Công Khai
+window.timVaMoHoSo = function() {
+    const targetUser = document.getElementById('tim-kiem-user').value.trim();
+    if (!targetUser) return;
+    window.moHoSoCongKhai(targetUser);
+    document.getElementById('tim-kiem-user').value = '';
+};
+
+// 4. Mở Popup Thông Báo (Chuyển hướng sang khu vực đình công)
+window.moThongBao = function() {
+    document.getElementById('tab-5').classList.add('active-tab'); 
+    document.querySelectorAll('.tab-screen').forEach((tab, index) => {
+        if(index !== 4) tab.classList.remove('active-tab');
+    });
+};
+
+// HỆ THỐNG CHAT 1-1 (TRẠM TRUNG CHUYỂN FIREBASE -> LOCAL STORAGE)
+let currentChatFriend = null;
+let chatListenerRef = null;
+
+// Hàm phụ: Vẽ 1 tin nhắn lên màn hình
+window.renderTinNhanDon = function(msg) {
+    const container = document.getElementById('human-chat-history');
+    const currentUser = localStorage.getItem('currentUser');
+    const isMe = msg.nguoi_gui === currentUser;
+    const align = isMe ? 'flex-end' : 'flex-start';
+    const bg = isMe ? '#28a745' : '#e4e6eb';
+    const color = isMe ? 'white' : 'black';
+    const radius = isMe ? '15px 15px 0 15px' : '15px 15px 15px 0';
+    
+    let d = new Date(msg.thoi_gian);
+    let timeStr = d.getHours() + ':' + (d.getMinutes()<10?'0':'') + d.getMinutes();
+
+    const html = `
+    <div style="display: flex; justify-content: ${align}; width: 100%;">
+        <div style="background: ${bg}; color: ${color}; padding: 10px 15px; border-radius: ${radius}; font-size: 15px; max-width: 75%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word;">
+            ${msg.noi_dung}
+            <div style="font-size: 10px; opacity: 0.7; text-align: ${isMe?'right':'left'}; margin-top: 4px;">${timeStr}</div>
+        </div>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    container.scrollTop = container.scrollHeight;
+};
+
+// Hàm mở khung chat và kết nối bưu điện
+window.moKhungChatNguoi = function(friendName) {
+    currentChatFriend = friendName;
+    document.getElementById('human-chat-screen').style.display = 'flex';
+    document.getElementById('chat-human-name').innerText = friendName;
+    
+    // Đóng các popup khác nếu đang mở
+    if(document.getElementById('messenger-hub-screen')) document.getElementById('messenger-hub-screen').style.display = 'none';
+    if(document.getElementById('public-profile-modal')) document.getElementById('public-profile-modal').style.display = 'none';
+
+    const avt = window.mapAvatars[friendName] || `https://ui-avatars.com/api/?name=${friendName}&background=random`;
+    document.getElementById('chat-human-avatar').src = avt;
+
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser || !window.db) return;
+
+    const roomId = [currentUser, friendName].sort().join('_');
+    const container = document.getElementById('human-chat-history');
+    container.innerHTML = '';
+
+    // 1. MỞ SỔ TAY LOCAL STORAGE ĐỂ XEM LẠI LỊCH SỬ CŨ KHÔNG CẦN MẠNG
+    let localChat = JSON.parse(localStorage.getItem('chat_1_1_' + roomId)) || [];
+    if (localChat.length === 0) {
+        container.innerHTML = `<div id="chat-empty-msg" style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Hãy gửi lời chào đến ${friendName} đi!</div>`;
+    } else {
+        localChat.forEach(msg => window.renderTinNhanDon(msg));
+    }
+
+    // 2. TỚI BƯU ĐIỆN FIREBASE LẤY THƯ MỚI CHƯA ĐỌC
+    if (chatListenerRef) chatListenerRef.off();
+    chatListenerRef = window.db.ref('tram_trung_chuyen_chat/' + roomId);
+    
+    // Dùng child_added để chỉ bắt những tin nhắn mới gửi đến
+    chatListenerRef.on('child_added', snap => {
+        const msg = snap.val();
+        const emptyMsg = document.getElementById('chat-empty-msg');
+        if(emptyMsg) emptyMsg.remove();
+
+        // Nếu là thư người kia gửi, tải về cất sổ tay và Tiêu Hủy trên Bưu điện
+        if (msg.nguoi_gui !== currentUser) {
+            let currentLocal = JSON.parse(localStorage.getItem('chat_1_1_' + roomId)) || [];
+            currentLocal.push(msg);
+            localStorage.setItem('chat_1_1_' + roomId, JSON.stringify(currentLocal));
+            
+            window.renderTinNhanDon(msg);
+            
+            // XÓA DẤU VẾT TRÊN FIREBASE ĐỂ TIẾT KIỆM DUNG LƯỢNG
+            snap.ref.remove();
+        }
+    });
+};
+
+window.dongKhungChatNguoi = function() {
+    document.getElementById('human-chat-screen').style.display = 'none';
+    if (chatListenerRef) { chatListenerRef.off(); chatListenerRef = null; }
+    currentChatFriend = null;
+};
+
+window.guiTinNhanNguoi = function() {
+    const input = document.getElementById('human-chat-input');
+    const text = input.value.trim();
+    const currentUser = localStorage.getItem('currentUser');
+    
+    if (!text || !currentUser || !currentChatFriend || !window.db) return;
+
+    const roomId = [currentUser, currentChatFriend].sort().join('_');
+    const msgObj = { nguoi_gui: currentUser, noi_dung: text, thoi_gian: Date.now() };
+
+    // 1. Lưu ngay vào sổ tay Local của bản thân
+    let localChat = JSON.parse(localStorage.getItem('chat_1_1_' + roomId)) || [];
+    localChat.push(msgObj);
+    localStorage.setItem('chat_1_1_' + roomId, JSON.stringify(localChat));
+
+    // 2. Hiện lên màn hình của mình
+    const emptyMsg = document.getElementById('chat-empty-msg');
+    if(emptyMsg) emptyMsg.remove();
+    window.renderTinNhanDon(msgObj);
+
+    // 3. Đưa thư ra Bưu điện Firebase chờ bạn kia lấy
+    window.db.ref('tram_trung_chuyen_chat/' + roomId).push(msgObj);
+
+    input.value = '';
+};
+
 </script>
 </body>
 </html>

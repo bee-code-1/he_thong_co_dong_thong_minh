@@ -4499,43 +4499,60 @@ window.toggleRouteMode = function() {
     }
 };
 
+// === CẬP NHẬT GHIM A VÀ B VỚI SỔ TAY ===
 window.setPointA = function(lat, lng) {
-    window.pointA = { lat: lat, lng: lng }; map.closePopup();
+    window.pointA = { lat: lat, lng: lng }; 
+    map.closePopup();
     if(window.markerA) map.removeLayer(window.markerA);
     
     let pinA = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#28a745" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
+    
     window.markerA = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinA, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
-        .addTo(window.markerLayerGroup)
-        .bindPopup(`
-        <div id="popup-A-content" style="text-align:center; min-width: 170px; font-weight:bold;">
-            <span style="color:#28a745; font-size:16px;">🟢 ĐIỂM XUẤT PHÁT</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-            <button onclick="window.thayDoiDiem('A')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác trên map</button>
-            <button onclick="window.hienSoTayTrongPopup('A')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Chọn từ Sổ tay đã lưu</button>
-            <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
-        </div>
-        `);
+        .addTo(window.markerLayerGroup);
+        
+    window.khoiPhucPopupGoc('A');
     if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
 window.setPointB = function(lat, lng) {
-    window.pointB = { lat: lat, lng: lng }; map.closePopup();
+    window.pointB = { lat: lat, lng: lng }; 
+    map.closePopup();
     if(window.markerB) map.removeLayer(window.markerB);
     
     let pinB = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
+    
     window.markerB = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinB, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
-        .addTo(window.markerLayerGroup)
-        .bindPopup(`
-        <div id="popup-B-content" style="text-align:center; min-width: 170px; font-weight:bold;">
-            <span style="color:#dc3545; font-size:16px;">🔴 ĐIỂM ĐẾN</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-            <button onclick="window.thayDoiDiem('B')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác trên map</button>
-            <button onclick="window.hienSoTayTrongPopup('B')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Chọn từ Sổ tay đã lưu</button>
-            <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
-        </div>
-        `);
+        .addTo(window.markerLayerGroup);
+
+    window.khoiPhucPopupGoc('B');
     if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
-// === CƠ CHẾ HIỂN THỊ SỔ TAY ĐỊA ĐIỂM NGAY BÊN TRONG POPUP A-B ===
+// Hàm tạo và hiển thị menu gốc (Có Nút Sổ Tay)
+window.khoiPhucPopupGoc = function(loai) {
+    let lat = loai === 'A' ? window.pointA.lat : window.pointB.lat;
+    let lng = loai === 'A' ? window.pointA.lng : window.pointB.lng;
+    let color = loai === 'A' ? '#28a745' : '#dc3545';
+    let title = loai === 'A' ? '🟢 ĐIỂM XUẤT PHÁT' : '🔴 ĐIỂM ĐẾN';
+    
+    let html = `
+        <div style="text-align:center; min-width: 170px; font-weight:bold;">
+            <span style="color:${color}; font-size:16px;">${title}</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+            <button onclick="window.thayDoiDiem('${loai}')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác trên map</button>
+            <button onclick="window.hienSoTayTrongPopup('${loai}')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Chọn từ Sổ tay đã lưu</button>
+            <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
+        </div>`;
+        
+    if (loai === 'A' && window.markerA) {
+        window.markerA.bindPopup(html);
+        if(window.markerA.isPopupOpen()) window.markerA.setPopupContent(html);
+    } else if (loai === 'B' && window.markerB) {
+        window.markerB.bindPopup(html);
+        if(window.markerB.isPopupOpen()) window.markerB.setPopupContent(html);
+    }
+};
+
+// Hàm chuyển đổi ruột Popup thành Danh sách Sổ tay
 window.hienSoTayTrongPopup = function(loai) {
     const user = localStorage.getItem('currentUser') || "Khach";
     const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
@@ -4544,7 +4561,7 @@ window.hienSoTayTrongPopup = function(loai) {
     html += `<span style="color:#17a2b8; font-size:15px; font-weight: 900;">📖 SỔ TAY CỦA CẬU</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">`;
     
     if (dsDiaDiem.length === 0) {
-        html += `<div style="font-size:13px; color:#888; margin-bottom:15px; font-style:italic;">Cậu chưa lưu địa điểm nào! Ra map tìm và ấn "⭐ Lưu" nhé.</div>`;
+        html += `<div style="font-size:13px; color:#888; margin-bottom:15px; font-style:italic;">Chưa có gì! Ra map tìm và ấn "⭐ Lưu" nhé.</div>`;
     } else {
         html += `<div style="max-height: 180px; overflow-y: auto; text-align:left; margin-bottom:10px; padding-right: 5px;">`;
         dsDiaDiem.forEach((diem) => {
@@ -4556,11 +4573,9 @@ window.hienSoTayTrongPopup = function(loai) {
         html += `</div>`;
     }
     
-    // Nút quay lại menu gốc
     html += `<button onclick="window.khoiPhucPopupGoc('${loai}')" style="display:block; width:100%; padding:8px; background:#6c757d; color:white; border:none; border-radius:8px; font-weight: bold; cursor:pointer;">⬅ Quay lại</button>`;
     html += `</div>`;
 
-    // SỬ DỤNG LỆNH CHÍNH CHỦ CỦA LEAFLET ĐỂ ÉP ĐỔI GIAO DIỆN
     if (loai === 'A' && window.markerA) {
         window.markerA.setPopupContent(html);
     } else if (loai === 'B' && window.markerB) {
@@ -4568,23 +4583,15 @@ window.hienSoTayTrongPopup = function(loai) {
     }
 };
 
+// Hàm kích hoạt nhảy ghim đến địa điểm được chọn trong sổ tay
 window.chonDiemTuSoTay = function(loai, lat, lng) {
     if (loai === 'A') {
         window.setPointA(lat, lng);
         map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
+        if(window.markerA) window.markerA.openPopup();
     } else {
         window.setPointB(lat, lng);
         map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
-    }
-};
-
-window.khoiPhucPopupGoc = function(loai) {
-    // Gọi lại hàm tạo Điểm để nó render lại Popup gốc
-    if (loai === 'A' && window.pointA) {
-        window.setPointA(window.pointA.lat, window.pointA.lng);
-        if(window.markerA) window.markerA.openPopup();
-    } else if (loai === 'B' && window.pointB) {
-        window.setPointB(window.pointB.lat, window.pointB.lng);
         if(window.markerB) window.markerB.openPopup();
     }
 };

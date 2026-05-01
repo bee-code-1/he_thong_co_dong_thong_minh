@@ -4551,11 +4551,8 @@ window.hienSoTayTrongPopup = function(loai) {
     const user = localStorage.getItem('currentUser') || "Khach";
     const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
     
-    const popupId = loai === 'A' ? 'popup-A-content' : 'popup-B-content';
-    const container = document.getElementById(popupId);
-    if (!container) return;
-
-    let html = `<span style="color:#17a2b8; font-size:15px; font-weight: 900;">📖 SỔ TAY CỦA CẬU</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">`;
+    let html = `<div style="text-align:center; min-width: 170px;">`;
+    html += `<span style="color:#17a2b8; font-size:15px; font-weight: 900;">📖 SỔ TAY CỦA CẬU</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">`;
     
     if (dsDiaDiem.length === 0) {
         html += `<div style="font-size:13px; color:#888; margin-bottom:15px; font-style:italic;">Cậu chưa lưu địa điểm nào! Ra map tìm và ấn "⭐ Lưu" nhé.</div>`;
@@ -4572,9 +4569,14 @@ window.hienSoTayTrongPopup = function(loai) {
     
     // Nút quay lại menu gốc
     html += `<button onclick="window.khoiPhucPopupGoc('${loai}')" style="display:block; width:100%; padding:8px; background:#6c757d; color:white; border:none; border-radius:8px; font-weight: bold; cursor:pointer;">⬅ Quay lại</button>`;
-    
-    // Biến hình nội dung Popup
-    container.innerHTML = html;
+    html += `</div>`;
+
+    // SỬ DỤNG LỆNH CHÍNH CHỦ CỦA LEAFLET ĐỂ ÉP ĐỔI GIAO DIỆN
+    if (loai === 'A' && window.markerA) {
+        window.markerA.setPopupContent(html);
+    } else if (loai === 'B' && window.markerB) {
+        window.markerB.setPopupContent(html);
+    }
 };
 
 window.chonDiemTuSoTay = function(loai, lat, lng) {

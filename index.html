@@ -4972,25 +4972,39 @@ window.chayDemNguocMeo = function() {
     if (catCountdownInterval) clearInterval(catCountdownInterval);
     
     catCountdownInterval = setInterval(() => {
-        let thoiGianVe = parseInt(localStorage.getItem('meo_ve_nha_luc'));
+        let thoiGianVeStr = localStorage.getItem('meo_ve_nha_luc');
+        let thoiGianVe = parseInt(thoiGianVeStr);
+        
+        // 🛑 BỘ LỌC CHỐNG NaN: Nếu không có dữ liệu giờ về hợp lệ -> Ép Mèo về luôn!
+        if (!thoiGianVeStr || isNaN(thoiGianVe)) {
+            thoiGianVe = Date.now() - 1000; // Trừ đi 1 giây để thời gian Còn Lại < 0
+        }
+
         let conLai = thoiGianVe - Date.now();
         
         if (conLai <= 0) {
-            // HẾT GIỜ! Mèo tự mò về
+            // HẾT GIỜ HOẶC LỖI DATA! Mèo tự mò về
             clearInterval(catCountdownInterval);
             localStorage.setItem('meo_bo_nha', 'false');
-            alert("Mèo đi hoang chán rồi đã tự mò về nhà!");
-            document.getElementById('cat-missing-note').style.display = 'none';
-            document.getElementById('cat-assistant').style.display = 'block';
+            alert("Mèo đi bụi chán rồi đã tự mò về nhà!");
+            
+            const note = document.getElementById('cat-missing-note');
+            const cat = document.getElementById('cat-assistant');
+            if (note) note.style.display = 'none';
+            if (cat) cat.style.display = 'block';
+            
             if(window.routeLayerGroup) window.routeLayerGroup.clearLayers();
             if(window.markerLayerGroup) window.markerLayerGroup.clearLayers();
         } else {
-            // Cập nhật đồng hồ
+            // Cập nhật đồng hồ bình thường
             let h = Math.floor((conLai / (1000 * 60 * 60)) % 24);
             let m = Math.floor((conLai / 1000 / 60) % 60);
             let s = Math.floor((conLai / 1000) % 60);
-            document.getElementById('cat-countdown-timer').innerText = 
-                `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            
+            const timerDisplay = document.getElementById('cat-countdown-timer');
+            if(timerDisplay) {
+                timerDisplay.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
         }
     }, 1000);
 };

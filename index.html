@@ -2324,33 +2324,33 @@ window.loadRealConnectMap = function(mapId, distId, friendName, friendLat, frien
             L.marker([myLat, myLng], { icon: createDropIcon(myAvatar, myColor), zIndexOffset: 1000 }).addTo(mMap);
             L.marker([friendLat, friendLng], { icon: createDropIcon(friendAvatar, friendColor) }).addTo(mMap);
 
-            // GỌI OSRM ĐỂ TÍNH KHOẢNG CÁCH VÀ VẼ ĐƯỜNG
-            fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${myLng},${myLat};${friendLng},${friendLat}?overview=full&geometries=geojson`)
-            .then(res => res.json())
-            .then(data => {
-                if(data.routes && data.routes.length > 0) {
-                    // FIX CHÍ MẠNG: Dùng .at() để chống lỗi hệ thống nuốt mất ngoặc vuông của array
-                    const route = data.routes.at(0); 
-                    const routeCoords = route.geometry.coordinates.map(coord => [ coord.at(1), coord.at(0) ]);
-                    
-                    const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
-                    mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
-                    
-                    const distanceKm = (route.distance / 1000).toFixed(1);
-                    document.getElementById(distId).innerHTML = `${distanceKm} km`;
-                } else {
-                    document.getElementById(distId).innerHTML = "Không tìm thấy đường";
-                }
-            })
+        // GỌI OPENROUTESERVICE ĐỂ TÍNH KHOẢNG CÁCH VÀ VẼ ĐƯỜNG
+        const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjZmZTUwZTA5ZWVhYjQwMmNiYjgwMWJjMjk1ZDA0ZTJiIiwiaCI6Im11cm11cjY0In0=";
+        fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${myLng},${myLat}&end=${friendLng},${friendLat}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.features && data.features.length > 0) {
+                const route = data.features.at(0);
+                const routeCoords = route.geometry.coordinates.map(coord => [ coord.at(1), coord.at(0) ]);
+                const polyline = L.polyline(routeCoords, { color: '#004BAd', weight: 6, lineCap: 'round' }).addTo(mMap);
+                mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
+                
+                // ORS lưu khoảng cách ở chỗ khác OSRM
+                const distanceKm = (route.properties.summary.distance / 1000).toFixed(1);
+                document.getElementById(distId).innerHTML = `${distanceKm} km`;
+            } else {
+                document.getElementById(distId).innerHTML = "Không tìm thấy đường";
+            }
+        })
         .catch(err => {
-        console.warn("Lỗi OSRM:", err);
-        // Thất bại duyên dáng: Nối đường chim bay nét đứt
-        const fallbackCoords = [[myLat, myLng], [friendLat, friendLng]];
-        const polyline = L.polyline(fallbackCoords, { color: '#9E9E9E', weight: 5, dashArray: '6, 6' }).addTo(mMap);
-        mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
-        const khoangCachAo = (mMap.distance([myLat, myLng], [friendLat, friendLng]) / 1000).toFixed(1);
-        document.getElementById(distId).innerHTML = `~ ${khoangCachAo} km`;
-    });
+            console.warn("Lỗi ORS:", err);
+            // Sơ cứu đường chim bay nếu rớt mạng
+            const fallbackCoords = [[myLat, myLng], [friendLat, friendLng]];
+            const polyline = L.polyline(fallbackCoords, { color: '#9E9E9E', weight: 5, dashArray: '6, 6' }).addTo(mMap);
+            mMap.fitBounds(polyline.getBounds(), { padding: L.point(20, 20) });
+            const khoangCachAo = (mMap.distance([myLat, myLng], [friendLat, friendLng]) / 1000).toFixed(1);
+            document.getElementById(distId).innerHTML = `~ ${khoangCachAo} km`;
+        });
         }
         setTimeout(() => { if(window.miniMaps[mapId]) window.miniMaps[mapId].invalidateSize(); }, 400);
     };
@@ -4088,83 +4088,75 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
     L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang quét AQI thực tế lộ trình...</div>`).openOn(map);
     
-    fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`)
+    const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjZmZTUwZTA5ZWVhYjQwMmNiYjgwMWJjMjk1ZDA0ZTJiIiwiaCI6Im11cm11cjY0In0=";
+    fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${lng1},${lat1}&end=${lng2},${lat2}`)
     .then(res => res.json())
     .then(async data => {
-        if(data.routes && data.routes.length > 0) {
-            const route = data.routes.at(0); 
-            const coords = route.geometry.coordinates; 
-            const totalDist = (route.distance / 1000).toFixed(1);
+        if(data.features && data.features.length > 0) {
+            const route = data.features.at(0);
+            const coords = route.geometry.coordinates;
+            const totalDist = (route.properties.summary.distance / 1000).toFixed(1);
             
-            let numSegments = Math.min(5, Math.max(1, Math.ceil(totalDist / 2))); 
+            let numSegments = Math.min(5, Math.max(1, Math.ceil(totalDist / 2)));
             let segmentSize = Math.floor(coords.length / numSegments);
             let aqiPromises = [];
-
+            
             for (let i = 0; i < numSegments; i++) {
                 let midIndex = i * segmentSize + Math.floor(segmentSize / 2);
                 if (midIndex >= coords.length) midIndex = coords.length - 1;
-                
                 let sampleLng = coords.at(midIndex).at(0);
                 let sampleLat = coords.at(midIndex).at(1);
-
+                
                 let p = fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${sampleLat}&longitude=${sampleLng}&current=us_aqi`)
                     .then(r => r.json())
                     .then(aqiData => aqiData.current.us_aqi)
-                    .catch(e => 50); 
+                    .catch(e => 50);
                 aqiPromises.push(p);
             }
-
+            
             let aqiResults = await Promise.all(aqiPromises);
-
             for (let i = 0; i < numSegments; i++) {
                 let startIndex = i * segmentSize;
-                let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1; 
+                let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1;
                 let segmentCoords = coords.slice(startIndex, endIndex);
-                let leafCoords = segmentCoords.map(c => [c.at(1), c.at(0)]); 
-
+                let leafCoords = segmentCoords.map(c => [c.at(1), c.at(0)]);
+                
                 let aqi = aqiResults.at(i);
-                let aqiColor = "#28a745"; 
-                if (aqi > 50 && aqi <= 100) aqiColor = "#ffc107"; 
-                else if (aqi > 100 && aqi <= 150) aqiColor = "#fd7e14"; 
-                else if (aqi > 150 && aqi <= 200) aqiColor = "#dc3545"; 
-                else if (aqi > 200) aqiColor = "#6f42c1"; 
-
+                let aqiColor = "#28a745";
+                if (aqi > 50 && aqi <= 100) aqiColor = "#ffc107";
+                else if (aqi > 100 && aqi <= 150) aqiColor = "#fd7e14";
+                else if (aqi > 150 && aqi <= 200) aqiColor = "#dc3545";
+                else if (aqi > 200) aqiColor = "#6f42c1";
+                
                 L.polyline(leafCoords, { color: aqiColor, weight: 8, opacity: 0.7, lineCap: 'round' }).addTo(window.routeLayerGroup);
             }
-
             const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
             map.fitBounds(L.polyline(allLeafCoords).getBounds(), { padding: L.point(30, 30) });
-
-            L.popup()
-                .setLatLng([lat2, lng2])
-                .setContent(`
-                    <div style="font-weight:bold; color:#004BAd; text-align:center;">
-                        Khoảng cách: ${totalDist} km<br>
-                        <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                            ⭐ Lưu địa điểm này
-                        </button>
-                    </div>
-                `).openOn(map);
+            
+            L.popup().setLatLng([lat2, lng2]).setContent(`
+                <div style="font-weight:bold; color:#004BAd; text-align:center;">
+                Khoảng cách: ${totalDist} km<br>
+                <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                ⭐ Lưu địa điểm này
+                </button>
+                </div>
+            `).openOn(map);
         }
     }).catch(err => {
-    console.warn("Vệ tinh OSRM sập:", err);
-    // UX/UI: Thất bại duyên dáng 
-    let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
-    let khoangCachAo = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1);
-    
-    L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
-    map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
-
-    L.popup().setLatLng([lat2, lng2]).setContent(`
-        <div style="font-weight:bold; color:#dc3545; text-align:center;">
-        📡 Máy chủ định tuyến đang nghẽn!<br>
-        Khoảng cách chim bay: ~${khoangCachAo} km<br>
-        <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-        ⭐ Lưu địa điểm này
-        </button>
-        </div>
-    `).openOn(map);
-});
+        console.warn("Lỗi API ORS:", err);
+        let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
+        let khoangCachAo = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1);
+        L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
+        map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
+        L.popup().setLatLng([lat2, lng2]).setContent(`
+            <div style="font-weight:bold; color:#dc3545; text-align:center;">
+            📡 Máy chủ đang nghẽn!<br>Khoảng cách chim bay: ~${khoangCachAo} km<br>
+            <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            ⭐ Lưu địa điểm này
+            </button>
+            </div>
+        `).openOn(map);
+    });
 };
 
 window.luuDiaDiemCaNhan = function(lat, lng) {

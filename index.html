@@ -14,8 +14,7 @@
     
      <style>
         /* 1. QUẢN LÝ HIỂN THỊ CÁC LAYER TAB (LỚP NỀN) */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
-         #human-chat-screen, #messenger-hub-screen, #cat-chat-screen {
+#human-chat-screen, #messenger-hub-screen, #cat-chat-screen, #ar-catch-screen {
     pointer-events: auto !important;
 }
         .tab-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
@@ -427,7 +426,7 @@
 <!-- TỜ GIẤY NOTE KHI MÈO BỎ NHÀ ĐI (Mặc định ẩn) -->
 <div id="cat-missing-note" style="display: none; position: absolute; top: 15px; right: 15px; z-index: 2000; flex-direction: column; align-items: flex-end;">
     <div style="background: #fff9c4; border: 1px solid #d4b895; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); transform: rotate(5deg); text-align: center; width: 90px;">
-        <span style="font-size: 24px;">😿</span>
+        <span style="font-size: 24px;">🐾</span>
         <div style="font-size: 11px; font-weight: bold; color: #d32f2f; margin-top: 5px;">Mèo đi bụi rồi!</div>
     </div>
     <button onclick="window.moManHinhBatMeo()" style="margin-top: 10px; background: #dc3545; color: white; border: 2px solid white; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: catPulse 1.5s infinite;">
@@ -2561,46 +2560,79 @@ window.toggleConnectExpandReal = function(element) {
     }
 };
 // === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LƯU VẾT THỜI GIAN) ===
+// === HỆ THỐNG GỘP: RADAR BẠN BÈ THẬT & ĐỊA ĐIỂM ƯA THÍCH ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
-    container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar Firebase...</div>';
+    container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar & Mở sổ tay...</div>';
+    const currentUsername = localStorage.getItem('currentUser') || "Khach";
 
-    if (!window.db) return;
+    // ==================================================
+    // PHẦN 1: TẢI ĐỊA ĐIỂM ƯA THÍCH (TỪ LOCAL STORAGE)
+    // ==================================================
+    const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + currentUsername)) || [];
+    let htmlDiaDiem = '<h3 style="color: #d35400; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 5px; margin-bottom: 10px; font-size: 16px;">⭐ Sổ tay địa điểm</h3>';
+    
+    if (dsDiaDiem.length === 0) {
+        htmlDiaDiem += '<div style="text-align: center; color: #888; font-style: italic; font-size: 13px; margin-bottom: 25px;">Cậu chưa lưu địa điểm nào. Mở bản đồ và ghim lại những nơi hay tới nhé!</div>';
+    } else {
+        dsDiaDiem.forEach((diem, index) => {
+            htmlDiaDiem += `
+            <div style="background: #fff9c4; border: 2px solid #ffc107; border-radius: 15px; padding: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="flex: 1; text-align: left;">
+                    <div style="font-weight: 900; font-size: 16px; color: #333;">📍 ${diem.ten}</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.closeOneConnect(); window.switchTab(1); window.routeFromCurrentTo(${diem.lat}, ${diem.lng})" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Chỉ đường</button>
+                    <button onclick="window.xoaDiaDiemCaNhan(${index})" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Xóa</button>
+                </div>
+            </div>`;
+        });
+        htmlDiaDiem += '<div style="margin-bottom: 25px;"></div>'; // Khoảng cách giữa 2 phần
+    }
+
+    // ==================================================
+    // PHẦN 2: TẢI RADAR BẠN BÈ (TỪ FIREBASE)
+    // ==================================================
+    let htmlBanBe = '<h3 style="color: #004BAd; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 10px; margin-bottom: 10px; font-size: 16px;">👥 Radar Bạn bè</h3>';
+
+    if (!window.db) {
+        container.innerHTML = htmlDiaDiem + htmlBanBe + '<div style="text-align: center; color: #888;">Mất kết nối đám mây Firebase.</div>';
+        return;
+    }
 
     window.db.ref('nguoi_dung').once('value').then((snapshot) => {
         const data = snapshot.val();
-        if (!data) { container.innerHTML = '<div style="text-align: center; color: #888; margin-top: 50px;">Chưa có ai từng chia sẻ vị trí.</div>'; return; }
-        
-        let html = '';
+        if (!data) { 
+            container.innerHTML = htmlDiaDiem + htmlBanBe + '<div style="text-align: center; color: #888; font-style: italic;">Chưa có ai từng chia sẻ vị trí.</div>'; 
+            return; 
+        }
+
         const now = Date.now();
-        const currentUsername = localStorage.getItem('currentUser');
-        const danhSachBanBe = window.danhSachBanBeThuc || []; 
+        const danhSachBanBe = window.danhSachBanBeThuc || [];
+        let coBanBe = false;
 
         for (let userId in data) {
             const user = data[userId];
             if (userId === currentUsername) continue;
-            if (!danhSachBanBe.includes(userId)) continue; 
+            if (!danhSachBanBe.includes(userId)) continue;
+            coBanBe = true;
 
             let lat = user.toa_do_lat;
             let lng = user.toa_do_lng;
-            
-            // CHÌA KHÓA: Nếu có lat và lng trên mây -> Đã từng bật GPS
-            let hasLoc = (lat && lng) ? true : false; 
-
+            let hasLoc = (lat && lng) ? true : false;
             let statusText = "đang hoạt động";
-            let dotColor = "#28a745"; 
-            let lastActiveText = "Vừa xong"; // Biến lưu thời gian của vị trí cuối
-            
+            let dotColor = "#28a745";
+            let lastActiveText = "Vừa xong";
+
             if (!hasLoc) {
                 statusText = "Chưa bật định vị";
-                dotColor = "#888"; 
-                lat = 0; lng = 0;  // Gán tạm để tránh lỗi undefined
+                dotColor = "#888";
+                lat = 0; lng = 0;
             } else {
                 const lastUpdate = user.thoi_gian_cap_nhat || now;
                 const diffMinutes = Math.floor((now - lastUpdate) / 60000);
-                
                 if (diffMinutes > 5) {
-                    dotColor = "#dc3545"; 
+                    dotColor = "#dc3545";
                     if (diffMinutes < 60) {
                         statusText = `hoạt động ${diffMinutes} phút trước`;
                         lastActiveText = `${diffMinutes} phút trước`;
@@ -2612,59 +2644,61 @@ window.fetchRealFriends = function() {
             }
 
             const avatar = user.avatar || `https://ui-avatars.com/api/?name=${userId}&background=random&color=fff`;
-            window.mapAvatars[userId] = avatar; 
-
+            window.mapAvatars[userId] = avatar;
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
-            
-            // XỬ LÝ GIAO DIỆN MỞ RỘNG (BẢN ĐỒ KÈM THỜI GIAN LƯU VẾT HOẶC BẢNG TRỐNG)
+
             let expandedContentHTML = "";
             if (hasLoc) {
                 expandedContentHTML = `
-                    <div style="padding: 15px;">
-                        <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
-                        <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
-                            bạn cách ${userId} <span id="${distId}">đang tính...</span>
-                        </div>
-                        <div style="text-align: center; margin-top: 8px; font-size: 13px; color: #d35400; font-weight: bold; font-style: italic;">
-                            📍 Vị trí lưu vết lần cuối: ${lastActiveText}
-                        </div>
-                    </div>`;
+                <div style="padding: 15px;">
+                    <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
+                    <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        bạn cách ${userId} <span id="${distId}">đang tính...</span>
+                    </div>
+                    <div style="text-align: center; margin-top: 8px; font-size: 13px; color: #d35400; font-weight: bold; font-style: italic;">
+                        📍 Vị trí lưu vết lần cuối: ${lastActiveText}
+                    </div>
+                </div>`;
             } else {
                 expandedContentHTML = `
-                    <div style="padding: 15px;">
-                        <div style="width: 100%; aspect-ratio: 1; background-color: #e0e0e0; border-radius: 15px; border: 3px dashed #888; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #555; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
-                            <span style="font-size: 50px; margin-bottom: 10px; filter: grayscale(1);">📡</span>
-                            <strong style="font-size: 18px; color: #333;">Chưa có dữ liệu</strong>
-                            <span style="font-size: 14px; margin-top: 5px; font-weight: bold;">Hãy chờ họ online nhé!</span>
-                        </div>
-                    </div>`;
+                <div style="padding: 15px;">
+                    <div style="width: 100%; aspect-ratio: 1; background-color: #e0e0e0; border-radius: 15px; border: 3px dashed #888; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #555; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
+                        <span style="font-size: 50px; margin-bottom: 10px; filter: grayscale(1);">📡</span>
+                        <strong style="font-size: 18px; color: #333;">Chưa có dữ liệu</strong>
+                        <span style="font-size: 14px; margin-top: 5px; font-weight: bold;">Hãy chờ họ online nhé!</span>
+                    </div>
+                </div>`;
             }
 
-            html += `
+            htmlBanBe += `
             <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
-                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}" data-hasloc="${hasLoc}">
-                
+                data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}" data-hasloc="${hasLoc}">
                 <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
                     <div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
                         <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #333; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
                         <div style="position: absolute; bottom: -2px; right: -5px; width: 15px; height: 15px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
                     </div>
-
                     <div style="flex: 1; text-align: left;">
                         <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
                         <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>
                     </div>
                     <div class="expand-icon" style="font-size: 20px; font-weight: bold; color: #333; transition: transform 0.4s ease;">▼</div>
                 </div>
-
                 <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; background-color: #fcdab0;">
                     ${expandedContentHTML}
                 </div>
             </div>`;
         }
-        
-        container.innerHTML = html || '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Bạn chưa kết bạn với ai. Hãy sang Tab 4 để thêm bạn nhé!</div>';
+
+        if (!coBanBe) {
+            htmlBanBe += '<div style="text-align: center; color: #888; font-style: italic; margin-top: 10px;">Bạn chưa kết bạn với ai. Sang Tab 4 thêm bạn nhé!</div>';
+        }
+
+        // ==================================================
+        // PHẦN 3: GỘP UI VÀ ĐỔ RA MÀN HÌNH
+        // ==================================================
+        container.innerHTML = htmlDiaDiem + htmlBanBe;
     });
 };
     
@@ -4659,6 +4693,9 @@ let arStream = null;
 let catchTimer = null;
 let isCatching = false;
 let catX = 50, catY = 50; 
+// THÊM BIẾN LƯU TRỮ TỌA ĐỘ KHÔNG GIAN THỰC
+let currentAlpha = 0, currentBeta = 90;
+let targetAlpha = 0, targetBeta = 75; 
 
 // 1. MỞ CAMERA VÀ BẬT AR
 window.moManHinhBatMeo = async function() {
@@ -4666,19 +4703,16 @@ window.moManHinhBatMeo = async function() {
     document.getElementById('ar-success-popup').style.display = 'none';
     const video = document.getElementById('ar-camera-video');
     
-    // Bật Camera Sau
     try {
         arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = arStream;
     } catch (err) { alert("Không mở được camera sau! Nhớ cấp quyền nhé!"); }
 
-    // Kích hoạt Gyroscope để mô phỏng mặt đất
     if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientation', handleOrientation);
     }
     
-    // Random vị trí xuất hiện ban đầu
-    teleportCat();
+    teleportCat(); // Thả mèo xuống đất lần đầu
 };
 
 window.dongARCat = function() {
@@ -4687,23 +4721,43 @@ window.dongARCat = function() {
     window.removeEventListener('deviceorientation', handleOrientation);
 };
 
-// 2. GYROSCOPE: CHỈ HIỆN MÈO KHI NHÌN XUỐNG ĐẤT
+// 2. GYROSCOPE: NEO MÈO XUỐNG MẶT ĐẤT THẬT (PARALLAX AR)
 function handleOrientation(event) {
-    let tilt = event.beta; // Trục dọc (X-axis)
+    currentAlpha = event.alpha || 0; // La bàn (0-360)
+    currentBeta = event.beta || 90;  // Góc cúi lên xuống
+
     const catTarget = document.getElementById('ar-cat-target');
     const warning = document.getElementById('ar-angle-warning');
     
     // Khi điện thoại nghiêng từ 45 đến 110 độ (Chĩa xuống đất)
-    if (tilt > 45 && tilt < 110) {
+    if (currentBeta > 45 && currentBeta < 110) {
         catTarget.style.display = 'block';
         warning.style.opacity = '0';
+
+        // TÍNH TOÁN ĐỘ LỆCH GÓC GIỮA ĐIỆN THOẠI VÀ VỊ TRÍ MÈO
+        let deltaAlpha = currentAlpha - targetAlpha;
+        
+        // Xử lý chống giật khi quay qua hướng Bắc (360 độ -> 0 độ)
+        if (deltaAlpha > 180) deltaAlpha -= 360;
+        if (deltaAlpha < -180) deltaAlpha += 360;
+
+        let deltaBeta = currentBeta - targetBeta;
+
+        // Quy đổi độ lệch góc ra pixel % trên màn hình. 
+        // Khi cậu xoay máy sang phải (deltaAlpha > 0), con mèo sẽ bị đẩy sang trái để giữ nguyên vị trí ở môi trường thực!
+        catX = 50 - (deltaAlpha * 2.0); 
+        catY = 50 - (deltaBeta * 2.5);
+
+        // Giới hạn để Mèo không văng ra khỏi DOM (vẫn trượt đi nhưng không bị lỗi UI)
+        catTarget.style.left = catX + '%';
+        catTarget.style.top = catY + '%';
     } else {
         catTarget.style.display = 'none';
         warning.style.opacity = '1';
     }
 }
 
-// 3. LOGIC BẤM GIỮ ĐỂ BẮT (1 GIÂY)
+// ... CÁC HÀM LOGIC BẤM GIỮ GIỮ NGUYÊN (startCatching, stopCatching) ...
 const arCatTarget = document.getElementById('ar-cat-target');
 const progressRing = document.getElementById('catch-progress-ring');
 const progressCircle = document.getElementById('catch-progress-circle');
@@ -4712,13 +4766,10 @@ function startCatching(e) {
     e.preventDefault();
     isCatching = true;
     progressRing.style.display = 'block';
-    
-    // Kích hoạt hiệu ứng chạy viền tròn 1 giây
     setTimeout(() => { progressCircle.style.strokeDashoffset = "0"; }, 50);
 
     catchTimer = setTimeout(() => {
         if (isCatching) {
-            // THÀNH CÔNG!
             isCatching = false;
             progressRing.style.display = 'none';
             document.getElementById('ar-success-popup').style.display = 'flex';
@@ -4732,8 +4783,6 @@ function stopCatching(e) {
     if (!isCatching) return;
     isCatching = false;
     clearTimeout(catchTimer);
-    
-    // Bắt hụt! Reset vòng tròn và Teleport mèo
     progressCircle.style.transition = "none";
     progressCircle.style.strokeDashoffset = "283";
     progressRing.style.display = 'none';
@@ -4751,10 +4800,15 @@ function stopCatching(e) {
 }
 
 function teleportCat() {
-    catX = 15 + Math.random() * 70; // X từ 15% đến 85%
-    catY = 30 + Math.random() * 50; // Y từ 30% đến 80%
-    arCatTarget.style.left = catX + '%';
-    arCatTarget.style.top = catY + '%';
+    // THẢ MÈO VÀO MỘT TỌA ĐỘ KHÔNG GIAN MỚI XUNG QUANH HƯỚNG NHÌN HIỆN TẠI
+    let randomOffsetAlpha = (Math.random() - 0.5) * 40; // Lệch trái/phải tối đa 20 độ
+    let randomOffsetBeta = (Math.random() - 0.5) * 15;  // Lệch lên/xuống tối đa 7.5 độ
+
+    targetAlpha = currentAlpha + randomOffsetAlpha;
+    if (targetAlpha >= 360) targetAlpha -= 360;
+    if (targetAlpha < 0) targetAlpha += 360;
+
+    targetBeta = 75 + randomOffsetBeta; // Mặc định ghim ở góc nhìn chúc xuống 75 độ
 }
 
 arCatTarget.addEventListener('touchstart', startCatching, {passive: false});
@@ -4819,6 +4873,16 @@ function bungPhaoHoa() {
     }
     draw();
 }
+
+// === HÀM QUẢN LÝ ĐỊA ĐIỂM ƯA THÍCH TRONG ONE CONNECT ===
+window.xoaDiaDiemCaNhan = function(index) {
+    if(!confirm("Cậu có chắc muốn xóa địa điểm này khỏi cẩm nang không?")) return;
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let ds = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
+    ds.splice(index, 1); // Xóa phần tử tại vị trí index
+    localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(ds));
+    window.fetchRealFriends(); // Cập nhật lại giao diện One Connect ngay lập tức
+};
 
 </script>
 </body>

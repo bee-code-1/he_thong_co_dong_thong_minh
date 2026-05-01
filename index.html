@@ -53,10 +53,6 @@
         /* 3. CÁC NÚT BẤM VÀ BẢNG THÔNG TIN TRÊN BẢN ĐỒ */
         .top-left-btn { position: absolute; top: 15px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; }
         #info-panel { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 10px 15px; width: 170px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .action-btn { position: absolute; bottom: 85px; padding: 12px 30px; font-size: 18px; font-weight: 900; color: white; border: 3px solid #004BAd; border-radius: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; text-transform: uppercase; }
-        .start-btn { left: 50%; transform: translateX(-50%); background: #00C853; }
-        .pause-btn { position: relative; bottom: 0; background: #FF9800; border-color: white; }
-        .end-btn { position: relative; bottom: 0; background: #F44336; border-color: white; }
 
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
         #map { width: 100%; height: 100%; z-index: 1; }
@@ -94,20 +90,19 @@
         #fog-menu { display: none; flex-direction: column; background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 15px; }
         #fog-menu button { margin: 4px 0; padding: 8px 15px; border: none; border-radius: 6px; background-color: #343a40; color: white; cursor: pointer; }
         
-/* =========================================
-   ANIMATION MORPHING: BẮT ĐẦU -> CHẠY -> RECAP
-========================================= */
+/* ===== ANIMATION MORPHING: BẮT ĐẦU -> CHẠY -> RECAP ===== */
 #action-btns-container {
     position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 0px; pointer-events: auto; width: max-content; z-index: 9000;
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    align-items: center; justify-content: center;
 }
 .action-btn {
     padding: 0; width: 0; opacity: 0; border: 0px solid white; margin: 0;
     border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     cursor: pointer; font-size: 16px; font-weight: bold; color: white;
     white-space: nowrap; overflow: hidden;
-    display: inline-flex; justify-content: center; align-items: center;
+    display: flex; justify-content: center; align-items: center;
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     height: 50px;
 }
@@ -121,16 +116,16 @@
 #action-btns-container.running #pause-btn { width: 150px; opacity: 1; border-width: 3px; background-color: #ffc107; color: #333; padding: 0 20px; }
 #action-btns-container.running #end-btn { width: 150px; opacity: 1; border-width: 3px; background-color: #dc3545; padding: 0 20px; }
 
-/* 3. Trạng thái Morphing lên Recap (GỘP LÀM 1 & BAY LÊN) */
+/* 3. Trạng thái Morphing lên Recap (BAY VÀO TÂM MÀN HÌNH) */
 #action-btns-container.morphing { bottom: 50%; transform: translate(-50%, 50%); gap: 0; }
 #action-btns-container.morphing #pause-btn { width: 0; opacity: 0; border-width: 0; padding: 0; }
-#action-btns-container.morphing #end-btn { width: 280px; background-color: #4CAF50; color: white; border-width: 3px; padding: 0 20px; }
+#action-btns-container.morphing #end-btn { width: 250px; background-color: #4CAF50; color: white; border-width: 3px; padding: 0 20px; border-radius: 15px; }
 
 /* 4. Hiệu ứng bung nở của bảng Recap */
-#recap-modal { opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
-#recap-modal.show { opacity: 1; pointer-events: auto; }
-#recap-modal > div { transform: scale(0.6); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-#recap-modal.show > div { transform: scale(1); }
+#recap-modal { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; pointer-events: none; }
+#recap-modal.show { opacity: 1; visibility: visible; pointer-events: auto; }
+#recap-modal > div { transform: scale(0.2); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); opacity: 0;}
+#recap-modal.show > div { transform: scale(1); opacity: 1;}
         
         .user-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid #ff0000; transform-origin: 50% 50%; will-change: transform; }
         .leaflet-control-attribution { display: none; }
@@ -1739,21 +1734,21 @@ window.hienThiRecap = function() {
     const rSpeed = document.getElementById('recap-speed');
     if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
 
-    const rModal = document.getElementById('recap-modal');
-    // KỊCH BẢN MORPHING BAY LÊN RECAP CHÚC MỪNG
+    // KỊCH BẢN MORPHING BAY LÊN TRUNG TÂM VÀ NHÈ BẢNG RECAP
     const endBtn = document.getElementById('end-btn');
     if (endBtn) endBtn.innerText = "🎉 CHÚC MỪNG 🎉";
-    document.getElementById('action-btns-container').classList.add('morphing');
+    const btnContainer = document.getElementById('action-btns-container');
+    btnContainer.classList.add('morphing');
 
-    // Đợi 600ms cho Viên nhộng bay tới giữa màn hình rồi mới bung bảng Recap
+    // Đợi 600ms cho Viên thuốc bay tới giữa màn hình rồi bung lụa
     setTimeout(() => {
-        document.getElementById('action-btns-container').style.opacity = '0';
+        btnContainer.style.opacity = '0'; // Tàng hình viên thuốc
         const rModal = document.getElementById('recap-modal');
         if(rModal) {
             rModal.style.display = 'flex';
-            setTimeout(() => rModal.classList.add('show'), 10);
+            setTimeout(() => rModal.classList.add('show'), 50); // Nảy bảng ra
             
-            // Đánh thức Mèo Ảo để chúc mừng sau tập
+            // Mèo chúc mừng
             if (typeof catBubble !== 'undefined') {
                 const postMsgs = ["Đỉnh đấy! Mèo khen cậu ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi cậu", "Đến giờ đớp rồi 😋"];
                 catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
@@ -1813,33 +1808,47 @@ window.luuTienTrinh = function() {
         }).catch(err => console.error("Lỗi lưu tiến trình:", err));
     }
 
+    // KỊCH BẢN THU HỒI BẢNG RECAP THÀNH VIÊN THUỐC VÀ RỚT XUỐNG
     const rModal = document.getElementById('recap-modal');
-    if (rModal) rModal.classList.remove('show');
+    if (rModal) rModal.classList.remove('show'); // Thu nhỏ bảng lại
 
-    // Đợi bảng Recap teo nhỏ mờ đi, rồi cho Viên nhộng hiện ra và rớt xuống
+    // Đợi 400ms cho bảng biến mất hẳn
     setTimeout(() => {
-        if(rModal) rModal.style.display = 'none';
+        if (rModal) rModal.style.display = 'none';
+        
         const btnContainer = document.getElementById('action-btns-container');
         if (btnContainer) {
-            btnContainer.style.opacity = '1';
-            btnContainer.classList.remove('morphing', 'running');
-            document.getElementById('end-btn').innerText = "⏹ KẾT THÚC"; // Reset text
+            btnContainer.style.opacity = '1'; // Hiện lại viên thuốc ở giữa màn hình
+            btnContainer.classList.remove('morphing'); // Rớt xuống đáy
+            
+            // Đợi nó rớt xuống đáy (600ms) rồi gộp lại thành nút BẮT ĐẦU
+            setTimeout(() => {
+                btnContainer.classList.remove('running');
+                document.getElementById('end-btn').innerText = "⏹ KẾT THÚC"; // Trả lại text
+            }, 600);
         }
     }, 400);
 
-    // Reset hiển thị số liệu
+    // Xóa cờ tracking và reset số liệu hiển thị
+    if (typeof isTracking !== 'undefined') isTracking = false;
+    if (typeof isPaused !== 'undefined') isPaused = false;
+    if (typeof totalDistanceMeter !== 'undefined') totalDistanceMeter = 0;
+    if (typeof elapsedSeconds !== 'undefined') elapsedSeconds = 0;
+    if (typeof pathLatLngs !== 'undefined') pathLatLngs = [];
+    if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
+    
+    if (document.getElementById('time-display')) {
+        document.getElementById('time-display').innerText = "00:00";
+        document.getElementById('time-display').style.display = 'none';
+    }
     if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
     if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
     if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
-
-
+    
+    // Hiện lại thanh menu dưới đáy và viên nhộng bản đồ
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.remove('nav-hidden');
-    const timer = document.getElementById('time-display');
-    if (timer) timer.style.display = 'none';
-    //  HIỆN LẠI VIÊN NHỘNG LỚP BẢN ĐỒ
     if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
-
 };
 
 // === BIẾN TOÀN CỤC CHO TÍNH NĂNG NHẤN GIỮ ===

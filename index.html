@@ -1874,20 +1874,14 @@ window.thayDoiAnh = function(event) {
                 // Lưu tạm máy để load nhanh
                 localStorage.setItem("avatar_" + user, base64Image);
                 
-                // ĐẨY LÊN FIREBASE STORAGE
-                if (typeof window.storage !== 'undefined' && typeof window.db !== 'undefined') {
-                    const fileName = 'avatars/' + user + '_avt.jpg';
-                    const storageRef = window.storage.ref().child(fileName);
-                    
-                    storageRef.putString(base64Image, 'data_url')
-                    .then((snapshot) => snapshot.ref.getDownloadURL())
-                    .then((downloadURL) => {
-                        // Cầm URL link thật về cập nhật profile
-                        window.db.ref('nguoi_dung/' + user).update({ avatar: downloadURL });
-                        console.log("Đã đồng bộ Avatar sang Firebase Storage!");
-                    })
-                    .catch((err) => console.error("Lỗi lưu ảnh:", err));
-                }
+                    // ĐẨY THẲNG CHUỖI BASE64 VÀO REALTIME DATABASE 
+                    if (typeof window.db !== 'undefined') {
+                        window.db.ref('nguoi_dung/' + user).update({ avatar: base64Image })
+                        .then(() => {
+                            console.log("Đã lưu Avatar thẳng vào Realtime Database!");
+                        })
+                        .catch((err) => console.error("Lỗi lưu ảnh:", err));
+                    }
             }
         };
         reader.readAsDataURL(file);
@@ -1970,16 +1964,24 @@ window.dangXuat = function() {
     }
 };
 
-// === TỰ ĐỘNG KÉO ẢNH TỪ ĐÁM MÂY VỀ KHI VỪA MỞ TRANG ===
+// === TỰ ĐỘNG ĐĂNG NHẬP & KÉO ẢNH TỪ ĐÁM MÂY VỀ KHI VỪA MỞ TRANG ===
 window.addEventListener('load', function() {
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
+            console.log("Đã phát hiện tài khoản:", savedUser, "-> Đang vào thẳng app!");
+            
+            // 1. TẮT BẢNG ĐĂNG NHẬP, MỞ THẲNG BẢN ĐỒ 
+            const authModal = document.getElementById('auth-modal');
+            const appCont = document.getElementById('app-container');
+            if (authModal) authModal.style.display = 'none';
+            if (appCont) appCont.style.display = 'block';
+
+            // 2. KÉO AVATAR TỪ FIREBASE VỀ
             if (typeof window.db !== 'undefined') {
                 window.db.ref('nguoi_dung/' + savedUser + '/avatar').once('value').then((snapshot) => {
                     let cloudAvatar = snapshot.val();
                     let avtImg = document.getElementById('avatar-btn-img');
-                    
                     if (cloudAvatar) {
                         localStorage.setItem("avatar_" + savedUser, cloudAvatar);
                         if(avtImg) avtImg.src = cloudAvatar;
@@ -1990,7 +1992,7 @@ window.addEventListener('load', function() {
                 });
             }
         }
-    }, 1000); 
+    }, 1000);
 });
     // UI LOGIC - CHUYỂN TAB VÀ ĐIỀU KHIỂN NÚT BẤM
 
@@ -2615,24 +2617,9 @@ window.xacNhanDangBai = function() {
         document.getElementById('draft-overlay').style.display = 'none';
         cheDoDangBai = null; 
 
-        console.log("Đang đẩy ảnh lên Firebase Storage...");
-        const user = localStorage.getItem('currentUser') || 'Khach';
-        const fileName = 'locket_images/' + user + '_' + Date.now() + '.jpg';
-        const storageRef = window.storage.ref().child(fileName);
-
-        // Upload thẳng chuỗi Base64 
-        storageRef.putString(anhDangCho, 'data_url')
-        .then((snapshot) => {
-            return snapshot.ref.getDownloadURL();
-        })
-        .then((downloadURL) => {
-            dayLenFirebase('image', downloadURL, caption);
-        })
-        .catch((error) => {
-            console.error("Lỗi Storage:", error);
-            alert("Mạng lag! Không thể tải ảnh lên đám mây!");
-            window.huyDangBai();
-        });
+        console.log("Đang đẩy ảnh Locket thẳng lên Realtime Database...");
+        // Bỏ qua Storage, truyền trực tiếp chuỗi Base64 (anhDangCho) vào Database
+        dayLenFirebase('image', anhDangCho, caption);
     }
 };
 

@@ -4698,6 +4698,7 @@ let currentAlpha = 0, currentBeta = 90;
 let targetAlpha = 0, targetBeta = 75; 
 
 // 1. MỞ CAMERA VÀ BẬT AR
+// 1. MỞ CAMERA VÀ BẬT AR (CÓ XIN QUYỀN BẢO MẬT CỦA APPLE)
 window.moManHinhBatMeo = async function() {
     document.getElementById('ar-catch-screen').style.display = 'block';
     document.getElementById('ar-success-popup').style.display = 'none';
@@ -4708,7 +4709,21 @@ window.moManHinhBatMeo = async function() {
         video.srcObject = arStream;
     } catch (err) { alert("Không mở được camera sau! Nhớ cấp quyền nhé!"); }
 
-    if (window.DeviceOrientationEvent) {
+    // XỬ LÝ BẢO MẬT GYROSCOPE (Cho iOS 13+ và Android đời mới)
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permissionState = await DeviceOrientationEvent.requestPermission();
+            if (permissionState === 'granted') {
+                window.addEventListener('deviceorientation', handleOrientation);
+            } else {
+                alert("⚠️ Cậu phải cho phép dùng Cảm biến chuyển động thì mới thấy Mèo!");
+            }
+        } catch (error) {
+            console.warn("Bỏ qua xin quyền (có thể do đang ở http hoặc ko click trực tiếp):", error);
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+    } else {
+        // Trình duyệt thông thường không yêu cầu xin quyền
         window.addEventListener('deviceorientation', handleOrientation);
     }
     
@@ -4721,10 +4736,10 @@ window.dongARCat = function() {
     window.removeEventListener('deviceorientation', handleOrientation);
 };
 
-// 2. GYROSCOPE: NEO MÈO XUỐNG MẶT ĐẤT THẬT (PARALLAX AR)
+// 2. GYROSCOPE: TỐI ƯU HÓA TOÁN HỌC (GHÌM MÈO TRONG MÀN HÌNH)
 function handleOrientation(event) {
-    currentAlpha = event.alpha || 0; // La bàn (0-360)
-    currentBeta = event.beta || 90;  // Góc cúi lên xuống
+    currentAlpha = event.alpha || 0; 
+    currentBeta = event.beta || 90;  
 
     const catTarget = document.getElementById('ar-cat-target');
     const warning = document.getElementById('ar-angle-warning');
@@ -4734,21 +4749,22 @@ function handleOrientation(event) {
         catTarget.style.display = 'block';
         warning.style.opacity = '0';
 
-        // TÍNH TOÁN ĐỘ LỆCH GÓC GIỮA ĐIỆN THOẠI VÀ VỊ TRÍ MÈO
         let deltaAlpha = currentAlpha - targetAlpha;
-        
-        // Xử lý chống giật khi quay qua hướng Bắc (360 độ -> 0 độ)
         if (deltaAlpha > 180) deltaAlpha -= 360;
         if (deltaAlpha < -180) deltaAlpha += 360;
 
         let deltaBeta = currentBeta - targetBeta;
 
-        // Quy đổi độ lệch góc ra pixel % trên màn hình. 
-        // Khi cậu xoay máy sang phải (deltaAlpha > 0), con mèo sẽ bị đẩy sang trái để giữ nguyên vị trí ở môi trường thực!
-        catX = 50 - (deltaAlpha * 2.0); 
-        catY = 50 - (deltaBeta * 2.5);
+        // Tính tọa độ
+        catX = 50 - (deltaAlpha * 2.5); 
+        catY = 50 - (deltaBeta * 3.0);
 
-        // Giới hạn để Mèo không văng ra khỏi DOM (vẫn trượt đi nhưng không bị lỗi UI)
+        // GHÌM CƯƠNG: Không cho Mèo văng ra khỏi màn hình (Khóa từ -10% đến 110%)
+        if (catX < -10) catX = -10;
+        if (catX > 110) catX = 110;
+        if (catY < -10) catY = -10;
+        if (catY > 110) catY = 110;
+
         catTarget.style.left = catX + '%';
         catTarget.style.top = catY + '%';
     } else {

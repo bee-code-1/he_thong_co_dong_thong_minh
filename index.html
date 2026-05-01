@@ -2107,6 +2107,16 @@ window.startRunningProxy = function() {
     }
 };
 // === 6. HỆ THỐNG MẠNG XÃ HỘI & CỘNG ĐỒNG ===
+    
+// BỘ NHỊP TIM - DUY TRÌ TRẠNG THÁI ONLINE THỜI GIAN THỰC
+setInterval(() => {
+    const user = localStorage.getItem('currentUser');
+    if (user && window.db) {
+        window.db.ref('nguoi_dung/' + user).update({
+            thoi_gian_cap_nhat: Date.now()
+        });
+    }
+}, 60000); // Cứ 60 giây đập nhịp tim 1 lần
 window.danhSachBanBeThuc = []; // Lưu mảng bạn bè thật
 window.loiMoiKetBan = [];
 
@@ -2185,23 +2195,29 @@ window.veBangTinCongDong = function(allUsers) {
         
         const data = allUsers[u];
         const isFriend = window.danhSachBanBeThuc.includes(u);
-        const timeDiff = Date.now() - data.thoi_gian_cap_nhat;
-        const isOnline = timeDiff < 600000; // 10 phút
-        
-        // Cài đặt màu chấm trạng thái
-        const dotColor = isOnline ? "#00C853" : "#9E9E9E";
-        
-        // Tính toán khoảng cách hoặc trạng thái hiển thị
-        let statusText = "Ngoại tuyến";
-        if (isOnline) {
-            if (data.toa_do_lat && data.toa_do_lng && myLat && myLng) {
-                // Tính khoảng cách bằng Leaflet
-                const khoangCach = L.latLng(myLat, myLng).distanceTo(L.latLng(data.toa_do_lat, data.toa_do_lng));
-                statusText = "📍 Cách bạn: " + (khoangCach / 1000).toFixed(1) + " km";
-            } else {
-                statusText = "Đang hoạt động";
-            }
-        }
+const now = Date.now();
+const lastUpdate = data.thoi_gian_cap_nhat || now;
+const diffMinutes = Math.floor((now - lastUpdate) / 60000);
+const isOnline = diffMinutes < 10; // Dưới 10 phút tính là Online
+
+// Cài đặt màu chấm trạng thái
+const dotColor = isOnline ? "#00C853" : "#9E9E9E";
+let statusText = "";
+
+if (isOnline) {
+    if (data.toa_do_lat && data.toa_do_lng && myLat && myLng) {
+        const khoangCach = L.latLng(myLat, myLng).distanceTo(L.latLng(data.toa_do_lat, data.toa_do_lng));
+        statusText = "📍 Cách bạn: " + (khoangCach / 1000).toFixed(1) + " km";
+    } else {
+        statusText = "Đang hoạt động";
+    }
+} else {
+    // Hiển thị thời gian thực ng dùng off
+    if (diffMinutes < 60) statusText = `Hoạt động ${diffMinutes} phút trước`;
+    else if (diffMinutes < 1440) statusText = `Hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
+    else statusText = `Hoạt động ${Math.floor(diffMinutes / 1440)} ngày trước`;
+}
+}
 
         const pinColor = isFriend ? "#004BAd" : "#dc3545"; // Bạn bè viền xanh, người lạ viền đỏ
         const avatarUrl = data.avatar ? data.avatar : `https://ui-avatars.com/api/?name=${u}&background=random`;
@@ -4309,12 +4325,25 @@ window.moHoSoCongKhai = function(username) {
         document.getElementById('public-km').innerText = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000).toFixed(1) : "0.0";
         document.getElementById('public-calo').innerText = data.calo_tieu_thu ? data.calo_tieu_thu.toFixed(1) : "0";
         
-        // Cập nhật trạng thái Online
-        const isOnline = (Date.now() - (data.thoi_gian_cap_nhat || 0)) < 600000;
-        const sttDiv = document.getElementById('public-status');
-        sttDiv.innerText = isOnline ? "Đang hoạt động" : "Ngoại tuyến";
-        sttDiv.style.color = isOnline ? "#28a745" : "#6c757d";
-        sttDiv.style.background = isOnline ? "#e8f5e9" : "#e9ecef";
+// Cập nhật trạng thái Online thời gian thực
+const now = Date.now();
+const lastUpdate = data.thoi_gian_cap_nhat || now;
+const diffMinutes = Math.floor((now - lastUpdate) / 60000);
+const isOnline = diffMinutes < 10;
+const sttDiv = document.getElementById('public-status');
+
+if (isOnline) {
+    sttDiv.innerText = "Đang hoạt động";
+    sttDiv.style.color = "#28a745";
+    sttDiv.style.background = "#e8f5e9";
+} else {
+    if (diffMinutes < 60) sttDiv.innerText = `Hoạt động ${diffMinutes} phút trước`;
+    else if (diffMinutes < 1440) sttDiv.innerText = `Hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
+    else sttDiv.innerText = `Hoạt động ${Math.floor(diffMinutes / 1440)} ngày trước`;
+    
+    sttDiv.style.color = "#6c757d";
+    sttDiv.style.background = "#e9ecef";
+}
 
         // Cập nhật nút bấm (Kết bạn hoặc Chat)
         const isFriend = window.danhSachBanBeThuc.includes(username);

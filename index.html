@@ -401,6 +401,18 @@
         <!-- 1. BẢNG THÔNG SỐ (Góc trên trái) -->
         <!-- === TRỢ LÝ ẢO SỨC KHỎE (MÈO) === -->
 <div id="cat-assistant" class="idle-cat" style="position: absolute; top: 15px; right: 15px; z-index: 2000; touch-action: none;">
+            <!-- MENU TÙY CHỌN CỦA MÈO (LONG PRESS ĐỂ MỞ) -->
+        <div id="cat-options-popup" style="display: none; position: absolute; right: 80px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 3000; flex-direction: column; width: 170px; overflow: hidden; font-weight: bold; font-size: 14px;">
+            <div onclick="window.moChatTuMenu(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
+                 Chat với Mèo
+            </div>
+            <div onclick="window.toggleLaiNhai(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
+                <span id="icon-lainhai">🔇</span> <span id="text-lainhai">Tắt lải nhải</span>
+            </div>
+            <div onclick="window.duoiMeo(event)" style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #dc3545; transition: background 0.2s;" onmousedown="this.style.background='#ffebee'" onmouseup="this.style.background='white'">
+                 Đuổi khỏi nhà
+            </div>
+        </div>
     <!-- Khung chat (Bong bóng thoại) -->
     <div id="cat-speech-bubble" style="display: none; position: absolute; right: 60px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px 0 15px 15px; padding: 10px 15px; width: max-content; max-width: 180px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 13px; font-weight: bold; color: #333; line-height: 1.4;">
         Trời hôm nay mát lắm, chạy thêm 1km nữa nhé! 
@@ -3201,14 +3213,18 @@ function getSmartCatMessage() {
 }
 
 let isCatThinking = false; // Cờ khóa họng Mèo khi đang load AI
+window.isCatLaiNhai = localStorage.getItem('cat_lai_nhai') !== 'false';
+window.catIsSpeaking = false; // KHÓA MÕM: Tránh đè bóng thoại
 
 function showRandomCatMessage() {
-    // Nếu mèo đang bị kéo hoặc đang bận hỏi API thì im lặng
-    if (isCatDragging || isCatThinking) return; 
-    
+    // NẾU: Đang bị kéo, đang load AI, bị tắt lải nhải, Mèo đã bỏ nhà đi, HOẶC ĐANG NÓI DỞ -> Cấm nói tiếp!
+    if (isCatDragging || isCatThinking || !window.isCatLaiNhai || localStorage.getItem('meo_bo_nha') === 'true' || window.catIsSpeaking) return;
+
+    window.catIsSpeaking = true; // Khóa mõm lại
+
     const smartData = getSmartCatMessage();
     catBubble.innerText = smartData.text;
-    
+
     if (smartData.type === 'alert') {
         catBubble.style.backgroundColor = '#fdf8e4';
         catBubble.style.border = '2px solid #d4b895';
@@ -3218,14 +3234,98 @@ function showRandomCatMessage() {
     }
     catBubble.style.color = '#333';
     catBubble.style.display = 'block';
+    
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 
+    // Mèo hiển thị câu nói trong 4 giây rồi tắt
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
-        setTimeout(() => catBubble.style.display = 'none', 600);
+        setTimeout(() => { 
+            catBubble.style.display = 'none'; 
+            window.catIsSpeaking = false; // Nói xong và ẩn hẳn rồi -> Mở khóa mõm cho lần sau
+        }, 600);
     }, 4000);
 }
-setInterval(showRandomCatMessage, 15000);
+
+// THUẬT TOÁN ĐỆ QUY CHUẨN XÁC 15s (Thay thế cho setInterval bị lỗi)
+function loopCatSpeech() {
+    setTimeout(() => {
+        showRandomCatMessage();
+        loopCatSpeech(); // Đợi hàm trên chạy xong mới bắt đầu đếm 15s tiếp theo
+    }, 15000);
+}
+loopCatSpeech(); // Kích hoạt bộ đếm
+
+// ==========================================
+// LOGIC MENU 3 TÙY CHỌN & ĐUỔI MÈO
+// ==========================================
+window.moMenuMeo = function() {
+    const menu = document.getElementById('cat-options-popup');
+    if(menu) menu.style.display = 'flex';
+    // Cập nhật text nút Lải nhải
+    const icon = document.getElementById('icon-lainhai');
+    const txt = document.getElementById('text-lainhai');
+    if(icon && txt) {
+        icon.innerText = window.isCatLaiNhai ? "🔇" : "🔊";
+        txt.innerText = window.isCatLaiNhai ? "Tắt lải nhải" : "Bật lải nhải";
+    }
+};
+
+window.dongMenuMeo = function() {
+    const menu = document.getElementById('cat-options-popup');
+    if(menu) menu.style.display = 'none';
+};
+
+window.moChatTuMenu = function(e) {
+    if(e) e.stopPropagation();
+    window.dongMenuMeo();
+    moChatMeo(); 
+};
+
+window.toggleLaiNhai = function(e) {
+    if(e) e.stopPropagation();
+    window.isCatLaiNhai = !window.isCatLaiNhai;
+    localStorage.setItem('cat_lai_nhai', window.isCatLaiNhai);
+    window.dongMenuMeo();
+    alert(window.isCatLaiNhai ? "😼 Mèo sẽ tiếp tục cà khịa cậu!" : "🤐 Đã dán băng dính vào mõm Mèo!");
+};
+
+window.duoiMeo = function(e) {
+    if(e) e.stopPropagation();
+    if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
+        window.dongMenuMeo();
+        localStorage.setItem('meo_bo_nha', 'true');
+        
+        // Hiệu ứng dọn đồ bay đi mất
+        catAssistant.style.transition = "transform 1s ease-in, opacity 1s ease";
+        catAssistant.style.transform = "translateY(-200px) scale(0)";
+        catAssistant.style.opacity = "0";
+        setTimeout(() => {
+            catAssistant.style.display = 'none';
+            // Bật Tờ giấy note lên (Nếu đã có code)
+            const note = document.getElementById('cat-missing-note');
+            if (note) note.style.display = 'flex';
+        }, 1000);
+    }
+};
+
+// Đóng menu Mèo khi chạm ra ngoài
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('cat-options-popup');
+    const catBody = document.getElementById('cat-body');
+    if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && (!catBody || !catBody.contains(e.target))) {
+        window.dongMenuMeo();
+    }
+});
+
+// KIỂM TRA TRẠNG THÁI KHI VỪA MỞ APP
+window.addEventListener('load', () => {
+    if (localStorage.getItem('meo_bo_nha') === 'true') {
+        if(catAssistant) catAssistant.style.display = 'none';
+        const note = document.getElementById('cat-missing-note');
+        if (note) note.style.display = 'flex';
+    }
+});
 
 // 3. TƯƠNG TÁC DOUBLE TAP VỚI BỘ NÃO AI GEMINI
 let GEMINI_API_KEY = "";
@@ -3410,7 +3510,8 @@ function dragStart(e) {
         // Bắt đầu đếm giờ nhấn giữ (800ms)
         catLongPressTimer = setTimeout(() => {
             isCatLongPress = true;
-            moChatMeo(); // Mở màn hình chat
+            window.moMenuMeo(); // Bật Menu 3 tùy chọn 
+
             if (navigator.vibrate) navigator.vibrate(50); // Rung nhẹ phản hồi
         }, 800);
 

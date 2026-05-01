@@ -630,6 +630,16 @@
     </div>
     <button onclick="window.taiLopBanDoChonLoc()" style="margin-top: 15px; width: 100%; background: #6f42c1; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(111,66,193,0.3);">Bật hiển thị</button>
 </div>
+
+<!-- BẢNG SỔ TAY ĐỊA ĐIỂM (Độc lập hoàn toàn với Popup) -->
+<div id="sotay-panel" style="position: absolute; right: 75px; top: 140px; width: 230px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(23, 162, 184, 0.3); border-radius: 20px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1001; opacity: 0; visibility: hidden; transform: scale(0.8) translateX(20px); transform-origin: right top; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+    <span onclick="window.dongBangSoTay()" style="position: absolute; top: 5px; right: 12px; font-size: 24px; font-weight: bold; color: #888; cursor: pointer;">&times;</span>
+    <h4 style="margin: 0 0 10px 0; color: #17a2b8; border-bottom: 1px dashed #eee; padding-bottom: 5px;">📖 Sổ tay của cậu</h4>
+    <div id="sotay-list-content" style="max-height: 250px; overflow-y: auto; text-align: left; padding-right: 5px;">
+        <!-- Dữ liệu sổ tay sẽ được đẩy vào đây -->
+    </div>
+</div>
+        
 <!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
 <button id="btn-radar-share" onclick="window.toggleRadarAndShare()" style="position: absolute; bottom: 220px; left: 15px; background: #eaeaea; border: 4px solid #b0b0b0; border-radius: 50%; width: 55px; height: 55px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000; transition: all 0.3s;" title="Bật/Tắt Radar Cộng đồng">
     <svg viewBox="0 0 40 40" style="width: 32px; height: 32px;">
@@ -4499,101 +4509,95 @@ window.toggleRouteMode = function() {
     }
 };
 
-// === CẬP NHẬT GHIM A VÀ B VỚI SỔ TAY ===
+// === CẬP NHẬT GHIM A VÀ B ===
 window.setPointA = function(lat, lng) {
-    window.pointA = { lat: lat, lng: lng }; 
-    map.closePopup();
+    window.pointA = { lat: lat, lng: lng }; map.closePopup();
     if(window.markerA) map.removeLayer(window.markerA);
-    
     let pinA = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#28a745" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
-    
     window.markerA = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinA, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
-        .addTo(window.markerLayerGroup);
-        
-    window.khoiPhucPopupGoc('A');
+        .addTo(window.markerLayerGroup)
+        .bindPopup(`
+            <div style="text-align:center; min-width: 170px; font-weight:bold;">
+                <span style="color:#28a745; font-size:16px;">🟢 ĐIỂM XUẤT PHÁT</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                <button onclick="window.thayDoiDiem('A')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác</button>
+                <button onclick="window.moBangSoTay('A')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Mở Sổ tay đã lưu</button>
+                <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu điểm này</button>
+            </div>
+        `);
     if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
 window.setPointB = function(lat, lng) {
-    window.pointB = { lat: lat, lng: lng }; 
-    map.closePopup();
+    window.pointB = { lat: lat, lng: lng }; map.closePopup();
     if(window.markerB) map.removeLayer(window.markerB);
-    
     let pinB = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
-    
     window.markerB = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinB, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
-        .addTo(window.markerLayerGroup);
-
-    window.khoiPhucPopupGoc('B');
+        .addTo(window.markerLayerGroup)
+        .bindPopup(`
+            <div style="text-align:center; min-width: 170px; font-weight:bold;">
+                <span style="color:#dc3545; font-size:16px;">🔴 ĐIỂM ĐẾN</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                <button onclick="window.thayDoiDiem('B')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác</button>
+                <button onclick="window.moBangSoTay('B')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Mở Sổ tay đã lưu</button>
+                <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu điểm này</button>
+            </div>
+        `);
     if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
-// Hàm tạo và hiển thị menu gốc (Có Nút Sổ Tay)
-window.khoiPhucPopupGoc = function(loai) {
-    let lat = loai === 'A' ? window.pointA.lat : window.pointB.lat;
-    let lng = loai === 'A' ? window.pointA.lng : window.pointB.lng;
-    let color = loai === 'A' ? '#28a745' : '#dc3545';
-    let title = loai === 'A' ? '🟢 ĐIỂM XUẤT PHÁT' : '🔴 ĐIỂM ĐẾN';
-    
-    let html = `
-        <div style="text-align:center; min-width: 170px; font-weight:bold;">
-            <span style="color:${color}; font-size:16px;">${title}</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-            <button onclick="window.thayDoiDiem('${loai}')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Chọn điểm khác trên map</button>
-            <button onclick="window.hienSoTayTrongPopup('${loai}')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#17a2b8; color:white; border:none; border-radius:8px; cursor:pointer;">📖 Chọn từ Sổ tay đã lưu</button>
-            <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
-        </div>`;
-        
-    if (loai === 'A' && window.markerA) {
-        window.markerA.bindPopup(html);
-        if(window.markerA.isPopupOpen()) window.markerA.setPopupContent(html);
-    } else if (loai === 'B' && window.markerB) {
-        window.markerB.bindPopup(html);
-        if(window.markerB.isPopupOpen()) window.markerB.setPopupContent(html);
-    }
-};
+// === LOGIC BẢNG SỔ TAY NGOÀI BẢN ĐỒ ===
+window.loaiDiemDangChon = null;
 
-// Hàm chuyển đổi ruột Popup thành Danh sách Sổ tay
-window.hienSoTayTrongPopup = function(loai) {
+window.moBangSoTay = function(loai) {
+    window.loaiDiemDangChon = loai;
+    map.closePopup(); // Tắt cái bong bóng Leaflet cứng đầu đi
+    
+    const panel = document.getElementById('sotay-panel');
+    const content = document.getElementById('sotay-list-content');
+    if (!panel || !content) return;
+    
     const user = localStorage.getItem('currentUser') || "Khach";
     const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
     
-    let html = `<div style="text-align:center; min-width: 170px;">`;
-    html += `<span style="color:#17a2b8; font-size:15px; font-weight: 900;">📖 SỔ TAY CỦA CẬU</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">`;
-    
     if (dsDiaDiem.length === 0) {
-        html += `<div style="font-size:13px; color:#888; margin-bottom:15px; font-style:italic;">Chưa có gì! Ra map tìm và ấn "⭐ Lưu" nhé.</div>`;
+        content.innerHTML = `<div style="font-size:13px; color:#888; margin-top:10px; font-style:italic;">Cậu chưa lưu địa điểm nào cả. Hãy tìm trên bản đồ và lưu lại nhé!</div>`;
     } else {
-        html += `<div style="max-height: 180px; overflow-y: auto; text-align:left; margin-bottom:10px; padding-right: 5px;">`;
+        let html = '';
         dsDiaDiem.forEach((diem) => {
             html += `
-            <div onclick="window.chonDiemTuSoTay('${loai}', ${diem.lat}, ${diem.lng})" style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;" onmousedown="this.style.background='#e2e6ea'" onmouseup="this.style.background='#f8f9fa'">
-                <span style="font-size: 18px;">📍</span> <span style="font-size: 14px; font-weight: bold; color: #333;">${diem.ten}</span>
+            <div onclick="window.chonDiemTuBangSoTay(${diem.lat}, ${diem.lng})" style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;" onmousedown="this.style.background='#e2e6ea'" onmouseup="this.style.background='#f8f9fa'">
+                <span style="font-size: 18px;">📍</span> 
+                <span style="font-size: 14px; font-weight: bold; color: #333;">${diem.ten}</span>
             </div>`;
         });
-        html += `</div>`;
+        content.innerHTML = html;
     }
     
-    html += `<button onclick="window.khoiPhucPopupGoc('${loai}')" style="display:block; width:100%; padding:8px; background:#6c757d; color:white; border:none; border-radius:8px; font-weight: bold; cursor:pointer;">⬅ Quay lại</button>`;
-    html += `</div>`;
-
-    if (loai === 'A' && window.markerA) {
-        window.markerA.setPopupContent(html);
-    } else if (loai === 'B' && window.markerB) {
-        window.markerB.setPopupContent(html);
-    }
+    // Nảy bảng sổ tay ra mượt mà
+    panel.style.opacity = '1';
+    panel.style.visibility = 'visible';
+    panel.style.transform = 'scale(1) translateX(0)';
 };
 
-// Hàm kích hoạt nhảy ghim đến địa điểm được chọn trong sổ tay
-window.chonDiemTuSoTay = function(loai, lat, lng) {
-    if (loai === 'A') {
+window.dongBangSoTay = function() {
+    const panel = document.getElementById('sotay-panel');
+    if (panel) {
+        panel.style.opacity = '0';
+        panel.style.transform = 'scale(0.8) translateX(20px)';
+        setTimeout(() => panel.style.visibility = 'hidden', 400);
+    }
+    window.loaiDiemDangChon = null;
+};
+
+window.chonDiemTuBangSoTay = function(lat, lng) {
+    window.dongBangSoTay();
+    if (window.loaiDiemDangChon === 'A') {
         window.setPointA(lat, lng);
-        map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
         if(window.markerA) window.markerA.openPopup();
     } else {
         window.setPointB(lat, lng);
-        map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
         if(window.markerB) window.markerB.openPopup();
     }
+    map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
 };
     
 // Hàm mới để xử lý xóa từng điểm

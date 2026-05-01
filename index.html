@@ -503,6 +503,36 @@
 #action-btns-container.running #end-btn {
     width: 150px; padding: 15px 20px; opacity: 1; border-width: 3px;
 }
+
+ /* === BỘ ANIMATION BUNG NỞ CHO MÈO === */
+/* 1. Animation cho Menu 3 tùy chọn */
+#cat-options-popup {
+    display: flex !important; /* Đè lệnh inline thô cứng */
+    opacity: 0;
+    transform: scale(0.5);
+    transform-origin: top right; /* Nảy ra từ phía góc Mèo */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Nảy tưng tưng */
+    pointer-events: none; /* Tránh kẹt click khi bị ẩn */
+}
+#cat-options-popup.show {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* 2. Animation cho Màn hình Chat Mèo  */
+#cat-chat-screen {
+    display: flex !important; 
+    opacity: 0;
+    transform: scale(0);
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.4, 1.2), opacity 0.3s ease;
+    pointer-events: none;
+}
+#cat-chat-screen.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}        
          
      </style>
 </head>
@@ -3443,12 +3473,11 @@ function loopCatSpeech() {
 }
 loopCatSpeech(); // Kích hoạt bộ đếm
 
-// ==========================================
 // LOGIC MENU 3 TÙY CHỌN & ĐUỔI MÈO
-// ==========================================
 window.moMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.style.display = 'flex';
+    if(menu) menu.classList.add('show');
+    
     // Cập nhật text nút Lải nhải
     const icon = document.getElementById('icon-lainhai');
     const txt = document.getElementById('text-lainhai');
@@ -3460,13 +3489,13 @@ window.moMenuMeo = function() {
 
 window.dongMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.style.display = 'none';
+    if(menu) menu.classList.remove('show');
 };
 
 window.moChatTuMenu = function(e) {
     if(e) e.stopPropagation();
-    window.dongMenuMeo();
-    moChatMeo(); 
+    window.dongMenuMeo(); // Bảng thu lại mượt mà
+    moChatMeo(); // Kích hoạt nổ màn hình chat
 };
 
 window.toggleLaiNhai = function(e) {
@@ -3474,15 +3503,15 @@ window.toggleLaiNhai = function(e) {
     window.isCatLaiNhai = !window.isCatLaiNhai;
     localStorage.setItem('cat_lai_nhai', window.isCatLaiNhai);
     window.dongMenuMeo();
-    alert(window.isCatLaiNhai ? "😼 Mèo sẽ tiếp tục cà khịa cậu!" : "🤐 Đã dán băng dính vào mõm Mèo!");
+    alert(window.isCatLaiNhai ? "😼 Mèo sẽ tiếp tục khịa cậu!" : "🤐 Đã dán băng dính vào mõm Mèo!");
 };
 
 window.duoiMeo = function(e) {
     if(e) e.stopPropagation();
     if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
-        window.dongMenuMeo();
+        window.dongMenuMeo(); // Bảng tùy chọn thu lại
         
-        // Hiệu ứng dọn đồ bay đi mất
+        // Hiệu ứng Mèo dọn đồ bay đi mất
         const cat = document.getElementById('cat-assistant');
         if(cat) {
             cat.style.transition = "transform 1s ease-in, opacity 1s ease";
@@ -3490,8 +3519,9 @@ window.duoiMeo = function(e) {
             cat.style.opacity = "0";
         }
         
+        // Đợi bay mất hút rồi mới kích hoạt Tờ giấy Note
         setTimeout(() => {
-            window.hieuUngMeoBoNha(); // GỌI LUỒNG LOGIC VÀ ĐẾM NGƯỢC
+            window.hieuUngMeoBoNha(); 
         }, 1000);
     }
 };
@@ -3776,13 +3806,27 @@ function dragEnd(e) {
 // === HỆ THỐNG MA TRẬN NHÁNH CÂY (DECISION TREE) BỞI ORCHESTRATOR AGENT ===
 
 function moChatMeo() {
-    document.getElementById('cat-chat-screen').style.display = 'flex';
+    const screen = document.getElementById('cat-chat-screen');
+    const catElement = document.getElementById('cat-assistant'); 
+    
+    if(screen && catElement) {
+        // Thuật toán: Quét tọa độ rốn con Mèo làm tâm bung nở
+        const rect = catElement.getBoundingClientRect();
+        const originX = rect.left + rect.width / 2;
+        const originY = rect.top + rect.height / 2;
+        
+        // Gán tâm bung nở và kích hoạt
+        screen.style.transformOrigin = `${originX}px ${originY}px`;
+        screen.classList.add('active');
+    }
+    
     taiLichSuChat();
-    capNhatGoiYTheoNguCanh(); // Gọi Tác nhân điều phối quét trạng thái
+    capNhatGoiYTheoNguCanh(); 
 }
 
 function dongChatMeo() {
-    document.getElementById('cat-chat-screen').style.display = 'none';
+    const screen = document.getElementById('cat-chat-screen');
+    if(screen) screen.classList.remove('active'); // Mất class, tự động hút về chỗ Mèo
 }
 
 function taiLichSuChat() {

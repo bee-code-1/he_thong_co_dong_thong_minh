@@ -3384,6 +3384,8 @@ window.addEventListener('load', () => {
         if(catAssistant) catAssistant.style.display = 'none';
         const note = document.getElementById('cat-missing-note');
         if (note) note.style.display = 'flex';
+        // TIÊM THUỐC TRỢ TIM CHO ĐỒNG HỒ
+        if (typeof window.chayDemNguocMeo === 'function') window.chayDemNguocMeo();
     }
 });
 
@@ -4930,18 +4932,25 @@ window.xoaDiaDiemCaNhan = function(index) {
 // ==========================================
 let catCountdownInterval = null;
 
-// HÀM NÀY SẼ CHẠY KHI BẠN BẤM "ĐUỔI MÈO" TRONG MENU
-window.hieuUngMeoBoNha = function() {
+// HÀM NÀY CHẠY KHI BẠN BẤM "ĐUỔI MÈO" (isAuto=false) HOẶC MÈO TỰ BỎ ĐI (isAuto=true)
+window.hieuUngMeoBoNha = function(isAuto = false) {
     // 🛑 BỘ LỌC CHỐNG LỖI: Bắt buộc phải có GPS mới cho đuổi Mèo
     if (typeof latestLatLng === 'undefined' || !latestLatLng) {
         alert("📡 Khoan đã! GPS chưa chốt được vị trí của cậu. Đợi xíu cho cái mũi tên đỏ bản đồ hiện lên rồi hẵng đuổi Mèo đi, không là tịt đường tìm nó luôn đấy!");
-        return; // Đóng sập cửa, không cho đuổi!
+        return;
     }
 
     localStorage.setItem('meo_bo_nha', 'true');
     
-    // Hẹn giờ 20 tiếng sau (20 * 60 * 60 * 1000 mili-giây)
-    let thoiGianVe = Date.now() + (20 * 60 * 60 * 1000);
+    // THUẬT TOÁN RANDOM BƯỚC NHẢY 30 PHÚT
+    // Đuổi đi: 2 -> 3 tiếng (tương đương 4 -> 6 nửa tiếng)
+    // Tự đi: 2 -> 4 tiếng (tương đương 4 -> 8 nửa tiếng)
+    let minSteps = 4;
+    let maxSteps = isAuto ? 8 : 6; 
+    let randomSteps = Math.floor(Math.random() * (maxSteps - minSteps + 1)) + minSteps;
+    let msToAdd = randomSteps * 30 * 60 * 1000; 
+
+    let thoiGianVe = Date.now() + msToAdd;
     localStorage.setItem('meo_ve_nha_luc', thoiGianVe);
 
     // Random tọa độ Mèo lẩn trốn (Cách khoảng 1 - 2.5km) dựa trên GPS hiện tại
@@ -4973,8 +4982,8 @@ window.chayDemNguocMeo = function() {
             alert("Mèo đi hoang chán rồi đã tự mò về nhà!");
             document.getElementById('cat-missing-note').style.display = 'none';
             document.getElementById('cat-assistant').style.display = 'block';
-            if(window.catMarker2D) map.removeLayer(window.catMarker2D);
             if(window.routeLayerGroup) window.routeLayerGroup.clearLayers();
+            if(window.markerLayerGroup) window.markerLayerGroup.clearLayers();
         } else {
             // Cập nhật đồng hồ
             let h = Math.floor((conLai / (1000 * 60 * 60)) % 24);
@@ -4986,29 +4995,49 @@ window.chayDemNguocMeo = function() {
     }, 1000);
 };
 
-window.catMarker2D = null;
 window.batDauDiTimMeo = function() {
     let catLat = localStorage.getItem('toa_do_meo_lat');
     let catLng = localStorage.getItem('toa_do_meo_lng');
     
-    if (!catLat || !catLng || !latestLatLng) {
-        alert("Chưa dò được sóng GPS của Mèo! Hãy di chuyển thêm chút nữa!");
+    // Bộ lọc 1: Máy chưa chốt GPS
+    if (typeof latestLatLng === 'undefined' || !latestLatLng) {
+        alert("📡 Tịt ngòi! Bản đồ chưa bắt được sóng GPS của CẬU. Hãy đợi mũi tên đỏ hiện lên trước đã!");
         return;
     }
+
+    // Bộ lọc 2: Lỗi Data
+    if (!catLat || !catLng) {
+        alert("🙀 Lỗi Data: Không tìm thấy dấu vết của Mèo trong bộ nhớ! Hãy F5, gọi Mèo về và bấm 'Đuổi khỏi nhà' đàng hoàng nhé!");
+        return;
+    }
+
+    catLat = parseFloat(catLat);
+    catLng = parseFloat(catLng);
     
-    // Sử dụng thuật toán vẽ đường AQI có sẵn của anh em mình
-    window.routeFromCurrentTo(catLat, catLng);
+    map.closePopup();
     
-    // Vẽ cái mặt mèo lấp lánh lên bản đồ 2D
-    if (window.catMarker2D) map.removeLayer(window.catMarker2D);
+    // Dọn dẹp sạch sẽ các đường vẽ cũ và ghim cũ
+    if (window.routeLayerGroup) window.routeLayerGroup.clearLayers();
+    if (window.markerLayerGroup) window.markerLayerGroup.clearLayers();
+    window.routeLayerGroup.addTo(map);
+    window.markerLayerGroup.addTo(map);
+
+    // Gán lại biến A, B để hệ thống rẽ nhánh thông minh không bị nhầm
+    window.pointA = { lat: latestLatLng.lat, lng: latestLatLng.lng };
+    window.pointB = { lat: catLat, lng: catLng };
+    
+    //  CHỈ VẼ DUY NHẤT 1 ICON CỦA MÈO Ở ĐIỂM ĐẾN 
     let catIcon = L.divIcon({ 
         className:'', 
         html: `<div style="font-size:35px; filter: drop-shadow(0 0 10px #ffeb3b); animation: catPulse 1.5s infinite;">😼</div>`, 
         iconSize: L.point(40,40), iconAnchor: L.point(20,20) 
     });
-    window.catMarker2D = L.marker([catLat, catLng], { icon: catIcon }).addTo(map);
+    L.marker([catLat, catLng], { icon: catIcon }).addTo(window.markerLayerGroup);
     
-    alert("📍 Đã đánh dấu vị trí của Mèo trên bản đồ! Hãy tới đó, nút Bắt Mèo sẽ mở khóa!");
+    // Vẽ đường đi bằng hàm AQI có sẵn (Từ GPS thiết bị tới tọa độ Mèo)
+    window.drawAQIRoute(latestLatLng.lat, latestLatLng.lng, catLat, catLng);
+    
+    alert("📍 Đã dò ra vị trí Mèo! Đường đi đã được vẽ. Hãy xách giày lên đi bộ đến đó, khi nào cách Mèo dưới 20m, nút Camera sẽ mở khóa!");
 };
 
 </script>

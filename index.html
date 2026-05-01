@@ -4010,26 +4010,26 @@ window.taiLopBanDoChonLoc = function() {
     }).catch(e => console.warn("Lỗi tải POI GeoJSON"));
 };
 
-// ==========================================
-// 3. KHÔI PHỤC LỘ TRÌNH A-B (SỬ DỤNG GIỌT NƯỚC SVG VÀ .at() CHỐNG LỖI)
-// ==========================================
+// === 3. KHÔI PHỤC LỘ TRÌNH A-B (CƠ CHẾ KHÓA BẢN ĐỒ & POPUP TÙY CHỈNH) ===
 window.isRouteMode = false;
 window.pointA = null; window.pointB = null;
+window.markerA = null; window.markerB = null; // Quản lý riêng rẽ 2 ghim
 window.routeLayerGroup = L.layerGroup();
 window.markerLayerGroup = L.layerGroup();
 
 window.toggleRouteMode = function() {
     window.isRouteMode = !window.isRouteMode;
-    const btn = document.getElementById('btn-route-ab'); 
-    
+    const btn = document.getElementById('btn-route-ab');
     if (window.isRouteMode) {
-        btn.style.backgroundColor = '#F5F5DC'; 
+        btn.style.backgroundColor = '#F5F5DC';
         window.routeLayerGroup.addTo(map);
         window.markerLayerGroup.addTo(map);
-        alert("📍 Bật chế độ Lộ trình A-B! Bấm vào bản đồ hoặc tiện ích để chọn điểm.");
+        alert("📍 Bật chế độ Lộ trình A-B! Bấm vào bản đồ để chọn điểm.");
     } else {
         btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
         window.pointA = null; window.pointB = null;
+        if(window.markerA) map.removeLayer(window.markerA);
+        if(window.markerB) map.removeLayer(window.markerB);
         window.routeLayerGroup.clearLayers();
         window.markerLayerGroup.clearLayers();
         map.removeLayer(window.routeLayerGroup);
@@ -4039,37 +4039,67 @@ window.toggleRouteMode = function() {
 
 window.setPointA = function(lat, lng) {
     window.pointA = { lat: lat, lng: lng }; map.closePopup();
+    if(window.markerA) map.removeLayer(window.markerA);
+
     let pinA = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#28a745" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
-    L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinA, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) }).addTo(window.markerLayerGroup);
+    
+    window.markerA = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinA, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
+        .addTo(window.markerLayerGroup)
+        .bindPopup(`
+            <div style="text-align:center; min-width: 170px; font-weight:bold;">
+                <span style="color:#28a745; font-size:16px;">🟢 ĐIỂM XUẤT PHÁT</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                <button onclick="window.thayDoiDiem('A')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Thay đổi điểm xuất phát</button>
+                <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
+            </div>
+        `);
+
+    if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
 };
 
 window.setPointB = function(lat, lng) {
     window.pointB = { lat: lat, lng: lng }; map.closePopup();
+    if(window.markerB) map.removeLayer(window.markerB);
+
     let pinB = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
-    L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinB, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) }).addTo(window.markerLayerGroup);
-    window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
+    
+    window.markerB = L.marker([lat, lng], { icon: L.divIcon({ className:'', html: pinB, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) })
+        .addTo(window.markerLayerGroup)
+        .bindPopup(`
+            <div style="text-align:center; min-width: 170px; font-weight:bold;">
+                <span style="color:#dc3545; font-size:16px;">🔴 ĐIỂM ĐẾN</span><hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                <button onclick="window.thayDoiDiem('B')" style="display:block; width:100%; margin-bottom:8px; padding:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Thay đổi điểm đến</button>
+                <button onclick="window.luuDiaDiemCaNhan(${lat}, ${lng})" style="display:block; width:100%; padding:8px; background:#ffc107; color:#333; border:none; border-radius:8px; cursor:pointer;">⭐ Lưu địa điểm này</button>
+            </div>
+        `);
+
+    if (window.pointA && window.pointB) window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
+};
+
+// Hàm mới để xử lý xóa từng điểm
+window.thayDoiDiem = function(loai) {
+    window.routeLayerGroup.clearLayers(); // Xóa sạch đường vẽ cũ
+    map.closePopup();
+    if (loai === 'A') {
+        window.pointA = null;
+        if(window.markerA) map.removeLayer(window.markerA);
+    } else {
+        window.pointB = null;
+        if(window.markerB) map.removeLayer(window.markerB);
+    }
 };
 
 // LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
+// LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
 map.on('click', function(e) {
-    if (!window.isRouteMode) return; // Nếu đang tắt chế độ Lộ trình thì không làm gì cả
+    if (!window.isRouteMode) return; // Đang tắt lộ trình thì không làm gì
     let lat = e.latlng.lat;
     let lng = e.latlng.lng;
     
+    // NẾU ĐÃ CHỌN ĐỦ 2 ĐIỂM -> KHÓA BẢN ĐỒ KHÔNG CHO BẤM LUNG TUNG NỮA
     if (!window.pointA) {
         window.setPointA(lat, lng);
     } else if (!window.pointB) {
         window.setPointB(lat, lng);
-    } else {
-        if(confirm("Cậu đã chọn đủ 2 điểm rồi. Muốn xóa lộ trình cũ và chọn lại Điểm A tại đây không?")) {
-            // Dọn dẹp sạch sẽ tàn dư cũ trên bản đồ
-            window.routeLayerGroup.clearLayers();
-            window.markerLayerGroup.clearLayers();
-            window.pointB = null; // Reset lại điểm B
-            
-            // Cắm lại ghim A mới tinh
-            window.setPointA(lat, lng);
-        }
     }
 });    
 window.routeFromCurrentTo = function(tLat, tLng) {
@@ -4133,14 +4163,14 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
             const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
             map.fitBounds(L.polyline(allLeafCoords).getBounds(), { padding: L.point(30, 30) });
             
-            L.popup().setLatLng([lat2, lng2]).setContent(`
-                <div style="font-weight:bold; color:#004BAd; text-align:center;">
-                Khoảng cách: ${totalDist} km<br>
-                <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                ⭐ Lưu địa điểm này
-                </button>
-                </div>
-            `).openOn(map);
+            // HIỆN KHOẢNG CÁCH NỔI BẬT DỌC THEO ĐƯỜNG ĐI 
+            let midIndex = Math.floor(allLeafCoords.length / 2);
+            let midCoord = allLeafCoords[midIndex];
+            
+            L.tooltip({ permanent: true, direction: 'top', opacity: 0.95 })
+            .setLatLng(midCoord)
+            .setContent(`<div style="font-weight: 900; color: #004BAd; font-size: 15px;">🛣️ ${totalDist} km</div>`)
+            .addTo(window.routeLayerGroup);
         }
     }).catch(err => {
         console.warn("Lỗi API ORS:", err);

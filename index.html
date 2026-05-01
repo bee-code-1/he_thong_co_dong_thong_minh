@@ -442,7 +442,42 @@
 }
 #poi-panel.show { opacity: 1; visibility: visible; transform: scale(1) translateX(0); }
          
-    </style>
+/* =========================================
+   ANIMATION TÁCH NÚT: BẮT ĐẦU -> TẠM DỪNG / KẾT THÚC
+========================================= */
+#action-btns-container {
+    position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 0px; /* Gap mặc định bằng 0 để nút ẩn dính sát vào */
+    pointer-events: auto; width: max-content;
+    transition: gap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#action-btns-container.running {
+    gap: 15px; /* Khi chạy, tách 2 nút ra 15px */
+}
+
+.action-btn {
+    border-radius: 30px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    cursor: pointer; font-size: 16px; font-weight: bold; color: white;
+    white-space: nowrap; overflow: hidden; /* Chống rớt chữ khi nút bị bóp nhỏ */
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Trạng thái mặc định (Dành cho nút Tạm dừng/Kết thúc) là Tàng hình & Bóp nát */
+    padding: 0; width: 0; opacity: 0; border-width: 0; margin: 0;
+    display: inline-flex; justify-content: center; align-items: center;
+}
+
+/* NÚT BẮT ĐẦU: Lúc nhàn rỗi thì To, lúc Chạy thì Bị bóp nát */
+#start-btn { background-color: #28a745; width: 160px; padding: 15px 30px; opacity: 1; border-width: 3px; }
+#action-btns-container.running #start-btn { width: 0; padding: 0; opacity: 0; border-width: 0; margin: 0; }
+
+/* NÚT TẠM DỪNG & KẾT THÚC: Lúc nhàn rỗi thì Bị bóp nát, lúc Chạy thì Phình to */
+#pause-btn { background-color: #ffc107; color: #333; }
+#end-btn { background-color: #dc3545; }
+#action-btns-container.running #pause-btn,
+#action-btns-container.running #end-btn {
+    width: 150px; padding: 15px 20px; opacity: 1; border-width: 3px;
+}
+         
+     </style>
 </head>
 <body>
 
@@ -559,11 +594,11 @@
 
 <!-- 4. NÚT LOCATE ME  -->
 <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; bottom: 150px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000;">📍</button>
-     <!-- 4. BỘ NÚT ĐIỀU KHIỂN ở tab chạy bộ (bắt dầu, tạm dừng, kết thúc) -->
-        <div id="action-btns-container" style="position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; width: max-content;">
-            <button id="start-btn" class="action-btn" onclick="startRunningProxy()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #28a745; min-width: 150px;">▶ BẮT ĐẦU</button>
-            <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #ffc107; color: #333; display: none;">⏸ TẠM DỪNG</button>
-            <button id="end-btn" class="action-btn" onclick="window.handleEndClick(event)" style="position: relative; bottom: 0; left: 0; transform: none; background-color: #dc3545; display: none; user-select: none;">⏹ KẾT THÚC</button>
+    <!-- 4. BỘ NÚT ĐIỀU KHIỂN ở tab chạy bộ (bắt đầu, tạm dừng, kết thúc) -->
+        <div id="action-btns-container">
+            <button id="start-btn" class="action-btn" onclick="startRunningProxy()">▶ BẮT ĐẦU</button>
+            <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()">⏸ TẠM DỪNG</button>
+            <button id="end-btn" class="action-btn" onclick="window.handleEndClick(event)">⏹ KẾT THÚC</button>
         </div>
     </div>
 
@@ -1648,9 +1683,7 @@ window.hienThiRecap = function() {
         }
 
         // Trả các nút về trạng thái CHƯA TẬP
-        document.getElementById('start-btn').style.display = 'inline-block';
-        document.getElementById('pause-btn').style.display = 'none';
-        document.getElementById('end-btn').style.display = 'none';
+        document.getElementById('action-btns-container').classList.remove('running');
         isTracking = false;
             //  HIỆN LẠI VIÊN NHỘNG LỚP BẢN ĐỒ
         if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
@@ -1770,9 +1803,9 @@ window.luuTienTrinh = function() {
     if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
     if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
     
-    document.getElementById('start-btn').style.display = 'inline-block';
-    document.getElementById('pause-btn').style.display = 'none';
-    document.getElementById('end-btn').style.display = 'none';
+        // Trả các nút về trạng thái CHƯA TẬP (Hút 2 nút thành 1)
+    document.getElementById('action-btns-container').classList.remove('running');
+
     
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.remove('nav-hidden');
@@ -2261,9 +2294,9 @@ window.startRunningProxy = function() {
     if (nav) nav.classList.add('nav-hidden');
     
     // 2. Đổi giao diện nút 
-    document.getElementById('start-btn').style.display = 'none';
-    document.getElementById('pause-btn').style.display = 'inline-block';
-    document.getElementById('end-btn').style.display = 'inline-block';
+    //  KÍCH HOẠT ANIMATION TÁCH NÚT
+    document.getElementById('action-btns-container').classList.add('running');
+
     
     // 3. Hiện đồng hồ 
     document.getElementById('time-display').style.display = 'block';

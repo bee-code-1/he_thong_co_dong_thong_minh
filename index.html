@@ -827,6 +827,62 @@
         </div>
     </div>
 </div>
+
+<!-- MÀN HÌNH CHAT 1-1 VỚI BẠN BÈ -->
+<div id="human-chat-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f2f5; z-index: 6000; flex-direction: column;">
+    <div style="background: #28a745; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; padding-top: calc(15px + env(safe-area-inset-top)); box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img id="chat-human-avatar" src="" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+            <div>
+                <h3 id="chat-human-name" style="margin: 0; font-size: 16px;">Đang tải...</h3>
+                <div style="font-size: 12px; opacity: 0.8;">Đang hoạt động</div>
+            </div>
+        </div>
+        <button onclick="window.dongKhungChatNguoi()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer;">&times;</button>
+    </div>
+    
+    <!-- Lịch sử Chat -->
+    <div id="human-chat-history" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div id="chat-empty-msg" style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Đang tải tin nhắn...</div>
+    </div>
+    
+    <!-- Ô nhập tin nhắn -->
+    <div style="padding: 10px 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="human-chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key === 'Enter') window.guiTinNhanNguoi()" style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 15px; background: #f8f9fa;">
+        <button onclick="window.guiTinNhanNguoi()" style="background: #28a745; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚀</button>
+    </div>
+</div>
+
+<!-- MÀN HÌNH MESSENGER HUB (DANH SÁCH BẠN BÈ LỚN) -->
+<div id="messenger-hub-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f2f5; z-index: 4500; flex-direction: column;">
+    <div style="background: #28a745; color: white; padding: 15px 20px; display: flex; align-items: center; padding-top: calc(15px + env(safe-area-inset-top)); box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
+        <button onclick="document.getElementById('messenger-hub-screen').style.display='none'" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; margin-right: 15px; padding: 0;">⬅</button>
+        <h2 style="margin: 0; font-size: 20px;">💬 Đoạn chat</h2>
+    </div>
+    <!-- Nơi nhồi danh sách bạn bè -->
+    <div id="messenger-hub-list" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
+</div>
+
+<!-- POPUP HỒ SƠ CÔNG KHAI CỦA NGƯỜI KHÁC -->
+<div id="public-profile-modal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
+    <div onclick="event.stopPropagation()" style="background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <span onclick="document.getElementById('public-profile-modal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 28px; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+        
+        <img id="public-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #28a745; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+        <h2 id="public-name" style="margin: 0 0 5px 0; color: #333; font-size: 22px;">Tên User</h2>
+        <div id="public-status" style="font-size: 13px; color: #28a745; font-weight: bold; margin-bottom: 15px; background: #e8f5e9; display: inline-block; padding: 4px 10px; border-radius: 12px;">Đang hoạt động</div>
+        
+        <!-- Các chỉ số công khai -->
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px; border: 1px solid #eee;">
+            <div style="margin-bottom: 8px;">🏃 Tổng quãng đường: <b id="public-km" style="color: #004BAd;">0.0</b> km</div>
+            <div>🔥 Tổng calo đốt: <b id="public-calo" style="color: #dc3545;">0</b> kcal</div>
+        </div>
+        
+        <!-- Khu vực nút tương tác động -->
+        <div id="public-action-btn"></div>
+    </div>
+</div>
+    
 <!-- MÀN HÌNH CHAT VỚI MÈO (NHẤN GIỮ ĐỂ MỞ) -->
 <div id="cat-chat-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f2f5; z-index: 5000; flex-direction: column;">
     
@@ -4092,7 +4148,6 @@ window.thayDoiDiem = function(loai) {
 };
 
 // LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
-// LẮNG NGHE CÚ CLICK TRÊN BẢN ĐỒ ĐỂ CHỌN A VÀ B
 map.on('click', function(e) {
     if (!window.isRouteMode) return; // Đang tắt lộ trình thì không làm gì
     let lat = e.latlng.lat;
@@ -4104,28 +4159,19 @@ map.on('click', function(e) {
     } else if (!window.pointB) {
         window.setPointB(lat, lng);
     }
-});    
-window.routeFromCurrentTo = function(tLat, tLng) {
-    if (!latestLatLng) return alert("Chưa có tín hiệu GPS!");
-    map.closePopup();
-    window.routeLayerGroup.clearLayers(); window.markerLayerGroup.clearLayers();
-    window.routeLayerGroup.addTo(map); window.markerLayerGroup.addTo(map);
-    window.pointA = { lat: latestLatLng.lat, lng: latestLatLng.lng };
-    window.pointB = { lat: tLat, lng: tLng };
-    let pinB = `<svg viewBox="0 0 32 40" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M16 0 C7.16 0 0 7.16 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.16 24.84 0 16 0 Z" fill="#dc3545" stroke="#fff" stroke-width="2"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>`;
-    L.marker([tLat, tLng], { icon: L.divIcon({ className:'', html: pinB, iconSize: L.point(36,45), iconAnchor: L.point(18,45) }) }).addTo(window.markerLayerGroup);
-    window.drawAQIRoute(latestLatLng.lat, latestLatLng.lng, tLat, tLng);
-};
+});
 
+// HÀM VẼ ĐƯỜNG ĐI AQI TỪ A ĐẾN B
 window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
     L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang quét AQI thực tế lộ trình...</div>`).openOn(map);
-    
+
     const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjZmZTUwZTA5ZWVhYjQwMmNiYjgwMWJjMjk1ZDA0ZTJiIiwiaCI6Im11cm11cjY0In0=";
     fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${lng1},${lat1}&end=${lng2},${lat2}`)
     .then(res => res.json())
     .then(async data => {
         if(data.features && data.features.length > 0) {
+            map.closePopup();
             const route = data.features.at(0);
             const coords = route.geometry.coordinates;
             const totalDist = (route.properties.summary.distance / 1000).toFixed(1);
@@ -4148,6 +4194,12 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
             }
             
             let aqiResults = await Promise.all(aqiPromises);
+
+            // BƯỚC 1: VẼ VIỀN TRẮNG CHẠY XUYÊN SUỐT TỪ A ĐẾN B
+            const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
+            L.polyline(allLeafCoords, { color: '#ffffff', weight: 14, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(window.routeLayerGroup);
+
+            // BƯỚC 2: VẼ CÁC ĐOẠN LÕI MÀU AQI ĐÈ LÊN
             for (let i = 0; i < numSegments; i++) {
                 let startIndex = i * segmentSize;
                 let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1;
@@ -4161,12 +4213,12 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
                 else if (aqi > 150 && aqi <= 200) aqiColor = "#dc3545";
                 else if (aqi > 200) aqiColor = "#6f42c1";
                 
-                L.polyline(leafCoords, { color: aqiColor, weight: 8, opacity: 0.7, lineCap: 'round' }).addTo(window.routeLayerGroup);
+                L.polyline(leafCoords, { color: aqiColor, weight: 8, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(window.routeLayerGroup);
             }
-            const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
+            
             map.fitBounds(L.polyline(allLeafCoords).getBounds(), { padding: L.point(30, 30) });
             
-            // HIỆN KHOẢNG CÁCH NỔI BẬT DỌC THEO ĐƯỜNG ĐI 
+            // HIỆN KHOẢNG CÁCH NỔI BẬT DỌC THEO ĐƯỜNG ĐI (Ở GIỮA LỘ TRÌNH)
             let midIndex = Math.floor(allLeafCoords.length / 2);
             let midCoord = allLeafCoords[midIndex];
             

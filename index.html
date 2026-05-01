@@ -94,11 +94,43 @@
         #fog-menu { display: none; flex-direction: column; background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 15px; }
         #fog-menu button { margin: 4px 0; padding: 8px 15px; border: none; border-radius: 6px; background-color: #343a40; color: white; cursor: pointer; }
         
-        #action-btns-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
-        .action-btn { padding: 15px 30px; border-radius: 30px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer; font-size: 16px; font-weight: bold; color: white; transition: 0.2s; }
-        #start-btn { background-color: #28a745; min-width: 150px; } 
-        #pause-btn { background-color: #ffc107; color: #333; display: none; } 
-        #end-btn { background-color: #dc3545; display: none; }
+/* =========================================
+   ANIMATION MORPHING: BẮT ĐẦU -> CHẠY -> RECAP
+========================================= */
+#action-btns-container {
+    position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 0px; pointer-events: auto; width: max-content; z-index: 9000;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.action-btn {
+    padding: 0; width: 0; opacity: 0; border: 0px solid white; margin: 0;
+    border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    cursor: pointer; font-size: 16px; font-weight: bold; color: white;
+    white-space: nowrap; overflow: hidden;
+    display: inline-flex; justify-content: center; align-items: center;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    height: 50px;
+}
+
+/* 1. Trạng thái Nghỉ (BẮT ĐẦU) */
+#start-btn { width: 160px; opacity: 1; border-width: 3px; background-color: #28a745; padding: 0 20px;}
+
+/* 2. Trạng thái Đang Chạy (TÁCH ĐÔI) */
+#action-btns-container.running { gap: 15px; }
+#action-btns-container.running #start-btn { width: 0; opacity: 0; border-width: 0; padding: 0; }
+#action-btns-container.running #pause-btn { width: 150px; opacity: 1; border-width: 3px; background-color: #ffc107; color: #333; padding: 0 20px; }
+#action-btns-container.running #end-btn { width: 150px; opacity: 1; border-width: 3px; background-color: #dc3545; padding: 0 20px; }
+
+/* 3. Trạng thái Morphing lên Recap (GỘP LÀM 1 & BAY LÊN) */
+#action-btns-container.morphing { bottom: 50%; transform: translate(-50%, 50%); gap: 0; }
+#action-btns-container.morphing #pause-btn { width: 0; opacity: 0; border-width: 0; padding: 0; }
+#action-btns-container.morphing #end-btn { width: 280px; background-color: #4CAF50; color: white; border-width: 3px; padding: 0 20px; }
+
+/* 4. Hiệu ứng bung nở của bảng Recap */
+#recap-modal { opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+#recap-modal.show { opacity: 1; pointer-events: auto; }
+#recap-modal > div { transform: scale(0.6); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+#recap-modal.show > div { transform: scale(1); }
         
         .user-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid #ff0000; transform-origin: 50% 50%; will-change: transform; }
         .leaflet-control-attribution { display: none; }
@@ -594,7 +626,7 @@
 
 <!-- 4. NÚT LOCATE ME  -->
 <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; bottom: 150px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000;">📍</button>
-    <!-- 4. BỘ NÚT ĐIỀU KHIỂN ở tab chạy bộ (bắt đầu, tạm dừng, kết thúc) -->
+    <!-- 4. BỘ NÚT ĐIỀU KHIỂN ở tab chạy bộ (Morphing) -->
         <div id="action-btns-container">
             <button id="start-btn" class="action-btn" onclick="startRunningProxy()">▶ BẮT ĐẦU</button>
             <button id="pause-btn" class="action-btn" onclick="pauseTrackingAction()">⏸ TẠM DỪNG</button>
@@ -1367,14 +1399,6 @@ window.saveProfile = function(isSkip) {
         isTracking = true; 
         isPaused = false;
 
-        //  ÉP GIAO DIỆN CHUYỂN NÚT NGAY LẬP TỨC 
-        document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('pause-btn').style.display = 'inline-block';
-        document.getElementById('end-btn').style.display = 'inline-block';
-        
-        document.getElementById('pause-btn').innerText = "⏸ TẠM DỪNG";
-        document.getElementById('pause-btn').style.backgroundColor = "#ff9800"; // Đổi màu Cam
-
         //  Kích hoạt bộ thu sóng GPS chạy ngầm
         if (typeof gpsWatcherId === 'undefined' || !gpsWatcherId) {
             if (typeof initGPS === 'function') initGPS();
@@ -1636,11 +1660,7 @@ window.hienThiRecap = function() {
     if (typeof isPaused !== 'undefined') isPaused = true;
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
 
-    // =========================================================
-    // 🛑 BÀN TAY SẮT: TRỪNG PHẠT KẺ LƯỜI BIẾNG (TƯỚC QUYỀN RECAP)
-    // =========================================================
-    // Note: Tớ đang set tạm là chạy > 5 giây mà đi < 15 mét để cậu dễ test. 
-    // Sau khi test ok, cậu có thể tự sửa thành > 300 (5 phút) và < 50 mét nhé!
+    // 🛑 BÀN TAY SẮT: TRỪNG PHẠT KẺ LƯỜI BIẾNG (TƯỚC QUYỀN RECAP
     if (elapsedSeconds > 5 && totalDistanceMeter < 15) {
         
         // 1. Giấu tiệt cái bảng Recap đi
@@ -1688,7 +1708,7 @@ window.hienThiRecap = function() {
             //  HIỆN LẠI VIÊN NHỘNG LỚP BẢN ĐỒ
         if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
 
-
+    document.getElementById('action-btns-container').classList.remove('running', 'morphing');
 
         return; //  Chặn ở đây, k chạy các code hiện Recap ở phía dưới nữa!
     }
@@ -1720,30 +1740,35 @@ window.hienThiRecap = function() {
     if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
 
     const rModal = document.getElementById('recap-modal');
-    if(rModal) {
-        rModal.style.display = 'flex';
+    // KỊCH BẢN MORPHING BAY LÊN RECAP CHÚC MỪNG
+    const endBtn = document.getElementById('end-btn');
+    if (endBtn) endBtn.innerText = "🎉 CHÚC MỪNG 🎉";
+    document.getElementById('action-btns-container').classList.add('morphing');
 
-        // Đánh thức Mèo Ảo để chúc mừng sau tập 
-        if (typeof catBubble !== 'undefined') {
-            const postMsgs = [
-                "Đỉnh đấy! Mèo khen cậu ",
-                "Recap xịn, cho Mèo ké tí",
-                "Người hôi rồi, tắm đi cậu",
-                "Đến giờ đớp rồi 😋"
-            ];
-            catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
-            catBubble.style.backgroundColor = '#fff9c4';  
-            catBubble.style.border = '2px solid #ffc107'; 
-            catBubble.style.color = '#333';               
-            catBubble.style.display = 'block';
-            setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-
-            setTimeout(() => {
-                catBubble.classList.remove('show-bubble');
-                setTimeout(() => catBubble.style.display = 'none', 600);
-            }, 6000);
+    // Đợi 600ms cho Viên nhộng bay tới giữa màn hình rồi mới bung bảng Recap
+    setTimeout(() => {
+        document.getElementById('action-btns-container').style.opacity = '0';
+        const rModal = document.getElementById('recap-modal');
+        if(rModal) {
+            rModal.style.display = 'flex';
+            setTimeout(() => rModal.classList.add('show'), 10);
+            
+            // Đánh thức Mèo Ảo để chúc mừng sau tập
+            if (typeof catBubble !== 'undefined') {
+                const postMsgs = ["Đỉnh đấy! Mèo khen cậu ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi cậu", "Đến giờ đớp rồi 😋"];
+                catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
+                catBubble.style.backgroundColor = '#fff9c4';
+                catBubble.style.border = '2px solid #ffc107';
+                catBubble.style.color = '#333';
+                catBubble.style.display = 'block';
+                setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+                setTimeout(() => {
+                    catBubble.classList.remove('show-bubble');
+                    setTimeout(() => catBubble.style.display = 'none', 600);
+                }, 6000);
+            }
         }
-    }
+    }, 600);
 };
 
 // === HÀM LƯU TIẾN TRÌNH  ===
@@ -1789,24 +1814,25 @@ window.luuTienTrinh = function() {
     }
 
     const rModal = document.getElementById('recap-modal');
-    if (rModal) rModal.style.display = 'none';
-    
-    if (typeof isTracking !== 'undefined') isTracking = false;
-    if (typeof isPaused !== 'undefined') isPaused = false;
-    if (typeof totalDistanceMeter !== 'undefined') totalDistanceMeter = 0;
-    if (typeof elapsedSeconds !== 'undefined') elapsedSeconds = 0;
-    if (typeof pathLatLngs !== 'undefined') pathLatLngs = [];
-    if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
-    
-    if (document.getElementById('time-display')) document.getElementById('time-display').innerText = "00:00";
+    if (rModal) rModal.classList.remove('show');
+
+    // Đợi bảng Recap teo nhỏ mờ đi, rồi cho Viên nhộng hiện ra và rớt xuống
+    setTimeout(() => {
+        if(rModal) rModal.style.display = 'none';
+        const btnContainer = document.getElementById('action-btns-container');
+        if (btnContainer) {
+            btnContainer.style.opacity = '1';
+            btnContainer.classList.remove('morphing', 'running');
+            document.getElementById('end-btn').innerText = "⏹ KẾT THÚC"; // Reset text
+        }
+    }, 400);
+
+    // Reset hiển thị số liệu
     if (document.getElementById('dist-display')) document.getElementById('dist-display').innerText = "0.00";
     if (document.getElementById('step-display')) document.getElementById('step-display').innerText = "0";
     if (document.getElementById('cal-display')) document.getElementById('cal-display').innerText = "0.0";
-    
-        // Trả các nút về trạng thái CHƯA TẬP (Hút 2 nút thành 1)
-    document.getElementById('action-btns-container').classList.remove('running');
 
-    
+
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.remove('nav-hidden');
     const timer = document.getElementById('time-display');

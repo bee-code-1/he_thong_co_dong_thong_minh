@@ -597,6 +597,10 @@
         <!-- === TRỢ LÝ ẢO SỨC KHỎE (MÈO) === -->
 <div id="cat-assistant" class="idle-cat" style="position: absolute; top: 15px; right: 15px; z-index: 2000; touch-action: none;">
             <!-- MENU TÙY CHỌN CỦA MÈO (LONG PRESS ĐỂ MỞ) -->
+        <div onclick="window.hoiThoiTietNhanh(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #d35400; transition: background 0.2s;" onmousedown="this.style.background='#fff3cd'" onmouseup="this.style.background='white'">
+             Phân tích thời tiết
+        </div>
+    
         <div id="cat-options-popup" style="display: none; position: absolute; right: 80px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 3000; flex-direction: column; width: 170px; overflow: hidden; font-weight: bold; font-size: 14px;">
             <div onclick="window.moChatTuMenu(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
                  Chat với Mèo
@@ -4102,18 +4106,20 @@ window.addEventListener('load', function() {
         }
     }, 1500); // Đợi 1.5s cho Firebase khởi động xong
 })
-// === LÕI NÃO BỘ AI (ĐƯỢC GỌI TỪ CẢM BIẾN TOUCHEND) ===
-window.isCatThinking = false; // Biến cờ khóa mõm an toàn tuyệt đối
-window.kichHoatAIKhia = async function() {
-    // Nếu Mèo đang load thì khóa không cho gõ tiếp
+// === NÃO BỘ AI: PHÂN TÍCH THỜI TIẾT VÀ LỜI KHUYÊN (TỪ MENU) ===
+window.isCatThinking = false; 
+
+window.hoiThoiTietNhanh = async function(e) {
+    if(e) e.stopPropagation();
+    if (typeof window.dongMenuMeo === 'function') window.dongMenuMeo(); // Thu menu lại cho gọn
+
     if (window.isCatThinking) return;
 
-    isMangKinh = !isMangKinh;
-    catImgObj.src = getAnhMacDinh();
-
+    // 1. Quét dữ liệu môi trường từ widget
     const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
     const aqi = document.getElementById('btn-bui-min') ? document.getElementById('btn-bui-min').innerText.replace(/\n/g, ' ') : "AQI Ổn";
 
+    // 2. Quét hồ sơ y tế cá nhân từ LocalStorage
     let userCondition = 'none';
     let userAge = 20;
     const currentUser = localStorage.getItem('currentUser');
@@ -4125,32 +4131,31 @@ window.kichHoatAIKhia = async function() {
         }
     }
 
-    if (isMangKinh) {
-        catBubble.style.backgroundColor = '#e3f2fd';
-        catBubble.style.border = '2px solid #0d47a1';
-    } else {
-        catBubble.style.backgroundColor = '#fdf8e4';
-        catBubble.style.border = '2px solid #d4b895';
-    }
-    catBubble.innerText = "Đợi tí để Mèo xem nào... ⏳";
+    // 3. Giao diện Mèo "Đang đo đạc"
+    if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();
+    catBubble.style.backgroundColor = '#e3f2fd';
+    catBubble.style.border = '2px solid #0d47a1';
+    catBubble.innerText = "Đợi Mèo lôi vệ tinh ra soi thời tiết nhé... 🛰️";
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+    window.isCatThinking = true;
 
-    window.isCatThinking = true; // BẬT CỜ KHÓA HỌNG
-
+    // 4. CHUẨN BỊ PROMPT CHO GEMINI
     let benhLyText = "Khỏe mạnh";
     if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
     else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
 
     let aqiNumber = window.currentAQIValue || "chưa rõ";
 
-    const prompt = `Bạn là huấn luyện viên Mèo ảo. Tính cách: xéo xắt, mặn mòi, mỏ hỗn nhưng rất quan tâm sức khỏe.
-    Quy tắc xưng hô: Luôn xưng "Mèo", gọi người dùng là "cậu".
-    Người dùng: ${userAge} tuổi, sức khỏe: ${benhLyText}.
-    Môi trường: ${thoiTiet}, chỉ số bụi mịn AQI là ${aqiNumber} (${aqi}).
-    Hành động: Cậu ta vừa gõ đầu Mèo 2 cái để ${isMangKinh ? 'đeo kính đen' : 'lột kính đen'}.
-    Yêu cầu: Viết MỘT câu duy nhất (dưới 20 chữ). Nhận xét thời tiết/không khí hiện tại và giục đi tập hoặc khuyên ở nhà. Giọng điệu thật khịa đểu. Không dùng dấu ngoặc kép.`;
+    const prompt = `Bạn là huấn luyện viên Mèo ảo. Tính cách: thông minh, mặn mòi, xéo xắt nhưng cực kỳ quan tâm sức khỏe.
+    Người dùng: ${userAge} tuổi, bệnh lý: ${benhLyText}.
+    Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn AQI là ${aqiNumber} (${aqi}).
+    Yêu cầu: Dựa vào các chỉ số trên, viết MỘT ĐOẠN (tối đa 40 chữ). 
+    1. Đánh giá nhanh thời tiết này.
+    2. Chốt lại là có nên ra ngoài không, hay ở nhà làm gì (chạy bộ, tập gym, hay đi ngủ). 
+    Giọng điệu như một chuyên gia nhưng vẫn khịa đểu. Tuyệt đối không dùng dấu ngoặc kép.`;
 
+    // 5. GỌI API GEMINI 2.5 FLASH
     try {
         if (!GEMINI_API_KEY) {
             catBubble.innerText = "Cậu chưa cắm Key API cho Mèo kìa! 😿";
@@ -4163,28 +4168,27 @@ window.kichHoatAIKhia = async function() {
             const data = await response.json();
 
             if (data.error) {
-                console.error("Lỗi từ Google:", data.error);
                 catBubble.innerText = `Google chặn: ${data.error.message.substring(0, 30)}... 😾`;
             } else if (data.candidates && data.candidates.length > 0 && data.candidates.content && data.candidates.content.parts && data.candidates.content.parts.length > 0) {
-                let aiMessage = data.candidates.content.parts.text.trim();
-                catBubble.innerText = aiMessage.replace(/\*/g, '');
+                let aiMessage = data.candidates.content.parts.text.trim().replace(/\*/g, '');
+                catBubble.innerText = aiMessage;
             } else {
-                catBubble.innerText = "Mèo đang lag, cậu gõ đầu lại coi 😿";
+                catBubble.innerText = "Vệ tinh kẹt mây rồi, hỏi lại coi 😿";
             }
         }
     } catch (error) {
-        console.error("Lỗi AI Double Tap:", error);
-        catBubble.innerText = "Đứt cáp rồi! Mèo không phân tích đc 😿";
+        console.error("Lỗi AI Thời tiết:", error);
+        catBubble.innerText = "Đứt cáp quang rồi! Mèo không soi vệ tinh đc 😿";
     }
 
-    // Đợi 6 giây cho người dùng đọc rồi thu hồi và mở cờ
+    // 6. THU DỌN KHUNG CHAT VÀ MỞ KHÓA HỌNG SAU 8 GIÂY
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => {
             catBubble.style.display = 'none';
-            window.isCatThinking = false; // TẮT CỜ MỞ KHÓA HỌNG BẰNG BIẾN TOÀN CỤC CHUẨN XÁC
+            window.isCatThinking = false;
         }, 600);
-    }, 6000);
+    }, 8000);
 };
 
 // 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)

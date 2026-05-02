@@ -569,7 +569,15 @@
 .slider-dots { display: flex; justify-content: center; gap: 8px; }
 .slider-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; transition: all 0.3s; }
 .slider-dot.active { width: 25px; background: #004BAd; border-radius: 5px; }
-         
+
+/* === UI PHÒNG TRƯNG BÀY THÀNH TỰU (TAB 5) === */
+.badge-item { display: flex; align-items: center; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; transition: transform 0.2s; }
+.badge-item:active { transform: scale(0.98); }
+.badge-icon { font-size: 45px; margin-right: 15px; width: 60px; text-align: center; }
+.badge-locked { filter: grayscale(1); opacity: 0.6; background: #e9ecef; border: 2px dashed #ccc; }
+.badge-unlocked { border: 2px solid #ffc107; background: linear-gradient(135deg, #fffdf0 0%, #fff8e1 100%); }
+.badge-lock-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 24px; opacity: 0.5; }
+
      </style>
 </head>
 <body>
@@ -871,14 +879,17 @@
         </div>
     </div>
 </div>
-<!-- LAYER TAB 5: ĐÌNH CÔNG -->
-<div id="tab-5" class="tab-screen solid-bg" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto;">
-    <div style="padding: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-        <span style="font-size: 60px; filter: grayscale(1);">🚧</span>
-        <h2 style="color: #6c757d; margin-top: 15px;">Khu vực đang đình công</h2>
-        <p style="color: #888; font-size: 14px;">Nhà phát triển đang chuẩn bị đóng apk rồi nhé.</p>
-    </div>
-</div>
+        <!-- LAYER TAB 5: THÀNH TỰU CÁ NHÂN -->
+        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 140px;">
+            <div style="padding: 25px 15px; text-align: center;">
+                <h2 style="color: #d35400; margin-top: 0; margin-bottom: 5px; font-size: 24px;">🏆 Phòng Trưng Bày</h2>
+                <p style="color: #666; font-size: 14px; margin-bottom: 25px; font-weight: bold;">Những dấu chân lịch sử của cậu trên dải đất hình chữ S.</p>
+                
+                <div id="danh-sach-thanh-tuu" style="display: flex; flex-direction: column;">
+                    <!-- JS sẽ nhồi 12 huy hiệu vào đây -->
+                </div>
+            </div>
+        </div>
 <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
 <div id="bottom-nav" class="bottom-nav">
     <div class="nav-item active" onclick="switchTab(1)">🏃</div>
@@ -2508,6 +2519,62 @@ window.startRunningProxy = function() {
         startTrackingAction();
     }
 };
+
+// HỆ THỐNG THÀNH TỰU (PHÒNG TRƯNG BÀY TAB 5)
+// ==========================================
+const DANH_SACH_HUY_HIEU = [
+    { cap: 16, icon: '🐢', title: 'Khởi động Hồ Gươm', desc: 'Bước chân đầu tiên! Cậu đã hoàn thành quãng đường bằng một vòng dạo quanh Hồ Gươm (Hà Nội).' },
+    { cap: 47, icon: '🚲', title: 'Gió mát Hồ Tây', desc: 'Không đùa đâu, cậu đã tích lũy đủ để đạp xe trọn vẹn một vòng Hồ Tây lộng gió rồi đấy!' },
+    { cap: 78, icon: '🏅', title: 'Huy chương Marathon', desc: 'Thể lực tuyệt vời! Sức bền của cậu hiện đã ngang với việc chạy xong một giải Full-Marathon tiêu chuẩn.' },
+    { cap: 120, icon: '🎒', title: 'Đôi chân Phượt thủ', desc: 'Chúc mừng! Cậu đã đi bộ một quãng đường tương đương từ thủ đô Hà Nội về thăm Cố đô Hoa Lư.' },
+    { cap: 208, icon: '☁️', title: 'Săn mây Đà Lạt', desc: 'Đỉnh chóp! Quãng đường cậu đi đã bằng một chuyến Trekking thẳng từ Sài Gòn lên xứ mù sương Đà Lạt.' },
+    { cap: 269, icon: '🌊', title: 'Hương vị Biển cả', desc: 'Chân cậu chắc khỏe lắm rồi đấy. Hành trình của cậu đã dài bằng chuyến đi từ Sài Gòn ra ngắm biển Nha Trang.' },
+    { cap: 399, icon: '⛰️', title: 'Dấu chân Trường Sơn', desc: 'Lịch sử gọi tên cậu! Từng bước chân đã cộng dồn bằng đúng chiều dài của Dãy Trường Sơn hùng vĩ.' },
+    { cap: 496, icon: '🇻🇳', title: 'Xuyên Việt Ca', desc: 'Ngạo nghễ! Cậu vừa điền tên mình vào danh sách những người đi bộ xuyên Việt từ Hà Nội vào TP.Hồ Chí Minh.' },
+    { cap: 584, icon: '🛣️', title: 'Dọc đường Thiên Lý', desc: 'Không gì cản nổi! Cậu đã chinh phục toàn bộ chiều dài Quốc lộ 1A từ Lạng Sơn đến tận Mũi Cà Mau.' },
+    { cap: 687, icon: '🏖️', title: 'Ôm trọn Biển Đông', desc: 'Cậu là một chiến binh! Cậu đã đi dọc toàn bộ đường bờ biển tuyệt đẹp của tổ quốc.' },
+    { cap: 1000, icon: '🦅', title: 'Cánh chim Xuyên Lục Địa', desc: 'Vượt ra khỏi biên giới! Quãng đường cậu đi đã dài bằng một chuyến bay thẳng từ Việt Nam sang tận nước Úc.' },
+    { cap: 1203, icon: '🌍', title: 'Kẻ chinh phục Địa Cầu', desc: 'Cột mốc tối thượng! Cậu đã hoàn thành khoảng cách vĩ đại từ Xích Đạo lên thẳng Bắc Cực. Không còn giới hạn nào cho cậu nữa!' }
+];
+
+window.veBangThanhTuu = function() {
+    const container = document.getElementById('danh-sach-thanh-tuu');
+    if (!container) return;
+    const user = localStorage.getItem('currentUser');
+    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+    let html = '';
+
+    DANH_SACH_HUY_HIEU.forEach(hh => {
+        const isUnlocked = currentLevel >= hh.cap;
+        const trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
+        const lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
+        const descText = isUnlocked ? hh.desc : `<i>Đạt Cấp ${hh.cap} để khám phá bí mật này...</i>`;
+        const titleText = isUnlocked ? hh.title : `Thử thách Cấp ${hh.cap}`;
+        const glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
+
+        html += `
+        <div class="badge-item ${trangThaiClass}">
+            <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
+            <div style="flex: 1; text-align: left; padding-right: 20px;">
+                <div style="font-weight: 900; font-size: 15px; margin-bottom: 5px; color: ${isUnlocked ? '#d35400' : '#555'};">${titleText}</div>
+                <div class="badge-desc" style="font-size: 13px; line-height: 1.4; color: ${isUnlocked ? '#333' : '#888'};">${descText}</div>
+            </div>
+            ${lockIcon}
+        </div>`;
+    });
+    container.innerHTML = html;
+};
+
+// Gắn cơ chế tự động load bảng thành tựu khi bấm sang Tab 5
+const oldSwitchTabChoTab5 = window.switchTab;
+window.switchTab = function(tabIndex) {
+    if(typeof oldSwitchTabChoTab5 === 'function') oldSwitchTabChoTab5(tabIndex);
+    if(tabIndex === 5 && typeof window.veBangThanhTuu === 'function') {
+        window.veBangThanhTuu();
+    }
+};
+window.addEventListener('load', () => { setTimeout(() => window.veBangThanhTuu(), 1500); });
+
 // === 6. HỆ THỐNG MẠNG XÃ HỘI & CỘNG ĐỒNG ===
     
 // BỘ NHỊP TIM - DUY TRÌ TRẠNG THÁI ONLINE THỜI GIAN THỰC

@@ -4004,7 +4004,8 @@ loopCatSpeech(); // Kích hoạt bộ đếm
 // ==========================================
 window.moMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.style.display = 'flex';
+    // 🔥 UỐNG ĐÚNG THUỐC: Dùng class .show để bung Animation CSS thay vì style.display
+    if(menu) menu.classList.add('show'); 
     
     // Cập nhật text nút Lải nhải
     const icon = document.getElementById('icon-lainhai');
@@ -4014,7 +4015,7 @@ window.moMenuMeo = function() {
         txt.innerText = window.isCatLaiNhai ? "Tắt lải nhải" : "Bật lải nhải";
     }
 
-    // BÀN TAY SẮT 1: Ép Mèo tỉnh lại ngay khi Menu vừa mở ra
+    // 🛑 BÀN TAY SẮT 1: Ép Mèo tỉnh lại ngay khi Menu vừa mở ra
     if (typeof catImgObj !== 'undefined') {
         catImgObj.src = getAnhMacDinh();
         const catAssist = document.getElementById('cat-assistant');
@@ -4027,7 +4028,8 @@ window.moMenuMeo = function() {
 
 window.dongMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.style.display = 'none';
+    // 🔥 Rút class .show để bảng mờ đi và tự đóng
+    if(menu) menu.classList.remove('show'); 
     
     // 🛑 BÀN TAY SẮT 2: Ép Mèo tỉnh lại khi đóng Menu (Chống kẹt UI)
     if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();

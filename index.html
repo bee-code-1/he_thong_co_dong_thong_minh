@@ -1944,11 +1944,25 @@ window.luuTienTrinh = function() {
     if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
         // TẠO ID MỚI TRÊN FIREBASE TRƯỚC KHI LƯU
         const newRecordRef = window.db.ref('tien_trinh_tap_luyen/' + username).push();
-        newRecordRef.set(recordData).then(() => {
-            alert("Đã lưu tiến trình thành công vào hồ sơ!");
-            // Truyền ID đó vào để vẽ thẻ
-            window.veTheTienTrinh(newRecordRef.key, recordData); 
-        }).catch(err => console.error("Lỗi lưu tiến trình:", err));
+            newRecordRef.set(recordData).then(() => {
+                alert("Đã lưu tiến trình thành công vào hồ sơ!");
+                // FIX LỖI ĐÚP: Dọn sạch và kéo lại từ mây
+                const listContainer = document.getElementById('progress-list');
+                if(listContainer) listContainer.innerHTML = '';
+                
+                window.db.ref('tien_trinh_tap_luyen/' + username).once('value').then((snapshot) => {
+                    if(snapshot.val()) {
+                        if (typeof window.xuLyDuLieuTienTrinh === 'function') {
+                            window.xuLyDuLieuTienTrinh(snapshot.val());
+                        } else {
+                            window.capNhatBangTichLuy(snapshot.val());
+                            const records = Object.keys(snapshot.val()).map(key => ({ key: key, data: snapshot.val()[key] }));
+                            records.sort((a, b) => a.data.timestamp - b.data.timestamp);
+                            records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
+                        }
+                    }
+                });
+            }).catch(err => console.error("Lỗi lưu tiến trình:", err));
     }
 
     // KỊCH BẢN ĐÓNG RECAP RỒI MỚI GỘP NÚT
@@ -1998,16 +2012,30 @@ window.xoaTienTrinh = function(recordKey, btnElement) {
     let username = localStorage.getItem('currentUser');
     if (username && typeof window.db !== 'undefined') {
         window.db.ref('tien_trinh_tap_luyen/' + username + '/' + recordKey).remove()
-            .then(() => {
-                const card = btnElement.closest('.progress-card');
-                if (card) card.remove();
-
-                const listContainer = document.getElementById('progress-list');
-                if (listContainer && listContainer.querySelectorAll('.progress-card').length === 0) {
+        .then(() => {
+            // FIX LỖI UI: Dọn sạch và kéo lại từ mây để chia lại mốc tháng/level
+            const listContainer = document.getElementById('progress-list');
+            if(listContainer) listContainer.innerHTML = '';
+            
+            window.db.ref('tien_trinh_tap_luyen/' + username).once('value').then((snapshot) => {
+                if(snapshot.val()) {
+                    if (typeof window.xuLyDuLieuTienTrinh === 'function') {
+                        window.xuLyDuLieuTienTrinh(snapshot.val());
+                    } else {
+                        window.capNhatBangTichLuy(snapshot.val());
+                        const records = Object.keys(snapshot.val()).map(key => ({ key: key, data: snapshot.val()[key] }));
+                        records.sort((a, b) => a.data.timestamp - b.data.timestamp);
+                        records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
+                    }
+                } else {
                     const emptyMsg = document.getElementById('empty-progress');
                     if (emptyMsg) emptyMsg.style.display = 'block';
+                    // Xóa sạch thì reset số tổng
+                    if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy({});
+                    if (typeof window.capNhatHeThongLevel === 'function') window.capNhatHeThongLevel(0);
                 }
-            })
+            });
+        })
             .catch(err => {
                 console.error("Lỗi xóa tiến trình:", err);
                 alert("Không thể xóa lúc này, vui lòng thử lại sau!");
@@ -4084,11 +4112,11 @@ window.addEventListener('devicemotion', function(e) {
 
         if (speed > shakeThreshold) {
             shakeCount++;
-            if(shakeCount > 10) { 
-                catImgObj.src = imgNhechMep;
-                catBubble.innerText = "Đừng lắc nữa, chóng mặt quá";
-                catBubble.style.backgroundColor = '#fdf8e4';
-                catBubble.style.border = '2px solid #d4b895';
+                if(shakeCount > 10) {
+                    catImgObj.src = imgChongMat; 
+                    catBubble.innerText = "Đừng lắc nữa, chóng mặt quá ";
+                    catBubble.style.backgroundColor = '#fdf8e4';
+                    catBubble.style.border = '2px solid #d4b895';
                 catBubble.style.display = 'block';
                 setTimeout(() => catBubble.classList.add('show-bubble'), 50);
 

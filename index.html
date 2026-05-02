@@ -18,7 +18,21 @@
     pointer-events: auto !important;
 }
         .tab-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
-        .tab-screen.active-tab { display: block; z-index: 10; }
+        /* HIỆU ỨNG NỞ MƯỢT KHI CHUYỂN TAB */
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: scale(0.98) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.tab-screen.active-tab { 
+    display: block; 
+    z-index: 10; 
+    animation: tabFadeIn 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
+}
+
+/* KẾ THỪA HIỆU ỨNG BAY LÊN (SLIDE UP) CHO TAB 2 VÀ TAB 4 */
+.progress-card, .community-card {
+    animation: slideUpFade 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
         .tab-screen.active-tab * { pointer-events: auto; }
         .solid-bg { background-color: #f5f5f5; pointer-events: auto; }
         .tab-content { padding: 20px; padding-top: 40px; text-align: center; color: #333; }
@@ -2612,8 +2626,8 @@ window.veBangTinCongDong = function(allUsers) {
 
         // GIAO DIỆN MẠNG XÃ HỘI MỚI NHẤT
         html += `
-        <div onclick="window.moHoSoCongKhai('${u}')" style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-            <!-- Cụm Avatar kiểu Pin Bản đồ -->
+        <div class="community-card" onclick="window.moHoSoCongKhai('${u}')" style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+       
             <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
                     <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="${pinColor}" />

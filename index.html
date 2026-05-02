@@ -568,7 +568,8 @@
                  Chat với Mèo
             </div>
             <div onclick="window.toggleLaiNhai(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
-                <span id="icon-lainhai"> </span>🔇<span id="text-lainhai">Tắt lải nhải</span>
+                <span id="icon-lainhai"> </span>
+                <span id="text-lainhai">Tắt lải nhải</span>
             </div>
             <div onclick="window.duoiMeo(event)" style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #dc3545; transition: background 0.2s;" onmousedown="this.style.background='#ffebee'" onmouseup="this.style.background='white'">
                  Đuổi khỏi nhà
@@ -3497,9 +3498,7 @@ function getSmartCatMessage() {
         return { text: pauseMsgs[Math.floor(Math.random() * pauseMsgs.length)], type: "alert" };
     } 
     else {
-        // ==========================================
         // 👻 EASTER EGG HỆ TÂM LINH (TỈ LỆ XUẤT HIỆN 1%)
-        // ==========================================
         if (Math.random() < 0.01) {
             return { text: "Mèo chơi trốn tìm theo tên chủ mộ", type: "alert" };
         }
@@ -3592,10 +3591,11 @@ function loopCatSpeech() {
 loopCatSpeech(); // Kích hoạt bộ đếm
 
 // LOGIC MENU 3 TÙY CHỌN & ĐUỔI MÈO
+// ==========================================
 window.moMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
     if(menu) menu.classList.add('show');
-    
+
     // Cập nhật text nút Lải nhải
     const icon = document.getElementById('icon-lainhai');
     const txt = document.getElementById('text-lainhai');
@@ -3612,8 +3612,8 @@ window.dongMenuMeo = function() {
 
 window.moChatTuMenu = function(e) {
     if(e) e.stopPropagation();
-    window.dongMenuMeo(); // Bảng thu lại mượt mà
-    moChatMeo(); // Kích hoạt nổ màn hình chat
+    window.dongMenuMeo();
+    moChatMeo();
 };
 
 window.toggleLaiNhai = function(e) {
@@ -3621,36 +3621,36 @@ window.toggleLaiNhai = function(e) {
     window.isCatLaiNhai = !window.isCatLaiNhai;
     localStorage.setItem('cat_lai_nhai', window.isCatLaiNhai);
     window.dongMenuMeo();
-    alert(window.isCatLaiNhai ? "😼 Mèo sẽ tiếp tục khịa cậu!" : "🤐 Đã dán băng dính vào mõm Mèo!");
+    alert(window.isCatLaiNhai ? "😼 Mèo sẽ liên tục lèm bèm" : "🤐 Đã dán băng dính vào mõm Mèo!");
 };
 
 window.duoiMeo = function(e) {
     if(e) e.stopPropagation();
     if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
-        window.dongMenuMeo(); // Bảng tùy chọn thu lại
-        
-        // Hiệu ứng Mèo dọn đồ bay đi mất
+        window.dongMenuMeo();
+        // Hiệu ứng dọn đồ bay đi mất
         const cat = document.getElementById('cat-assistant');
         if(cat) {
             cat.style.transition = "transform 1s ease-in, opacity 1s ease";
             cat.style.transform = "translateY(-200px) scale(0)";
             cat.style.opacity = "0";
         }
-        
-        // Đợi bay mất hút rồi mới kích hoạt Tờ giấy Note
         setTimeout(() => {
-            window.hieuUngMeoBoNha(); 
+            window.hieuUngMeoBoNha(); // GỌI LUỒNG LOGIC VÀ ĐẾM NGƯỢC
         }, 1000);
     }
 };
 
-// Đóng menu Mèo khi chạm ra ngoài
-document.addEventListener('click', function(e) {
-    const menu = document.getElementById('cat-options-popup');
-    const catBody = document.getElementById('cat-body');
-    if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && (!catBody || !catBody.contains(e.target))) {
-        window.dongMenuMeo();
-    }
+// Đóng menu Mèo khi chạm ra ngoài (Bản Siêu Việt - Vượt mặt Leaflet)
+['mousedown', 'touchstart'].forEach(evt => {
+    window.addEventListener(evt, function(e) {
+        const menu = document.getElementById('cat-options-popup');
+        const catBody = document.getElementById('cat-body');
+        // Nếu đang mở mà click trượt ra ngoài menu VÀ ngoài người con Mèo -> Thu lại
+        if (menu && menu.classList.contains('show') && !menu.contains(e.target) && (!catBody || !catBody.contains(e.target))) {
+            window.dongMenuMeo();
+        }
+    }, true); // Tham số true (useCapture) giúp chộp sự kiện từ trên cao nhất trước khi bị bản đồ nuốt mất!
 });
 
 // KIỂM TRA TRẠNG THÁI KHI VỪA MỞ APP

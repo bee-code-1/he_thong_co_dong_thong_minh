@@ -2212,6 +2212,13 @@ window.toggleRadarAndShare = function() {
 let lopBanDoBui = null;
 window.currentAQIColor = window.currentAQIColor || '#28a745'; // Màu dự phòng ban đầu
 
+window.toggleBuiMin = function() {
+    if (typeof window.isHienBui === 'undefined') window.isHienBui = false;
+    window.isHienBui = !window.isHienBui;
+    
+    const btn = document.getElementById('btn-bui-min');
+    if (!btn) return;
+
     if (window.isHienBui) {
         // TRẠNG THÁI ON: Hiện thẳng chỉ số AQI thực tế + Màu cảnh báo
         let aqiVal = window.currentAQIValue || "--";
@@ -2234,6 +2241,7 @@ window.currentAQIColor = window.currentAQIColor || '#28a745'; // Màu dự phòn
         btn.innerHTML = 'Lớp Bụi mịn<br>🔴 OFF';
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
+};
 // === LOGIC BẬT TẮT BẢN ĐỒ ĐỊA HÌNH ===
 let lopDiaHinh = null;
 window.isHienDiaHinh = false;

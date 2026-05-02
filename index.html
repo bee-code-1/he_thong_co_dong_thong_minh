@@ -596,23 +596,26 @@
         <!-- 1. BẢNG THÔNG SỐ (Góc trên trái) -->
         <!-- === TRỢ LÝ ẢO SỨC KHỎE (MÈO) === -->
 <div id="cat-assistant" class="idle-cat" style="position: absolute; top: 15px; right: 15px; z-index: 2000; touch-action: none;">
-            <!-- MENU TÙY CHỌN CỦA MÈO (LONG PRESS ĐỂ MỞ) -->
-        <div onclick="window.hoiThoiTietNhanh(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #d35400; transition: background 0.2s;" onmousedown="this.style.background='#fff3cd'" onmouseup="this.style.background='white'">
-             Phân tích thời tiết
-        </div>
+           <!-- MENU TÙY CHỌN CỦA MÈO (LONG PRESS ĐỂ MỞ) -->
+<div id="cat-options-popup" style="display: none; position: absolute; right: 80px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 3000; flex-direction: column; width: 190px; white-space: normal; overflow: hidden; font-weight: bold; font-size: 14px; line-height: 1.4;">
     
-       <div id="cat-options-popup" style="display: none; position: absolute; right: 80px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 3000; flex-direction: column; width: max-content; white-space: nowrap; overflow: hidden; font-weight: bold; font-size: 14px;">
-            <div onclick="window.moChatTuMenu(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
-                 Chat với Mèo
-            </div>
-            <div onclick="window.toggleLaiNhai(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
-                <span id="icon-lainhai"> </span>
-                <span id="text-lainhai">Tắt lải nhải</span>
-            </div>
-            <div onclick="window.duoiMeo(event)" style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #dc3545; transition: background 0.2s;" onmousedown="this.style.background='#ffebee'" onmouseup="this.style.background='white'">
-                 Đuổi khỏi nhà
-            </div>
-        </div>
+    <div onclick="window.hoiThoiTietNhanh(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #d35400; transition: background 0.2s;" onmousedown="this.style.background='#fff3cd'" onmouseup="this.style.background='white'">
+         Phân tích thời tiết
+    </div>
+
+    <div onclick="window.moChatTuMenu(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
+         Chat với Mèo
+    </div>
+
+    <div onclick="window.toggleLaiNhai(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
+        <span id="icon-lainhai">🔇</span> <span id="text-lainhai">Tắt lải nhải</span>
+    </div>
+
+    <div onclick="window.duoiMeo(event)" style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #dc3545; transition: background 0.2s;" onmousedown="this.style.background='#ffebee'" onmouseup="this.style.background='white'">
+         Đuổi khỏi nhà
+    </div>
+
+</div>
     <!-- Khung chat (Bong bóng thoại) -->
     <div id="cat-speech-bubble" style="display: none; position: absolute; right: 60px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px 0 15px 15px; padding: 10px 15px; width: max-content; max-width: 180px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 13px; font-weight: bold; color: #333; line-height: 1.4;">
         Trời hôm nay mát lắm, chạy thêm 1km nữa nhé! 

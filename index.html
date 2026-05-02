@@ -923,7 +923,10 @@
         <div class="nav-item" onclick="switchTab(2)">📊</div>
         <div class="nav-item" onclick="switchTab(3)">🏠</div>
         <div class="nav-item" onclick="switchTab(4)">👥</div>
-        <div class="nav-item" onclick="switchTab(5)" title="Thành tựu cá nhân">🏆</div>
+        <div class="nav-item" onclick="switchTab(5)" title="Thành tựu cá nhân" style="position: relative;">
+    🏆
+    <span id="cham-do-thanh-tuu" style="display: none; position: absolute; top: 0px; right: -5px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(220,53,69,0.8); animation: btnRadarPulse 2s infinite;"></span>
+</div>
     </div>
 
     <!-- MÀN HÌNH GIỚI THIỆU (ONBOARDING SLIDER) - BẢN GEN Z TỐI GIẢN -->
@@ -1014,6 +1017,24 @@
 <!-- CỬA SỔ SỨC KHỎE CƠ BẢN -->
 <div id="app-container">  
     <div id="fog-layer"></div>
+
+<!-- POPUP NỔ THÀNH TỰU MỚI TƯNG TƯNG -->
+<div id="achievement-modal" onclick="window.dongHuyHieuMoi()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10005; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
+    <!-- Khung pháo hoa xài riêng cho Thành tựu -->
+    <canvas id="achieve-fireworks-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></canvas>
+    
+    <!-- Hộp quà bên trong (Bấm vào hộp không bị tắt) -->
+    <div onclick="event.stopPropagation()" id="achieve-box" style="background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%); padding: 30px 20px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 0 30px #ffc107; position: relative; z-index: 2; transform: scale(0); opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+        <h2 style="color: #d35400; margin-top: 0; font-size: 22px;">🎉 KỶ LỤC MỚI! 🎉</h2>
+        <div id="achieve-icon" style="font-size: 80px; filter: drop-shadow(0 0 15px #ffeb3b); margin: 15px 0; animation: catPulse 1.5s infinite;">🏆</div>
+        <h3 id="achieve-title" style="color: #333; margin: 10px 0; font-size: 20px;">Tên Thành Tựu</h3>
+        <p id="achieve-desc" style="color: #555; font-size: 14px; font-weight: bold; line-height: 1.5; padding: 0 10px;"></p>
+        
+        <button onclick="window.dongHuyHieuMoi()" style="margin-top: 15px; background-color: #ffc107; color: #d35400; width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            NHẬN THƯỞNG
+        </button>
+    </div>
+</div>
 
         <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
         <div id="recap-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
@@ -2618,10 +2639,27 @@ window.nhanThuongLenCap = function() {
         currentLevel += 1;
         localStorage.setItem('user_level_' + user, currentLevel);
         
-        // Chúc mừng
-        alert(`🎉 ĐỈNH ! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
+        // 👁️ MẮT THẦN QUÉT HUY HIỆU MỚI
+        let coHuyHieuMoi = false;
+        if (typeof DANH_SACH_HUY_HIEU !== 'undefined') {
+            let hhMoi = DANH_SACH_HUY_HIEU.find(hh => hh.cap === currentLevel);
+            if (hhMoi) {
+                // Đánh dấu huy hiệu này là "Hàng mới về chưa bóc tem"
+                localStorage.setItem(`badge_new_${user}_${currentLevel}`, 'true');
+                coHuyHieuMoi = true;
+            }
+        }
+
+        if (coHuyHieuMoi) {
+            // Bật chấm đỏ ở Tab 5
+            const chamDo = document.getElementById('cham-do-thanh-tuu');
+            if(chamDo) chamDo.style.display = 'block';
+            alert(`🎉 Lên Cấp ${currentLevel}!\nCậu vừa nhận được một Hộp Quà Thành Tựu.\nSang Tab 5 (Phòng trưng bày) để đập hộp ngay nhé!`);
+        } else {
+            alert(`🎉 ĐỈNH ! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
+        }
         
-        // Quét lại giao diện ngay lập tức để cập nhật vạch chạy (Hoặc nổ nút tiếp nếu dư KM)
+        // Quét lại vạch Level
         let textKm = document.getElementById('tong-km-tab2').innerText;
         window.capNhatHeThongLevel(parseFloat(textKm) || 0);
     }
@@ -2652,17 +2690,36 @@ window.veBangThanhTuu = function() {
 
     DANH_SACH_HUY_HIEU.forEach(hh => {
         const isUnlocked = currentLevel >= hh.cap;
-        const trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
-        const lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
-        const descText = isUnlocked ? hh.desc : `<i>Đạt Cấp ${hh.cap} để khám phá bí mật này...</i>`;
-        const titleText = isUnlocked ? hh.title : `Thử thách Cấp ${hh.cap}`;
-        const glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
+        const isNew = localStorage.getItem(`badge_new_${user}_${hh.cap}`) === 'true'; // Chưa bóc tem
+        
+        let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
+        let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
+        let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
+        
+        let descText = `<i>Đạt Cấp ${hh.cap} để khám phá bí mật này...</i>`;
+        let titleText = `Thử thách Cấp ${hh.cap}`;
+        let clickEvent = '';
+
+        if (isUnlocked) {
+            if (isNew) {
+                // TRẠNG THÁI: MỚI NHẬN - CHƯA BÓC TEM (Viền chớp nháy, bắt bấm vào)
+                titleText = "🎁 CÓ QUÀ MỚI!";
+                descText = "<b>👉 CHẠM VÀO ĐÂY ĐỂ ĐẬP HỘP!</b>";
+                trangThaiClass = 'badge-unlocked';
+                glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
+                clickEvent = `onclick="window.moHuyHieuMoi(${hh.cap}, '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+            } else {
+                // TRẠNG THÁI: ĐÃ BÓC TEM (Hiện thông tin bình thường)
+                titleText = hh.title;
+                descText = hh.desc;
+            }
+        }
 
         html += `
-        <div class="badge-item ${trangThaiClass}">
+        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
             <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
             <div style="flex: 1; text-align: left; padding-right: 20px;">
-                <div style="font-weight: 900; font-size: 15px; margin-bottom: 5px; color: ${isUnlocked ? '#d35400' : '#555'};">${titleText}</div>
+                <div style="font-weight: 900; font-size: 15px; margin-bottom: 5px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#555'};">${titleText}</div>
                 <div class="badge-desc" style="font-size: 13px; line-height: 1.4; color: ${isUnlocked ? '#333' : '#888'};">${descText}</div>
             </div>
             ${lockIcon}
@@ -2680,7 +2737,65 @@ window.switchTab = function(tabIndex) {
     }
 };
 window.addEventListener('load', () => { setTimeout(() => window.veBangThanhTuu(), 1500); });
+// === LOGIC ANIMATION MỞ KHÓA THÀNH TỰU ===
+window.moHuyHieuMoi = function(cap, icon, title, desc) {
+    const user = localStorage.getItem('currentUser');
+    // 1. Nhồi dữ liệu vào hộp quà
+    document.getElementById('achieve-icon').innerText = icon;
+    document.getElementById('achieve-title').innerText = title;
+    document.getElementById('achieve-desc').innerHTML = desc;
+    
+    // 2. Nảy Popup ra giữa màn hình
+    const modal = document.getElementById('achievement-modal');
+    const box = document.getElementById('achieve-box');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        box.style.transform = 'scale(1)';
+        box.style.opacity = '1';
+        
+        // 3. Mượn tạm code Pháo Hoa để bắn
+        if(typeof bungPhaoHoa === 'function') {
+            // Gian lận một chút, trỏ tạm canvas pháo hoa cũ sang thẻ canvas mới
+            const canvasCu = document.getElementById('fireworks-canvas');
+            if(canvasCu) canvasCu.id = 'fireworks-canvas-backup';
+            const canvasMoi = document.getElementById('achieve-fireworks-canvas');
+            if(canvasMoi) canvasMoi.id = 'fireworks-canvas';
+            
+            bungPhaoHoa(); // ĐÙNG BÙM CHÉO !!!
+            
+            // Trả lại tên cho pháo hoa Mèo sau 3 giây
+            setTimeout(() => {
+                if(canvasMoi) canvasMoi.id = 'achieve-fireworks-canvas';
+                if(canvasCu) canvasCu.id = 'fireworks-canvas';
+            }, 3000);
+        }
+    }, 50);
+    
+    // 4. Âm thầm tước cái mác "Hàng mới" đi
+    localStorage.removeItem(`badge_new_${user}_${cap}`);
+};
 
+// Đảo ngược hiệu ứng thu nhỏ lại
+window.dongHuyHieuMoi = function() {
+    const modal = document.getElementById('achievement-modal');
+    const box = document.getElementById('achieve-box');
+    if (!modal || modal.style.display === 'none') return;
+    
+    // Hút nhỏ hộp quà lại
+    box.style.transform = 'scale(0)';
+    box.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.style.display = 'none';
+        
+        // Tắt chấm đỏ ở thanh điều hướng Tab 5
+        const chamDo = document.getElementById('cham-do-thanh-tuu');
+        if(chamDo) chamDo.style.display = 'none';
+        
+        // Vẽ lại Phòng trưng bày để nó hiện chữ thật (Hết bị giấu)
+        if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
+    }, 400); // Khớp với transition 0.5s
+};
 // === 6. HỆ THỐNG MẠNG XÃ HỘI & CỘNG ĐỒNG ===
     
 // BỘ NHỊP TIM - DUY TRÌ TRẠNG THÁI ONLINE THỜI GIAN THỰC

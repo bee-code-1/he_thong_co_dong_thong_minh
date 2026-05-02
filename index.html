@@ -883,6 +883,11 @@
                 <span id="xp-need">0.00 km</span>
             </div>
 
+            <!-- NÚT NHẬN THƯỞNG LÊN CẤP -->
+            <div style="text-align: center; margin-top: 10px;">
+                <button id="btn-claim-level" class="btn-level-up" style="display: none; background: #ffc107; color: #d35400; font-weight: 900; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; animation: catPulse 1s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.nhanThuongLenCap()">🚀 LÊN CẤP NGAY!</button>
+            </div
+
             <!-- Tổng kết nhỏ -->
             <div style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px; font-size: 13px; line-height: 1.6; font-weight: bold; margin-top: 15px; display: flex; justify-content: space-between;">
                 <div>📏 <span id="tong-km-tab2">0.0</span> km</div>
@@ -2538,39 +2543,67 @@ window.startRunningProxy = function() {
 };
 
 // TÍNH TOÁN CẤP ĐỘ & KINH NGHIỆM (HÀM 0.00691)
-// ==========================================
 window.capNhatHeThongLevel = function(tongKm) {
     if (!tongKm) tongKm = 0;
+    const user = localStorage.getItem('currentUser');
+    if (!user) return;
 
-    // 1. Tìm Cấp độ hiện tại dựa trên Hàm: KM = 0.00691 * Level^2
-    let currentLevel = 1;
-    while (tongKm >= (0.00691 * Math.pow(currentLevel + 1, 2))) {
-        currentLevel++;
-    }
+    // 1. Lấy cấp độ hiện tại người dùng ĐÃ BẤM NHẬN (Mặc định là 1)
+    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
     if (currentLevel > 1203) currentLevel = 1203;
 
-    // 2. Tính % của thanh tiến trình
+    // 2. Tính mốc KM của cấp hiện tại và cấp tiếp theo
     let kmCapHienTai = currentLevel === 1 ? 0 : 0.00691 * Math.pow(currentLevel, 2);
     let kmCapTiepTheo = 0.00691 * Math.pow(currentLevel + 1, 2);
 
+    // 3. Tính % tiến trình (Giới hạn tối đa 100%)
     let phanTram = ((tongKm - kmCapHienTai) / (kmCapTiepTheo - kmCapHienTai)) * 100;
     if (phanTram > 100) phanTram = 100;
     if (phanTram < 0) phanTram = 0;
 
-    // 3. Render ra Giao diện Tab 2
+    // 4. Đổ dữ liệu ra màn hình
     const elCurLv = document.getElementById('current-lv');
     if (elCurLv) {
         elCurLv.innerText = currentLevel;
         document.getElementById('next-lv').innerText = currentLevel >= 1203 ? "MAX" : currentLevel + 1;
         document.getElementById('level-bar-fill').style.width = phanTram + '%';
-        document.getElementById('xp-current').innerText = tongKm.toFixed(2) + ' km';
+        
+        // Hiển thị dạng tiến trình: Ví dụ 1.5 / 2.8 km
+        let soKmHienTai = (tongKm > kmCapTiepTheo) ? kmCapTiepTheo : tongKm;
+        document.getElementById('xp-current').innerText = soKmHienTai.toFixed(2) + ' km';
         document.getElementById('xp-need').innerText = kmCapTiepTheo.toFixed(2) + ' km';
     }
 
-    // 4. Lưu Level vào để Tab 5 (Thành Tựu) quét đập vỡ ổ khóa
-    const user = localStorage.getItem('currentUser');
-    localStorage.setItem('user_level_' + user, currentLevel);
+    // 5. Nổ nút LÊN CẤP nếu đủ KM
+    const btn = document.getElementById('btn-claim-level');
+    if (btn) {
+        if (tongKm >= kmCapTiepTheo && currentLevel < 1203) {
+            btn.style.display = 'inline-block';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    // Quét mở khóa Huy hiệu ở Tab 5
     if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
+};
+
+// HÀM XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT LÊN CẤP
+window.nhanThuongLenCap = function() {
+    const user = localStorage.getItem('currentUser');
+    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+    
+    if (currentLevel < 1203) {
+        currentLevel += 1;
+        localStorage.setItem('user_level_' + user, currentLevel);
+        
+        // Chúc mừng
+        alert(`🎉 ĐỈNH ! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
+        
+        // Quét lại giao diện ngay lập tức để cập nhật vạch chạy (Hoặc nổ nút tiếp nếu dư KM)
+        let textKm = document.getElementById('tong-km-tab2').innerText;
+        window.capNhatHeThongLevel(parseFloat(textKm) || 0);
+    }
 };
 
 // Móc nối hệ thống Level vào luồng tải dữ liệu cũ

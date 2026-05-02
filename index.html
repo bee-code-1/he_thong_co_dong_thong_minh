@@ -4102,32 +4102,18 @@ window.addEventListener('load', function() {
         }
     }, 1500); // Đợi 1.5s cho Firebase khởi động xong
 })
-let catTapTime = 0;
-// Dùng sự kiện 'click' kết hợp đo thời gian để thay thế dblclick trên Mobile
-catAssistant.addEventListener("click", async function(e) {
-    if (typeof isCatDragging !== 'undefined' && isCatDragging) return;
-
-    let currentTime = new Date().getTime();
-    let tapLength = currentTime - catTapTime;
-    catTapTime = currentTime;
-
-    // Chạm lần 1 hoặc chạm quá chậm (>400ms) thì bỏ qua
-    if (tapLength === 0 || tapLength > 400) return;
-
-    // === ĐÍCH THỊ LÀ DOUBLE TAP RỒI! ===
-    e.preventDefault();
-
-    // Khóa mõm: Nếu Mèo đang load suy nghĩ thì không cho gõ đầu tiếp để tránh spam API
-    if (typeof isCatThinking !== 'undefined' && isCatThinking) return;
+// === LÕI NÃO BỘ AI (ĐƯỢC GỌI TỪ CẢM BIẾN TOUCHEND) ===
+window.isCatThinking = false; // Biến cờ khóa mõm an toàn tuyệt đối
+window.kichHoatAIKhia = async function() {
+    // Nếu Mèo đang load thì khóa không cho gõ tiếp
+    if (window.isCatThinking) return;
 
     isMangKinh = !isMangKinh;
     catImgObj.src = getAnhMacDinh();
 
-    // 1. Quét dữ liệu môi trường (Đã FIX chuẩn ID nút Bụi mịn)
     const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
     const aqi = document.getElementById('btn-bui-min') ? document.getElementById('btn-bui-min').innerText.replace(/\n/g, ' ') : "AQI Ổn";
 
-    // 2. Quét hồ sơ y tế
     let userCondition = 'none';
     let userAge = 20;
     const currentUser = localStorage.getItem('currentUser');
@@ -4139,7 +4125,6 @@ catAssistant.addEventListener("click", async function(e) {
         }
     }
 
-    // 3. Giao diện Mèo "Đang suy nghĩ"
     if (isMangKinh) {
         catBubble.style.backgroundColor = '#e3f2fd';
         catBubble.style.border = '2px solid #0d47a1';
@@ -4150,10 +4135,9 @@ catAssistant.addEventListener("click", async function(e) {
     catBubble.innerText = "Đợi tí để Mèo xem nào... ⏳";
     catBubble.style.display = 'block';
     setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-    
-    isCatThinking = true; // BẬT CỜ KHÓA HỌNG
 
-    // 4. CHUẨN BỊ PROMPT CHO GEMINI
+    window.isCatThinking = true; // BẬT CỜ KHÓA HỌNG
+
     let benhLyText = "Khỏe mạnh";
     if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
     else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
@@ -4167,7 +4151,6 @@ catAssistant.addEventListener("click", async function(e) {
     Hành động: Cậu ta vừa gõ đầu Mèo 2 cái để ${isMangKinh ? 'đeo kính đen' : 'lột kính đen'}.
     Yêu cầu: Viết MỘT câu duy nhất (dưới 20 chữ). Nhận xét thời tiết/không khí hiện tại và giục đi tập hoặc khuyên ở nhà. Giọng điệu thật khịa đểu. Không dùng dấu ngoặc kép.`;
 
-    // 5. GỌI API GEMINI 2.5 FLASH REST
     try {
         if (!GEMINI_API_KEY) {
             catBubble.innerText = "Cậu chưa cắm Key API cho Mèo kìa! 😿";
@@ -4175,20 +4158,18 @@ catAssistant.addEventListener("click", async function(e) {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
             const data = await response.json();
 
             if (data.error) {
-                console.error("Chi tiết lỗi từ Google:", data.error);
+                console.error("Lỗi từ Google:", data.error);
                 catBubble.innerText = `Google chặn: ${data.error.message.substring(0, 30)}... 😾`;
             } else if (data.candidates && data.candidates.length > 0 && data.candidates.content && data.candidates.content.parts && data.candidates.content.parts.length > 0) {
                 let aiMessage = data.candidates.content.parts.text.trim();
                 catBubble.innerText = aiMessage.replace(/\*/g, '');
             } else {
-                catBubble.innerText = "Mèo đang lag, cậu gõ đầu lại coi sao 😿";
+                catBubble.innerText = "Mèo đang lag, cậu gõ đầu lại coi 😿";
             }
         }
     } catch (error) {
@@ -4196,15 +4177,15 @@ catAssistant.addEventListener("click", async function(e) {
         catBubble.innerText = "Đứt cáp rồi! Mèo không phân tích đc 😿";
     }
 
-    // 6. THU DỌN KHUNG CHAT VÀ MỞ KHÓA HỌNG
+    // Đợi 6 giây cho người dùng đọc rồi thu hồi và mở cờ
     setTimeout(() => {
         catBubble.classList.remove('show-bubble');
         setTimeout(() => {
             catBubble.style.display = 'none';
-            isCatThinking = false; // TẮT CỜ MỞ KHÓA HỌNG
+            window.isCatThinking = false; // TẮT CỜ MỞ KHÓA HỌNG BẰNG BIẾN TOÀN CỤC CHUẨN XÁC
         }, 600);
     }, 6000);
-});
+};
 
 // 4. LẮC ĐIỆN THOẠI (CHÓNG MẶT)
 let shakeThreshold = 300; 
@@ -4323,22 +4304,25 @@ function dragEnd(e) {
         catImgObj.src = getAnhMacDinh();
         const thaMsgs = ["Kéo kéo cái cmm", "Nghịch ít thôi", "Bỏ cái tay ra nha 😼"];
         catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
-        catBubble.style.backgroundColor = '#fdf8e4';
-        catBubble.style.border = '2px solid #d4b895';
+        catBubble.style.backgroundColor = '#fff9c4';
+        catBubble.style.border = '2px solid #ffc107';
         catBubble.style.color = '#333';
         catBubble.style.display = 'block';
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        setTimeout(() => { catBubble.classList.remove('show-bubble'); setTimeout(() => catBubble.style.display = 'none', 600); }, 2500);
-    } else {
-        catImgObj.src = imgNhamMat;
-        const khenMsgs = ["Tình yêu là cái rắm", "Có hai con mèo ngồi bên cửa sổ", "Trợ lý con mèo số 1 thế giới đây"];
-        catBubble.innerText = khenMsgs[Math.floor(Math.random() * khenMsgs.length)];
-        catBubble.style.backgroundColor = '#ffebee'; 
-        catBubble.style.border = '2px solid #ffcdd2';
-        catBubble.style.color = '#333';
-        catBubble.style.display = 'block';
-        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        setTimeout(() => { catImgObj.src = getAnhMacDinh(); catBubble.classList.remove('show-bubble'); setTimeout(() => catBubble.style.display = 'none', 600); }, 2000);
+        setTimeout(() => {
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 3000);
+    } else if (distanceMoved < 10) {
+        // === CẢM BIẾN CHẠM/TAP (ĐÁNH BẠI TRÌNH DUYỆT MOBILE) ===
+        let currentTime = new Date().getTime();
+        let tapLength = currentTime - (window.catTapTime || 0);
+        window.catTapTime = currentTime;
+
+        if (tapLength > 0 && tapLength < 400) {
+            // KÍCH HOẠT NÃO AI KHỊA!
+            if (typeof window.kichHoatAIKhia === 'function') window.kichHoatAIKhia();
+        }
     }
 }
 

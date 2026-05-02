@@ -547,6 +547,14 @@
 .unread-msg .swipe-content {
     background: #eaffea !important; /* Nền xanh nhạt nổi bật */
 }
+
+/* === BỐ CỤC SLIDER GIỚI THIỆU (ONBOARDING) === */
+.intro-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: transform 0.4s ease, opacity 0.4s ease; opacity: 0; transform: translateX(100%); }
+.intro-slide.active { opacity: 1; transform: translateX(0); }
+.intro-slide.prev { opacity: 0; transform: translateX(-100%); }
+.slider-dots { display: flex; justify-content: center; gap: 8px; }
+.slider-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; transition: all 0.3s; }
+.slider-dot.active { width: 25px; background: #004BAd; border-radius: 5px; }
          
      </style>
 </head>
@@ -870,6 +878,45 @@
         <span id="cham-do-thong-bao" style="display: none; position: absolute; top: 0px; right: -2px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid white;"></span>
     </div>
 </div>
+
+    <!-- MÀN HÌNH GIỚI THIỆU (ONBOARDING SLIDER) - BẢN GEN Z TỐI GIẢN -->
+<div id="intro-slider-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #fafafa; z-index: 10001; display: none; flex-direction: column;">
+    <!-- Khu vực bắt sự kiện vuốt -->
+    <div id="onboarding-touch-area" style="flex: 1; position: relative; overflow: hidden;">
+        
+        <!-- Slide 1 -->
+        <div class="intro-slide active" id="slide-0" style="background: #e0f7fa;">
+            <div style="width: 180px; height: 180px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 4px solid #b2ebf2;">🌿</div>
+            <h2 style="color: #00838f; margin-bottom: 10px; font-size: 24px;">Thở sạch sống khỏe</h2>
+            <p style="padding: 0 30px; color: #00bcd4; font-weight: bold; font-size: 15px; line-height: 1.5;">Dữ liệu vệ tinh xịn xò sẽ dọn đường né khói bụi để cậu tự tin hít thở trọn vẹn từng nhịp chạy</p>
+        </div>
+        
+        <!-- Slide 2 -->
+        <div class="intro-slide" id="slide-1" style="background: #fff9c4;">
+            <div style="width: 180px; height: 180px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 4px solid #fff59d;">😎</div>
+            <h2 style="color: #f57f17; margin-bottom: 10px; font-size: 24px;">HLV xéo xắt</h2>
+            <p style="padding: 0 30px; color: #fbc02d; font-weight: bold; font-size: 15px; line-height: 1.5;">Trợ lý Mèo ảo vừa lo tính calo đo thời tiết vừa sẵn sàng buông lời sắc mỏng nếu cậu dám lười biếng</p>
+        </div>
+        
+        <!-- Slide 3 -->
+        <div class="intro-slide" id="slide-2" style="background: #e8f5e9;">
+            <div style="width: 180px; height: 180px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 4px solid #a5d6a7;">📍</div>
+            <h2 style="color: #2e7d32; margin-bottom: 10px; font-size: 24px;">Chạy chung cho xôm</h2>
+            <p style="padding: 0 30px; color: #66bb6a; font-weight: bold; font-size: 15px; line-height: 1.5;">Lập hội cạ cứng soi map tìm nhau để cùng xây dựng cộng đồng chuyển động xanh mướt mỗi ngày</p>
+        </div>
+    </div>
+    
+    <!-- Cụm Điều khiển Đáy -->
+    <div style="background: white; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 25px 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -5px 15px rgba(0,0,0,0.03); z-index: 2;">
+        <div class="slider-dots" style="margin-bottom: 25px;">
+            <div class="slider-dot active" id="dot-0"></div>
+            <div class="slider-dot" id="dot-1"></div>
+            <div class="slider-dot" id="dot-2"></div>
+        </div>
+        <button id="btn-next-slide" onclick="window.chuyenSlide(1)" style="width: 100%; background: #004BAd; color: white; padding: 16px; border-radius: 20px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background 0.3s;">Trượt để xem 👉</button>
+    </div>
+</div>
+    
     <div id="auth-modal" class="overlay-modal">
         <div class="modal-content" id="login-form">
             <h2>Đăng Nhập</h2>
@@ -2309,20 +2356,57 @@ window.dangXuat = function() {
     }
 };
 
-// === TỰ ĐỘNG ĐĂNG NHẬP & KÉO ẢNH TỪ ĐÁM MÂY VỀ KHI VỪA MỞ TRANG ===
+// === TỰ ĐỘNG ĐĂNG NHẬP HOẶC BẬT GIỚI THIỆU (CÓ VUỐT CHẠM) ===
+let currentSlide = 0;
+window.chuyenSlide = function(direction = 1) {
+    let nextSlide = currentSlide + direction;
+    
+    // Xong giới thiệu -> Mở bảng Đăng nhập
+    if (nextSlide > 2) {
+        localStorage.setItem('da_xem_intro', 'true');
+        document.getElementById('intro-slider-modal').style.display = 'none';
+        document.getElementById('auth-modal').style.display = 'flex';
+        return;
+    }
+    if (nextSlide < 0) return; // Chặn vuốt ngược
+    
+    // Hiệu ứng trượt
+    document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+    document.getElementById(`slide-${currentSlide}`).classList.add(direction > 0 ? 'prev' : 'next-hidden');
+    document.getElementById(`dot-${currentSlide}`).classList.remove('active');
+    
+    currentSlide = nextSlide;
+    
+    document.getElementById(`slide-${currentSlide}`).className = 'intro-slide active'; 
+    document.getElementById(`dot-${currentSlide}`).classList.add('active');
+    
+    // Đổi chữ nút chốt hạ
+    const btn = document.getElementById('btn-next-slide');
+    if (currentSlide === 0) {
+        btn.innerText = "Trượt để xem ";
+        btn.style.background = "#004BAd";
+    }
+    else if (currentSlide === 1) {
+        btn.innerText = "Sắp xong rồi ";
+        btn.style.background = "#004BAd";
+    }
+    else if (currentSlide === 2) {
+        btn.innerText = "Bắt đầu hành trình của bạn";
+        btn.style.background = "#28a745"; // Chuyển màu xanh lá giục hành động
+    }
+};
+
 window.addEventListener('load', function() {
+    // 1. Logic Tự động đăng nhập
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             console.log("Đã phát hiện tài khoản:", savedUser, "-> Đang vào thẳng app!");
-            
-            // 1. TẮT BẢNG ĐĂNG NHẬP, MỞ THẲNG BẢN ĐỒ 
             const authModal = document.getElementById('auth-modal');
             const appCont = document.getElementById('app-container');
             if (authModal) authModal.style.display = 'none';
             if (appCont) appCont.style.display = 'block';
-
-            // 2. KÉO AVATAR TỪ FIREBASE VỀ
+            
             if (typeof window.db !== 'undefined') {
                 window.db.ref('nguoi_dung/' + savedUser + '/avatar').once('value').then((snapshot) => {
                     let cloudAvatar = snapshot.val();
@@ -2330,14 +2414,31 @@ window.addEventListener('load', function() {
                     if (cloudAvatar) {
                         localStorage.setItem("avatar_" + savedUser, cloudAvatar);
                         if(avtImg) avtImg.src = cloudAvatar;
-                    } else {
-                        let localAvt = localStorage.getItem("avatar_" + savedUser) || `https://ui-avatars.com/api/?name=${savedUser}&background=random`;
-                        if(avtImg) avtImg.src = localAvt;
                     }
                 });
             }
+        } else {
+            // Khách mới -> Kiểm tra xem đã xem Intro chưa
+            if (!localStorage.getItem('da_xem_intro')) {
+                document.getElementById('auth-modal').style.display = 'none';
+                document.getElementById('intro-slider-modal').style.display = 'flex';
+            } else {
+                document.getElementById('auth-modal').style.display = 'flex';
+            }
         }
     }, 1000);
+
+    // 2. Logic Vuốt ngón tay (Swipe) cho Slider
+    const touchArea = document.getElementById('onboarding-touch-area');
+    if(touchArea) {
+        let startX = 0;
+        touchArea.addEventListener('touchstart', e => { startX = e.touches.clientX; }, {passive: true});
+        touchArea.addEventListener('touchend', e => {
+            let endX = e.changedTouches.clientX;
+            if (startX - endX > 40) window.chuyenSlide(1);  // Vuốt trái -> Sang trang
+            if (endX - startX > 40) window.chuyenSlide(-1); // Vuốt phải -> Quay lại
+        });
+    }
 });
     // UI LOGIC - CHUYỂN TAB VÀ ĐIỀU KHIỂN NÚT BẤM
 

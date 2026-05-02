@@ -538,6 +538,15 @@
 .swipe-container { position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); background: #dc3545; }
 .swipe-content { position: relative; background: #cccccc; padding: 10px; display: flex; align-items: center; z-index: 2; transition: transform 0.3s ease; width: 100%; box-sizing: border-box; }
 .swipe-actions { position: absolute; top: 0; right: 0; width: 80px; height: 100%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 24px; cursor: pointer; z-index: 1; }
+
+/* === TRẠNG THÁI THÔNG BÁO CHƯA ĐỌC === */
+.unread-msg {
+    border-left: 5px solid #28a745 !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+}
+.unread-msg .swipe-content {
+    background: #eaffea !important; /* Nền xanh nhạt nổi bật */
+}
          
      </style>
 </head>
@@ -3082,19 +3091,20 @@ window.xacNhanXoaTB = function(idTB) {
 window.taiThongBaoLocal = function() {
     const savedData = localStorage.getItem('locket_notifications');
     const container = document.getElementById('list-thong-bao-content');
+    
     if (savedData && savedData.trim() !== '' && container) {
         container.innerHTML = savedData;
     } else {
         if(container) container.innerHTML = '';
     }
     
-    // TIÊM 2 THÔNG BÁO HỆ THỐNG VỚI NỘI DUNG TỪ ĐỘI NGŨ PHÁT TRIỂN
+    // TIÊM 2 THÔNG BÁO HỆ THỐNG VÀO (Cho phép vuốt xóa, có trạng thái Chưa Đọc)
     const currentUser = localStorage.getItem('currentUser') || "bạn";
 
     if (!localStorage.getItem('del_sys_msg_1')) {
         window.themThongBaoHeThong(
             'sys_msg_1', 
-            ' Lời ngỏ từ nhà phát triển', 
+            '🚀 Lời ngỏ từ nhà phát triển', 
             'Bấm vào đây để mở thư chào mừng...', 
             `Mến chào <b>${currentUser}</b>, người đồng hành mới.<br><br>Trong lúc khói bụi và sự bận rộn đang khiến chúng ta ngại ra đường, việc bước chân ra ngoài tập luyện đôi khi cần một sự quyết tâm rất lớn. Ứng dụng này ra đời để bảo vệ từng nhịp thở của bạn bằng công nghệ vệ tinh và trí tuệ nhân tạo, giúp tự động chọn ra những con đường có không khí trong lành và địa hình dễ đi nhất.<br><br>Tại đây, bạn sẽ không bao giờ phải tập luyện một mình. Một cộng đồng luôn sẵn sàng để chúng ta cùng kết nối, chia sẻ niềm vui và tiếp thêm động lực cho nhau mỗi ngày.<br><br>Chúng tôi lo phần công nghệ phức tạp phía sau, từ vệ tinh cho đến trí tuệ nhân tạo, chỉ để đổi lấy một việc đơn giản: Thấy bạn xỏ giày và bước ra khỏi cửa. Vì suy cho cùng, sức khỏe là thứ duy nhất không thể làm giả.`, 
             'Đội ngũ phát triển'
@@ -3114,22 +3124,37 @@ window.taiThongBaoLocal = function() {
     window.ganSuKienVuot();
 };
 
-// HÀM MỞ TỜ GIẤY NOTE
-window.moGiayNote = function(tieuDe, noiDungFull, kyTen) {
+// HÀM ĐÁNH DẤU ĐÃ ĐỌC
+window.danhDauDaDoc = function(idTB) {
+    const el = document.getElementById(idTB);
+    if (el && el.classList.contains('unread-msg')) {
+        el.classList.remove('unread-msg');
+        // Phục hồi lại màu xám mặc định cho nền tin nhắn
+        const content = el.querySelector('.swipe-content');
+        if (content) content.style.background = '#cccccc';
+        window.luuThongBaoLocal(); // Cập nhật vào HTML để nhớ mãi mãi
+    }
+};
+
+// HÀM MỞ TỜ GIẤY NOTE & TÍCH HỢP ĐÃ ĐỌC
+window.moGiayNote = function(tieuDe, noiDungFull, kyTen, idTB) {
     document.getElementById('note-title').innerHTML = tieuDe;
     document.getElementById('note-content').innerHTML = noiDungFull;
     document.getElementById('note-signature').innerHTML = "Ký tên: " + kyTen;
     document.getElementById('note-paper-modal').style.display = 'flex';
+    window.danhDauDaDoc(idTB); // Tự động đánh dấu đã đọc
 };
 
 // HÀM TIÊM THÔNG BÁO HỆ THỐNG
 window.themThongBaoHeThong = function(id, title, descShort, descFull, signature) {
     const container = document.getElementById('list-thong-bao-content');
     if(document.getElementById(id)) return; 
+    
+    // Khởi tạo luôn có class unread-msg
     const html = `
-    <div id="${id}" class="swipe-container">
+    <div id="${id}" class="swipe-container unread-msg">
         <div class="swipe-actions" onclick="window.xacNhanXoaTB('${id}')">🗑️</div>
-        <div class="swipe-content" onclick="window.moGiayNote('${title}', \`${descFull}\`, '${signature}')" style="cursor: pointer;">
+        <div class="swipe-content" onclick="window.moGiayNote('${title}', \`${descFull}\`, '${signature}', '${id}')" style="cursor: pointer; background: #eaffea; transition: background 0.4s ease;">
             <div style="font-size: 35px; margin-right: 15px;">${id === 'sys_msg_1' ? '💌' : '😼'}</div>
             <div style="flex: 1; text-align: left; line-height: 1.4;">
                 <div style="font-weight: bold; font-size: 15px; color: #004BAd; margin-bottom: 5px;">${title}</div>
@@ -3137,7 +3162,7 @@ window.themThongBaoHeThong = function(id, title, descShort, descFull, signature)
             </div>
         </div>
     </div>`;
-    container.insertAdjacentHTML('beforeend', html);
+    container.insertAdjacentHTML('afterbegin', html);
     window.luuThongBaoLocal();
 };
 

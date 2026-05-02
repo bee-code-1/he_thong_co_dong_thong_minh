@@ -2409,25 +2409,18 @@ window.luuHoSo = function() {
 
 // === ĐĂNG XUẤT TÀI KHOẢN ===
 window.dangXuat = function() {
-    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-        localStorage.removeItem('currentUser');
-        const hsModal = document.getElementById('hoso-modal');
-        const appCont = document.getElementById('app-container');
-        const authModal = document.getElementById('auth-modal');
-        const loginForm = document.getElementById('login-form');
-        const regForm = document.getElementById('register-form');
-
-        if(hsModal) hsModal.style.display = 'none';
-        if(appCont) appCont.style.display = 'none';
-
-        if(document.getElementById('login-user')) document.getElementById('login-user').value = '';
-        if(document.getElementById('login-pass')) document.getElementById('login-pass').value = '';
-
-        if(loginForm) loginForm.style.display = 'block';
-        if(regForm) regForm.style.display = 'none';
-        if(authModal) authModal.style.display = 'flex';
-
+    if(confirm("Cậu có chắc chắn muốn đăng xuất không?")) {
+        // 1.  tắt theo dõi GPS nếu đang chạy dở
         if (typeof window.handleEndClick === 'function') window.handleEndClick();
+        
+        // 2. Cắt đứt kết nối lắng nghe Firebase của Acc cũ 
+        if (typeof window.db !== 'undefined') window.db.ref().off();
+        
+        // 3. Xóa danh tính trong bộ nhớ thiết bị
+        localStorage.removeItem('currentUser');
+        
+        // 4. F5 Tải lại toàn bộ trang web để reset 100% bộ nhớ & Giao diện
+        window.location.reload();
     }
 };
 

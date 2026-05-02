@@ -2633,18 +2633,6 @@ window.nhanThuongLenCap = function() {
         window.capNhatHeThongLevel(parseFloat(textKm) || 0);
     }
 };
-
-// Móc nối hệ thống Level vào luồng tải dữ liệu cũ
-const oldCapNhatBangTichLuy = window.capNhatBangTichLuy;
-window.capNhatBangTichLuy = function(dataObj) {
-    if (typeof oldCapNhatBangTichLuy === 'function') oldCapNhatBangTichLuy(dataObj);
-    
-    // Đợi số liệu chạy lên màn hình xong thì bốc đi tính Level
-    setTimeout(() => {
-        let textKm = document.getElementById('tong-km-tab2').innerText;
-        window.capNhatHeThongLevel(parseFloat(textKm) || 0);
-    }, 100);
-};
     
 // HỆ THỐNG THÀNH TỰU (PHÒNG TRƯNG BÀY TAB 5)
 const DANH_SACH_HUY_HIEU = [
@@ -4747,12 +4735,11 @@ async function guiTinNhanMeo() {
     }
 }
 // 1. TÍNH TOÁN BẢNG TÍCH LŨY Ở TAB 2 & SẮP XẾP LỊCH SỬ
-
 window.capNhatBangTichLuy = function(dataObj) {
     if (!dataObj) return;
     let tongKm = 0, tongBuoc = 0, tongCalo = 0, tongPhut = 0;
     let ngaySomNhat = Date.now();
-
+    
     Object.values(dataObj).forEach(tienTrinh => {
         tongKm += parseFloat(tienTrinh.quang_duong) || 0;
         tongBuoc += parseInt(tienTrinh.buoc_chan) || 0;
@@ -4769,9 +4756,13 @@ window.capNhatBangTichLuy = function(dataObj) {
     if(document.getElementById('tong-km-tab2')) document.getElementById('tong-km-tab2').innerText = tongKm.toFixed(1);
     if(document.getElementById('tong-buoc-tab2')) document.getElementById('tong-buoc-tab2').innerText = tongBuoc;
     if(document.getElementById('tong-calo-tab2')) document.getElementById('tong-calo-tab2').innerText = tongCalo.toFixed(1);
-    
     let gio = Math.floor(tongPhut / 60); let phut = tongPhut % 60;
     if(document.getElementById('tong-thoigian-tab2')) document.getElementById('tong-thoigian-tab2').innerText = `${gio}h ${phut}m`;
+
+    //  TRUYỀN THẲNG TỔNG KM CHO VẠCH LEVEL 
+    if(typeof window.capNhatHeThongLevel === 'function') {
+        window.capNhatHeThongLevel(tongKm);
+    }
 };
 
 // Ghi đè hàm Load để Sắp xếp MỚI NHẤT lên đầu và tải Bảng tích lũy

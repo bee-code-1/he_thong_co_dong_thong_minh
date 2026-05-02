@@ -4001,8 +4001,8 @@ loopCatSpeech(); // Kích hoạt bộ đếm
 // ==========================================
 window.moMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.classList.add('show');
-
+    if(menu) menu.style.display = 'flex';
+    
     // Cập nhật text nút Lải nhải
     const icon = document.getElementById('icon-lainhai');
     const txt = document.getElementById('text-lainhai');
@@ -4010,11 +4010,24 @@ window.moMenuMeo = function() {
         icon.innerText = window.isCatLaiNhai ? "🔇" : "🔊";
         txt.innerText = window.isCatLaiNhai ? "Tắt lải nhải" : "Bật lải nhải";
     }
+
+    // BÀN TAY SẮT 1: Ép Mèo tỉnh lại ngay khi Menu vừa mở ra
+    if (typeof catImgObj !== 'undefined') {
+        catImgObj.src = getAnhMacDinh();
+        const catAssist = document.getElementById('cat-assistant');
+        if(catAssist) {
+            catAssist.classList.remove('dragging-cat');
+            catAssist.classList.add('idle-cat');
+        }
+    }
 };
 
 window.dongMenuMeo = function() {
     const menu = document.getElementById('cat-options-popup');
-    if(menu) menu.classList.remove('show');
+    if(menu) menu.style.display = 'none';
+    
+    // 🛑 BÀN TAY SẮT 2: Ép Mèo tỉnh lại khi đóng Menu (Chống kẹt UI)
+    if (typeof catImgObj !== 'undefined') catImgObj.src = getAnhMacDinh();
 };
 
 window.moChatTuMenu = function(e) {

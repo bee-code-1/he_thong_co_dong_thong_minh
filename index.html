@@ -4723,12 +4723,15 @@ window.addEventListener('load', function() {
                 if (dataObj) {
                     window.capNhatBangTichLuy(dataObj);
                     const listContainer = document.getElementById('progress-list');
-                    if(listContainer) listContainer.innerHTML = ''; 
+                    if(listContainer) listContainer.innerHTML = '';
                     
                     const records = Object.keys(dataObj).map(key => ({ key: key, data: dataObj[key] }));
                     // SẮP XẾP TỪ MỚI NHẤT ĐẾN CŨ NHẤT
-                    records.sort((a, b) => b.data.timestamp - a.data.timestamp);
+                    records.sort((a, b) => a.data.timestamp - b.data.timestamp);
                     records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
+                } else {
+                    // TÂN BINH CHƯA CÓ DATA -> ÉP TÍNH LEVEL ĐỂ HIỆN MỤC TIÊU LÊN CẤP 2
+                    if(typeof window.capNhatHeThongLevel === 'function') window.capNhatHeThongLevel(0);
                 }
             });
         }

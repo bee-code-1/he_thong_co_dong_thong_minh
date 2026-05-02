@@ -1333,7 +1333,8 @@ window.capNhatThoiTietAQI = function(lat, lng) {
             else if (aqi > 150 && aqi <= 200) { aqiIcon = "🔴"; aqiColor = "#dc3545"; } // Đỏ (Xấu)
             else if (aqi > 200) { aqiIcon = "🟣"; aqiColor = "#6f42c1"; } // Tím (Nguy hại)
 
-            // Lưu màu hiện tại vào biến toàn cục để nút bấm sử dụng
+            // Lưu CHỈ SỐ và MÀU hiện tại vào biến toàn cục để nút bấm và AI sử dụng
+            window.currentAQIValue = aqi;
             window.currentAQIColor = aqiColor;
 
             document.getElementById('widget-bui-min').innerHTML = `${aqiIcon} AQI: ${aqi} (${tenKhuVuc})`;
@@ -2211,37 +2212,28 @@ window.toggleRadarAndShare = function() {
 let lopBanDoBui = null;
 window.currentAQIColor = window.currentAQIColor || '#28a745'; // Màu dự phòng ban đầu
 
-window.toggleBuiMin = function() {
-    if (typeof window.isHienBui === 'undefined') window.isHienBui = false;
-    window.isHienBui = !window.isHienBui;
-    const btn = document.getElementById('btn-bui-min');
-    
-    if (!btn) return;
-
     if (window.isHienBui) {
-        // TRẠNG THÁI ON: Lấy màu AQI hiện tại, chữ trắng, không tỏa viền
+        // TRẠNG THÁI ON: Hiện thẳng chỉ số AQI thực tế + Màu cảnh báo
+        let aqiVal = window.currentAQIValue || "--";
         btn.style.backgroundColor = window.currentAQIColor;
-        btn.style.color = 'white'; 
+        btn.style.color = 'white';
         btn.style.border = '2px solid white';
-        btn.innerHTML = 'Chất lượng kk<br>🟢 ON';
-
+        btn.innerHTML = `<span style="font-size: 16px;">AQI: ${aqiVal}</span><br>🟢 Đang bật`;
+        
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
                 maxZoom: 18, opacity: 0.9, attribution: 'Air Quality by WAQI'
             });
         }
         if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
-
     } else {
-        // TRẠNG THÁI OFF: Màu xám tối tĩnh lặng, chữ trắng
+        // TRẠNG THÁI OFF: Trả về chữ thu gọn tĩnh lặng
         btn.style.backgroundColor = '#555';
         btn.style.color = 'white';
         btn.style.border = '2px solid #333';
-        btn.innerHTML = 'Chất lượng kk<br>🔴 OFF';
-        
+        btn.innerHTML = 'Lớp Bụi mịn<br>🔴 OFF';
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
-};
 // === LOGIC BẬT TẮT BẢN ĐỒ ĐỊA HÌNH ===
 let lopDiaHinh = null;
 window.isHienDiaHinh = false;
@@ -4034,12 +4026,15 @@ catAssistant.addEventListener("dblclick", async function(e) {
     if (userCondition === 'asthma') benhLyText = "Bị Hen suyễn/Viêm xoang";
     else if (userCondition === 'heart') benhLyText = "Bị Tim mạch/Huyết áp cao";
 
-    const prompt = `Bạn là một con mèo trợ lý ảo. Tên của bạn là Mèo. Tính cách của bạn cực kỳ xéo xắt, mặn mòi, hơi chảnh nhưng thực ra rất quan tâm sức khỏe người dùng. 
-Quy tắc xưng hô BẮT BUỘC: Luôn xưng là "Mèo", và gọi người dùng là "cậu". Không bao giờ xưng là tôi, tao, hay trẫm. 
-Người dùng (cậu) đang tương tác với Mèo là một người ${userAge} tuổi, tình trạng sức khỏe: ${benhLyText}. 
-Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn ${aqi}. 
-Hành động: ${isMangKinh ? 'Mèo vừa được cậu đeo kính đen siêu ngầu' : 'Mèo vừa bị cậu lột kính ra'}.
-Yêu cầu: Hãy khuyên bảo sức khỏe hoặc nhận xét thời tiết bằng MỘT câu duy nhất, ĐỘ DÀI TỐI ĐA 80 KÝ TỰ. Giọng điệu khịa đểu hoặc nhõng nhẽo. Không dùng dấu ngoặc kép.`;
+            // Lấy thêm số AQI chính xác để Mèo khịa cho chuẩn
+            let aqiNumber = window.currentAQIValue || "chưa rõ";
+
+            const prompt = `Bạn là huấn luyện viên Mèo ảo. Tính cách: hài hước, xéo xắt, mặn mòi, mỏ hỗn nhưng rất quan tâm sức khỏe.
+            Quy tắc xưng hô: Luôn xưng "Mèo", gọi người dùng là "cậu". 
+            Người dùng: ${userAge} tuổi, sức khỏe: ${benhLyText}.
+            Môi trường: ${thoiTiet}, chỉ số bụi mịn AQI là ${aqiNumber} (${aqi}).
+            Hành động: Cậu ta vừa gõ đầu Mèo 2 cái để ${isMangKinh ? 'đeo kính đen' : 'lột kính đen'}.
+            Yêu cầu: Viết MỘT câu duy nhất (dưới 25 chữ). Nhận xét thời tiết/không khí hiện tại và giục đi tập hoặc khuyên ở nhà. Giọng điệu 7 phần láo nháo 3 phần cute, không dùng dấu ngoặc kép.`;
 
     // 5. GỌI API GEMINI 2.5 FLASH REST
     try {

@@ -716,11 +716,10 @@
 
 <!-- LAYER TAB 3: TRANG CHỦ (BẢN FIX CUỘN + BẠN BÈ THẬT + ONE CONNECT) -->
 <div id="tab-3" class="tab-screen" style="pointer-events: auto;">
-    <div style="background-color: #8bd8af; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
-        
-        <!-- Thanh Widget & Story Bạn Bè Thật -->
-        <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px; z-index: 50; background: #8bd8af;">
-            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+   <div style="background-color: #f4f7f6; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+    <!-- Thanh Widget & Story Bạn Bè Thật -->
+    <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px; z-index: 50; background: #f4f7f6;">
+         <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
                 <div id="widget-thoi-tiet" style="background: rgba(255,255,255,0.9); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">Đang đo...</div>
 
 <!-- BẢNG AQI KIỂU FOLDER TAB  -->
@@ -809,11 +808,10 @@
 </div>
 
 <!-- LAYER TAB 4: CỘNG ĐỒNG -->
-<div id="tab-4" class="tab-screen" style="background-color: #fff1e6; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
-    
-        <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Giao diện Mạng Xã Hội) -->
-        <div style="position: sticky; top: 0; background: #fff1e6; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <!-- Thanh tìm kiếm (Ấn Enter để tìm hồ sơ) -->
+<div id="tab-4" class="tab-screen" style="background-color: #f8f9fa; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
+    <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Giao diện Mạng Xã Hội) -->
+    <div style="position: sticky; top: 0; background: #f8f9fa; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+         <!-- Thanh tìm kiếm (Ấn Enter để tìm hồ sơ) -->
             <div style="flex: 1; position: relative;">
                 <span style="position: absolute; left: 10px; top: 8px; color: #888;">🔍</span>
                 <input type="text" id="tim-kiem-user" placeholder="Tìm người dùng..." onkeypress="if(event.key === 'Enter') window.timVaMoHoSo()" style="width: 100%; padding: 8px 10px 8px 35px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; background: #eaeaea; font-weight: bold; color: #333;">
@@ -865,7 +863,7 @@
 </div>
 
 <!-- LAYER TAB 2: TIẾN TRÌNH  -->
-<div id="tab-2" class="tab-screen" style="background-color: #8bd8af; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
+<div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
     <div style="padding: 20px; text-align: center;">
        
         <!-- BẢNG CẤP ĐỘ VÀ THÀNH TỰU TÍCH LŨY -->
@@ -2921,7 +2919,7 @@ window.veBangTinCongDong = function(allUsers) {
 
         // GIAO DIỆN MẠNG XÃ HỘI MỚI NHẤT
         html += `
-        <div class="community-card" onclick="window.moHoSoCongKhai('${u}')" style="background: #cccccc; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+        <div class="community-card" onclick="window.moHoSoCongKhai('${u}')" style="background: #ffffff; border-radius: 20px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
        
             <div style="position: relative; width: 50px; height: 60px; margin-right: 15px; flex-shrink: 0;">
                 <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">

@@ -582,6 +582,41 @@
 .level-bar-container { background: rgba(255,255,255,0.3); height: 12px; border-radius: 6px; margin: 15px 0; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
 .level-bar-fill { height: 100%; background: linear-gradient(90deg, #ffc107, #ff9800); transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 6px; }
 
+/* ======== VIÊN NHỘNG CHẾ ĐỘ THỂ THAO (BUNG LÊN TRÊN) ============== */
+#mode-island {
+    position: absolute; bottom: 220px; left: 15px; width: 55px; height: 55px;
+    background: rgba(234, 234, 234, 0.9); backdrop-filter: blur(10px);
+    border: 4px solid #b0b0b0; border-radius: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column-reverse; align-items: center;
+    overflow: hidden; z-index: 1000; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#mode-island.expanded {
+    height: 190px; /* Nở bung chiều cao lên trên chứa đủ 3 nút */
+    background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+#btn-main-mode { 
+    z-index: 2; width: 47px; height: 47px; flex-shrink: 0; display: flex; 
+    justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; 
+    transition: transform 0.3s; font-size: 24px;
+}
+#mode-island.expanded #btn-main-mode { transform: scale(0.8); }
+
+.mode-items {
+    display: flex; flex-direction: column-reverse; opacity: 0;
+    transform: translateY(30px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none; gap: 12px; padding-bottom: 12px; width: 100%; align-items: center;
+}
+#mode-island.expanded .mode-items { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.mode-btn { 
+    width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; 
+    font-size: 20px; cursor: pointer; background: #f0f0f0; border-radius: 50%; 
+    transition: background 0.2s, transform 0.2s, color 0.2s, border 0.3s, box-shadow 0.3s; color: #555;
+}
+.mode-btn.active-mode { 
+    background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,75,173,0.4); 
+}
+         
      </style>
 </head>
 <body>
@@ -696,13 +731,22 @@
     </div>
 </div>
         
-<!-- 3. NÚT RADAR + CHIA SẺ VỊ TRÍ (Thiết kế hệt icon_1.png) -->
-<button id="btn-radar-share" onclick="window.toggleRadarAndShare()" style="position: absolute; bottom: 220px; left: 15px; background: #eaeaea; border: 4px solid #b0b0b0; border-radius: 50%; width: 55px; height: 55px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000; transition: all 0.3s;" title="Bật/Tắt Radar Cộng đồng">
-    <svg viewBox="0 0 40 40" style="width: 32px; height: 32px;">
-        <path d="M20 2 C12 2 6 8 6 16 C6 26 20 38 20 38 C20 38 34 26 34 16 C34 8 28 2 20 2 Z" fill="#004BAd" />
-        <circle cx="20" cy="15" r="7" fill="#00C853" />
-    </svg>
-</button>
+<!-- BỘ CHỌN CHẾ ĐỘ THỂ THAO & RADAR (VIÊN NHỘNG BUNG LÊN) -->
+<div id="mode-island">
+    <!-- Nút Lõi (Nằm dưới cùng) -->
+    <div id="btn-main-mode" onclick="window.toggleModeMenu(event)" title="Chế độ & Radar">
+        <span id="main-mode-icon">🏃</span>
+    </div>
+
+    <!-- Các nút chức năng bung ra phía trên -->
+    <div class="mode-items">
+        <div id="btn-run" class="mode-btn active-mode" onclick="window.chonCheDoTheThao(event, 'run')" title="Chạy bộ">🏃</div>
+        <div id="btn-walk" class="mode-btn" onclick="window.chonCheDoTheThao(event, 'walk')" title="Đi bộ">🚶</div>
+        <div id="btn-radar-share" class="mode-btn" onclick="window.toggleRadarAndShare(); window.dongModeMenu();" title="Bật/Tắt Radar Cộng đồng" style="border: 2px solid transparent; box-sizing: border-box;">
+            📡
+        </div>
+    </div>
+</div>
 
 <!-- 4. NÚT LOCATE ME  -->
 <button id="locate-me-btn" onclick="flyToMyLocation()" style="position: absolute; bottom: 150px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #2196F3; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; padding: 0; z-index: 1000;">📍</button>
@@ -1693,12 +1737,40 @@ if (pathLatLngs.length > 0 && isTracking && !isPaused) {
     const timeDiff = (currentTimestamp - lastTimestamp) / 1000; // Số giây trôi qua
     const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0; // Vận tốc: mét/giây
 
-    // Vận động viên chạy bộ nhanh nhất cũng chỉ 10-12m/s. 
     // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> 
-    if (currentSpeed > 15.3) {
-        console.warn("Đã chặn 1 điểm GPS nhiễu! Trôi xa: " + dist2D.toFixed(1) + "m");
-        return; // Đóng sập hàm lại, không cộng số liệu, không vẽ đường ngoằn ngoèo!
-    }
+            const currentSpeedMs = timeDiff > 0 ? (dist2D / timeDiff) : 0; // m/s
+            const currentSpeedKmh = currentSpeedMs * 3.6; // Đổi sang km/h cho chuẩn bài
+
+            // 🛑 BỘ LỌC CHỐNG GIAN LẬN THEO MÔN THỂ THAO
+            let maxSpeedKmh = 24; // Chạy bộ max 24 km/h
+            if (typeof window.currentSportMode !== 'undefined' && window.currentSportMode === 'walk') {
+                maxSpeedKmh = 6.5; // Đi bộ max 6.5 km/h
+            }
+
+            // MỨC 1: TRÊN 30 KM/H -> BÁO ĐỘNG GIAN LẬN ĐI XE MÁY HOẶC NHIỄU SÓNG NẶNG
+            if (currentSpeedKmh > 30) {
+                console.warn(`[CẢNH BÁO] Tốc độ ${currentSpeedKmh.toFixed(1)} km/h! Block!`);
+                if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
+                    catImgObj.src = typeof imgChongMat !== 'undefined' ? imgChongMat : getAnhMacDinh();
+                    catBubble.innerText = "Đi xe máy ăn gian hả? Mèo hủy kết quả luôn! 🛵😾";
+                    catBubble.style.backgroundColor = '#ffebee';
+                    catBubble.style.border = '2px solid #dc3545';
+                    catBubble.style.color = '#dc3545';
+                    catBubble.style.display = 'block';
+                    setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+                    setTimeout(() => { 
+                        catBubble.classList.remove('show-bubble'); 
+                        setTimeout(() => catBubble.style.display = 'none', 600); 
+                    }, 4000);
+                }
+                return; // 🛑 Khóa sập cửa, KHÔNG CỘNG KHOẢNG CÁCH
+            }
+
+            // MỨC 2: VƯỢT QUÁ GIỚI HẠN MÔN THỂ THAO (VD: Chọn Đi Bộ nhưng chạy 10km/h)
+            if (currentSpeedKmh > maxSpeedKmh) {
+                console.warn(`[CHẶN] Chọn ${window.currentSportMode} mà đi ${currentSpeedKmh.toFixed(1)} km/h!`);
+                return; // 🛑 Tịch thu khoảng cách điểm này, bắt buộc phải đi chậm lại
+            }
 
     // 1. BỘ ĐẾM SIÊU NHẠY: Nhích > 2 mét (và tốc độ người thường) thì nhảy số
     if (dist2D > 2) {
@@ -2135,6 +2207,69 @@ window.addEventListener('load', function() {
 });
 
 // === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
+// === HỆ THỐNG CHỌN CHẾ ĐỘ THỂ THAO ===
+window.currentSportMode = 'run'; // Mặc định là chạy
+window.isModeMenuOpen = false;
+
+window.toggleModeMenu = function(e) {
+    if(e) e.stopPropagation();
+    window.isModeMenuOpen = !window.isModeMenuOpen;
+    const island = document.getElementById('mode-island');
+    if (island) {
+        if (window.isModeMenuOpen) island.classList.add('expanded');
+        else island.classList.remove('expanded');
+    }
+};
+
+window.dongModeMenu = function() {
+    window.isModeMenuOpen = false;
+    const island = document.getElementById('mode-island');
+    if (island) island.classList.remove('expanded');
+};
+
+window.chonCheDoTheThao = function(e, mode) {
+    if(e) e.stopPropagation();
+    window.currentSportMode = mode;
+    
+    // Đổi màu Nút bên trong (Bỏ qua nút Radar)
+    document.querySelectorAll('.mode-btn').forEach(b => {
+        if (b.id !== 'btn-radar-share') b.classList.remove('active-mode');
+    });
+    if(mode === 'walk') document.getElementById('btn-walk').classList.add('active-mode');
+    else document.getElementById('btn-run').classList.add('active-mode');
+    
+    // Đổi Icon của Nút Lõi bên ngoài
+    const mainIcon = document.getElementById('main-mode-icon');
+    if (mainIcon) {
+        if (mode === 'walk') mainIcon.innerHTML = '🚶';
+        else mainIcon.innerHTML = '🏃';
+    }
+    
+    // Đóng menu lại mượt mà
+    window.dongModeMenu();
+    
+    // Báo cho AI Mèo biết
+    if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
+        catBubble.innerText = mode === 'walk' ? "Đi bộ tản mạn à? Nhớ xoay khớp cổ chân nhé cậu! 😼" : "Chạy bộ đốt mỡ hả? Cháy lên cậu ơi! 🔥";
+        catBubble.style.backgroundColor = '#e3f2fd';
+        catBubble.style.border = '2px solid #0d47a1';
+        catBubble.style.color = '#333';
+        catBubble.style.display = 'block';
+        setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+        setTimeout(() => { 
+            catBubble.classList.remove('show-bubble'); 
+            setTimeout(() => catBubble.style.display = 'none', 600); 
+        }, 3000);
+    }
+};
+
+// Đóng menu chọn chế độ khi click ra ngoài bản đồ
+document.addEventListener('click', function(event) {
+    const island = document.getElementById('mode-island');
+    if (window.isModeMenuOpen && island && !island.contains(event.target)) {
+        window.dongModeMenu();
+    }
+});
 // === HÀM GỘP: RADAR CỘNG ĐỒNG & CHIA SẺ VỊ TRÍ ===
 window.isSharingLocation = false;
 let friendMarkers = {};

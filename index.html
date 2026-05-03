@@ -986,17 +986,17 @@
                 </div>
             </div>
         </div>
-    <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
-    <div id="bottom-nav" class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab(1)">🏃</div>
-        <div class="nav-item" onclick="switchTab(2)">📊</div>
-        <div class="nav-item" onclick="switchTab(3)">🏠</div>
-        <div class="nav-item" onclick="switchTab(4)">👥</div>
-        <div class="nav-item" onclick="switchTab(5)" title="Thành tựu cá nhân" style="position: relative;">
-    🏆
-    <span id="cham-do-thanh-tuu" style="display: none; position: absolute; top: 0px; right: -5px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(220,53,69,0.8); animation: btnRadarPulse 2s infinite;"></span>
-</div>
+<!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV BAR) -->
+<div id="bottom-nav" class="bottom-nav">
+    <div class="nav-item active" onclick="window.phatAmThanh('pop'); switchTab(1)">🏃</div>
+    <div class="nav-item" onclick="window.phatAmThanh('pop'); switchTab(2)">📊</div>
+    <div class="nav-item" onclick="window.phatAmThanh('pop'); switchTab(3)">🏠</div>
+    <div class="nav-item" onclick="window.phatAmThanh('pop'); switchTab(4)">👥</div>
+    <div class="nav-item" onclick="window.phatAmThanh('pop'); switchTab(5)" title="Thành tựu cá nhân" style="position: relative;">
+        🏆
+        <span id="cham-do-thanh-tuu" style="display: none; position: absolute; top: 0px; right: -5px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(220,53,69,0.8); animation: btnRadarPulse 2s infinite;"></span>
     </div>
+</div>
 
     <!-- MÀN HÌNH GIỚI THIỆU (ONBOARDING SLIDER) - BẢN GEN Z TỐI GIẢN -->
 <div id="intro-slider-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #fafafa; z-index: 10001; display: none; flex-direction: column;">
@@ -2791,10 +2791,10 @@ window.capNhatHeThongLevel = function(tongKm) {
 
 // HÀM XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT LÊN CẤP
 window.nhanThuongLenCap = function() {
-    const user = localStorage.getItem('currentUser');
-    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
-    
-    if (currentLevel < 1203) {
+window.phatAmThanh('lv_up'); //  KÍCH HOẠT NHẠC LÊN CẤP
+const user = localStorage.getItem('currentUser');
+let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+if (currentLevel < 1203) {
         currentLevel += 1;
         localStorage.setItem('user_level_' + user, currentLevel);
         
@@ -2898,8 +2898,9 @@ window.switchTab = function(tabIndex) {
 window.addEventListener('load', () => { setTimeout(() => window.veBangThanhTuu(), 1500); });
 // === LOGIC ANIMATION MỞ KHÓA THÀNH TỰU ===
 window.moHuyHieuMoi = function(cap, icon, title, desc) {
-    const user = localStorage.getItem('currentUser');
-    // 1. Nhồi dữ liệu vào hộp quà
+window.phatAmThanh('thanh_tuu'); //  KÍCH HOẠT NHẠC ĐẬP HỘP THÀNH TỰU
+const user = localStorage.getItem('currentUser');
+// 1. Nhồi dữ liệu vào hộp quà
     document.getElementById('achieve-icon').innerText = icon;
     document.getElementById('achieve-title').innerText = title;
     document.getElementById('achieve-desc').innerHTML = desc;
@@ -4008,7 +4009,31 @@ document.addEventListener('click', function(event) {
         window.dongAqiBoard();
     }
 });
+    
+// HỆ THỐNG ÂM THANH (AUDIO ENGINE)
+// ==========================================
+window.KhoAmThanh = {
+    bam_chuong: new Audio('bam_chuong.wav'), // Mèo về nhà
+    thanh_tuu: new Audio('thanh_tuu.wav'),   // Mở hộp quà Tab 5
+    lv_up: new Audio('lv_up.mp3'),           // Lên cấp độ Tab 2
+    pop: new Audio('pop.mp3'),               // Nút bấm UI
+    thong_bao: new Audio('thong_bao.wav'),   // Thông báo mạng xã hội Locket
+    meow_1: new Audio('meow_1.mp3')          // Đuổi mèo / Bấm vào mèo
+};
 
+// Ép tải sẵn âm thanh vào RAM để không bị lag khi bấm
+Object.values(window.KhoAmThanh).forEach(audio => audio.preload = 'auto');
+
+// Hàm gọi phát âm thanh mọi nơi
+window.phatAmThanh = function(ten) {
+    try { 
+        if (window.KhoAmThanh[ten]) { 
+            window.KhoAmThanh[ten].currentTime = 0; 
+            window.KhoAmThanh[ten].play().catch(e=>console.warn("Trình duyệt tạm chặn âm thanh:", e)); 
+        } 
+    } catch (err) {}
+};
+    
 // === KHAI BÁO BIẾN CHO MÈO ===
 const catAssistant = document.getElementById('cat-assistant');
 const catBubble = document.getElementById('cat-speech-bubble');
@@ -4202,9 +4227,10 @@ window.toggleLaiNhai = function(e) {
 };
 
 window.duoiMeo = function(e) {
-    if(e) e.stopPropagation();
-    if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
-        window.dongMenuMeo();
+if(e) e.stopPropagation();
+if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
+window.phatAmThanh('meow_1'); //  MÈO KÊU LÊN KHI BỊ ĐUỔI
+window.dongMenuMeo();
         // Hiệu ứng dọn đồ bay đi mất
         const cat = document.getElementById('cat-assistant');
         if(cat) {

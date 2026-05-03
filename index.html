@@ -2065,8 +2065,28 @@ window.luuTienTrinh = function() {
         thoi_gian: timeVal, van_toc: speedVal, quang_duong: distVal,
         buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
     };
-
-    if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
+        if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
+            
+            // --- LOGIC TÍNH CHUỖI NGÀY HOẠT ĐỘNG (STREAK 👟) ---
+            let currentStreak = parseInt(localStorage.getItem('user_streak_' + username)) || 0;
+            let lastActiveDate = localStorage.getItem('last_active_date_' + username);
+            const todayDate = new Date().toLocaleDateString('vi-VN'); // VD: 04/05/2026
+            
+            if (lastActiveDate !== todayDate) {
+                // Kiểm tra xem có phải hôm qua không (Cách nhau 1 ngày)
+                let hqua = new Date(); hqua.setDate(hqua.getDate() - 1);
+                let yesterdayDate = hqua.toLocaleDateString('vi-VN');
+                
+                if (lastActiveDate === yesterdayDate) currentStreak += 1; // Nối tiếp chuỗi
+                else currentStreak = 1; // Bị đứt chuỗi, tính lại từ đầu
+                
+                localStorage.setItem('last_active_date_' + username, todayDate);
+                localStorage.setItem('user_streak_' + username, currentStreak);
+                
+                // Đẩy Streak lên đám mây lưu trữ
+                window.db.ref('nguoi_dung/' + username).update({ chuoi_ngay_streak: currentStreak });
+            }
+            
         // TẠO ID MỚI TRÊN FIREBASE TRƯỚC KHI LƯU
         const newRecordRef = window.db.ref('tien_trinh_tap_luyen/' + username).push();
             newRecordRef.set(recordData).then(() => {
@@ -6179,5 +6199,52 @@ window.taiLopBanDoChonLoc = function() {
 };
     
 </script>
+    <!-- =======================================================
+         KHU VỰC CHUẨN BỊ TEMPLATE WIDGET CHO BẢN ĐÓNG APK 
+         (Đang ẩn, hệ thống Android sẽ tự động Extract từ đây)
+    ======================================================== -->
+    <div id="apk-widget-templates" style="display: none;">
+        
+        <!-- WIDGET 1: CAMERA LOCKET (160x160) -->
+        <div class="widget-locket-style" style="width: 160px; height: 160px; border-radius: 25px; overflow: hidden; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+            <img id="wdg1-bg" src="meo_binh_thuong.png" style="width: 100%; height: 100%; object-fit: cover;">
+            <!-- Lớp phủ mờ trong suốt (Backdrop blur) -->
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px;">
+                <img id="wdg1-avt" src="https://ui-avatars.com/api/?name=Bạn" style="width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;">
+                <span id="wdg1-cap" style="color: white; font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Caption ở đây...</span>
+            </div>
+        </div>
+
+        <!-- WIDGET 2: TIẾN TRÌNH & CHUỖI NGÀY (300x140) -->
+        <div class="widget-progress-style" style="width: 300px; height: 140px; border-radius: 20px; background: linear-gradient(135deg, #28a745, #20c997); padding: 15px; color: white; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+            <!-- Chuỗi ngày (Góc trên phải) -->
+            <div style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 12px; font-weight: 900; font-size: 15px; backdrop-filter: blur(5px); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                👟 <span id="wdg2-streak">0</span>
+            </div>
+            <div>
+                <div style="font-size: 12px; opacity: 0.9;">Hành trình của cậu</div>
+                <div style="font-size: 22px; font-weight: 900;">Cấp <span id="wdg2-lv">1</span></div>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 5px;">
+                <div id="wdg2-bar" style="width: 50%; height: 100%; background: #ffc107;"></div>
+            </div>
+        </div>
+
+        <!-- WIDGET 3: ONE CONNECT (160x160 - Giống bản vẽ connect.png) -->
+        <div class="widget-connect-style" style="width: 160px; height: 160px; border-radius: 25px; overflow: hidden; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); background: #fcdab0;">
+            <!-- Bản đồ thu nhỏ nối 2 điểm -->
+            <img id="wdg3-map" src="chay_1.png" style="width: 100%; height: 100%; object-fit: cover;">
+            <!-- Lớp phủ thời gian góc trên cùng (Có chấm trạng thái) -->
+            <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; display: flex; align-items: center; gap: 5px;">
+                <span id="wdg3-dot">🟢</span> <span id="wdg3-time">15 phút trước</span>
+            </div>
+            <!-- Lớp phủ mờ Đáy (Avatar + Khoảng cách Route OSRM) -->
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px;">
+                <img id="wdg3-avt" src="https://ui-avatars.com/api/?name=Đ" style="width: 25px; height: 25px; border-radius: 50%; border: 2px solid white; flex-shrink: 0;">
+                <span id="wdg3-dist" style="color: white; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Đang tính km...</span>
+            </div>
+        </div>
+
+    </div>
 </body>
 </html>

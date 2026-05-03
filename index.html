@@ -1197,15 +1197,22 @@
             </div>
         </div>
 
-        <!-- Nút LƯU và ĐĂNG XUẤT -->
-        <button onclick="window.luuHoSo()" style="background-color: #28a745; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            LƯU THAY ĐỔI
-        </button>
-        
-        <button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            ĐĂNG XUẤT mmd
-        </button>
-    </div>
+<!-- KHU VỰC THÔNG BÁO HỆ THỐNG VÀ NÚT LƯU/ĐĂNG XUẤT -->
+<div style="text-align: left; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #28a745;">
+    <h4 style="margin: 0 0 5px 0; color: #28a745; font-size: 15px;">🔔 Thông báo ngoài màn hình</h4>
+    <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Nhận thông báo khi Mèo về nhà, có người thả tim Locket hoặc bạn bè lọt vào Radar.</p>
+    <button onclick="window.xinQuyenThongBao()" style="background-color: #28a745; color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        KÍCH HOẠT THÔNG BÁO ĐẨY
+    </button>
+</div>
+
+<button onclick="window.luuHoSo()" style="background-color: #004BAd; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+     LƯU THAY ĐỔI
+</button>
+<button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+     ĐĂNG XUẤT
+</button>
+</div>
 </div>
 </div>
     
@@ -3685,7 +3692,40 @@ window.taiThongBaoLocal = function() {
         );
     }
     
-    window.ganSuKienVuot();
+window.ganSuKienVuot();
+};
+
+// === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
+window.xinQuyenThongBao = function() {
+    if (!("Notification" in window)) {
+        alert("Trình duyệt/Điện thoại của cậu không hỗ trợ thông báo đẩy!");
+        return;
+    }
+    
+    // Nếu dùng iPhone/iOS, phải nhắc người dùng Thêm vào Màn hình chính trước
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    if (isIOS && !isStandalone) {
+        alert(" iOS BẮT BUỘC: Cậu phải bấm nút Chia sẻ (Share) -> 'Thêm vào MH chính' (Add to Home Screen) rồi mở App từ ngoài màn hình thì mới bật được thông báo nhé!");
+        return;
+    }
+
+    Notification.requestPermission().then(function (permission) {
+        if (permission === "granted") {
+            window.phatAmThanh('thong_bao'); // Kêu cái ting!
+            navigator.serviceWorker.ready.then(function(registration) {
+                registration.showNotification("🎉 Kích hoạt thành công!", {
+                    body: "Trợ lý Mèo đã nắm quyền gửi thông báo cho cậu. Cứ yên tâm tắt app",
+                    icon: "meo_binh_thuong.png",
+                    vibrate: [1, 2]
+                });
+            });
+            alert(" Đã bật thông báo thành công! Cậu có thể nhận thông báo kể cả khi khóa máy.");
+        } else {
+            alert(" Đã từ chối cấp quyền. Hãy vào cài đặt trình duyệt để mở lại nhé.");
+        }
+    });
 };
 
 // HÀM ĐÁNH DẤU ĐÃ ĐỌC

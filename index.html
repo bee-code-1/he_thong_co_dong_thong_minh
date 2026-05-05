@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CMD Run</title>
     <!-- Icon hiển thị trên tab trình duyệt (Tạm dùng mặt Mèo) -->
-    <link rel="icon" type="image/png" href="logo_app_nen_trang.png">
+    <link rel="icon" type="image/png" href="meo_binh_thuong.png">
     <!-- Khai báo cho iOS/Android biết đây là Web App xịn -->
     <meta name="apple-mobile-web-app-title" content="CMD Run">
     <meta name="application-name" content="CMD Run">
@@ -73,7 +73,9 @@
         .top-left-btn { position: absolute; top: 15px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; }
         #info-panel { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 10px 15px; width: 170px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 
+        * { -webkit-tap-highlight-color: transparent; outline: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+
         #map { width: 100%; height: 100%; z-index: 1; }
         
         /* Modal UI */
@@ -624,7 +626,7 @@
          
      </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div id="map"></div>
 <!-- LỚP GIAO DIỆN CHÍNH ) -->
@@ -960,7 +962,7 @@
             <!-- NÚT NHẬN THƯỞNG LÊN CẤP -->
             <div style="text-align: center; margin-top: 10px;">
                 <button id="btn-claim-level" class="btn-level-up" style="display: none; background: #ffc107; color: #d35400; font-weight: 900; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; animation: catPulse 1s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.nhanThuongLenCap()">🚀 LÊN CẤP NGAY!</button>
-            </div
+            </div>
 
             <!-- Tổng kết nhỏ -->
             <div style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px; font-size: 13px; line-height: 1.6; font-weight: bold; margin-top: 15px; display: flex; justify-content: space-between;">
@@ -982,9 +984,15 @@
 </div>
         <!-- LAYER TAB 5: THÀNH TỰU CÁ NHÂN -->
         <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 140px;">
-            <div style="padding: 25px 15px; text-align: center;">
-                <h2 style="color: #d35400; margin-top: 0; margin-bottom: 5px; font-size: 24px;">🏆 Phòng Trưng Bày</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 25px; font-weight: bold;">Những dấu chân lịch sử của cậu trên dải đất hình chữ S.</p>
+            <div style="padding: 25px 15px; text-align: center; position: relative;">
+                <!-- KHU VỰC HIỂN THỊ XU (TÚI TIẾN) -->
+                <div style="position: absolute; top: 25px; right: 15px; background: #fff9c4; padding: 6px 12px; border-radius: 20px; font-weight: 900; color: #f57f17; border: 2px solid #fbc02d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px; z-index: 10;">
+                    <img src="meow_coin.png" style="width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); animation: catPulse 2s infinite;"> <span id="coin-balance-display" style="font-size: 18px;">0</span>
+                </div>
+
+                <h2 style="color: #d35400; margin-top: 0; margin-bottom: 5px; font-size: 24px; padding-right: 60px;">🏆 Phòng Trưng Bày</h2>
+                <p style="color: #666; font-size: 14px; margin-bottom: 25px; font-weight: bold;">Những dấu chân của bạn trên dải đất hình chữ S.</p>
+
                 
                 <div id="danh-sach-thanh-tuu" style="display: flex; flex-direction: column;">
                     <!-- JS sẽ nhồi 12 huy hiệu vào đây -->
@@ -1134,92 +1142,94 @@
                 </button>
             </div>
         </div>
-<!-- hồ sơ cá nhân -->
-<!-- Thêm sự kiện onclick="window.dongHoSo()" vào lớp nền đen để bấm ra ngoài là tắt -->
-<div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
-    
-    <!-- Thêm onclick="event.stopPropagation()" để bấm vào vùng trắng không bị tắt -->
-    <!-- Thêm max-height: 85vh và overflow-y: auto để kích hoạt thanh trượt dọc -->
-    <div onclick="event.stopPropagation()" style="background: white; padding: 25px 25px 50px 25px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;">
-  
-        <!-- Nút X Tắt -->
-        <span onclick="window.dongHoSo()" style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1; z-index: 10;">&times;</span>
-        
-        <h2 style="color: #007bff; margin-top: 0; margin-bottom: 15px;"> Cái mặt chó của tôi </h2>
-        
-        <!-- Khu vực Avatar (Bấm vào hình để đổi) -->
-        <div style="margin-bottom: 20px; position: relative; display: inline-block;">
-            <img id="hs-avatar-preview" src="https://ui-avatars.com/api/?name=User" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #007bff; object-fit: cover; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" onclick="document.getElementById('upload-avatar').click();" title="Bấm để đổi ảnh đại diện">
-            <!-- SỬA LỖI MOBILE: Làm tàng hình input thay vì display:none -->
-            <input type="file" id="upload-avatar" accept="image/*" style="opacity: 0; position: absolute; left: 0; top: 0; width: 1px; height: 1px; z-index: -1;" onchange="window.thayDoiAnh(event)">
-            <div style="font-size: 12px; color: #888; margin-top: 8px;">đừng đổi ảnh nữa</div>
-        </div>
+    <!-- BẢNG CÀI ĐẶT HỆ THỐNG (SETTINGS) THAY THẾ HỒ SƠ CŨ -->
+    <div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
+        <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 0; border-radius: 20px; width: 90%; max-width: 380px; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;">
 
-        <!-- TÊN TÀI KHOẢN KO THỂ SỬA -->
-        <div style="background: #e9ecef; border-radius: 8px; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; font-size: 15px; text-align: left;">
-            <span style="color: #555; font-weight: bold;"> Tài khoản:</span> 
-            <span id="hs-display-username" style="color: #0f0230; font-weight: bold; font-size: 16px;">...</span>
-        </div>
-
-        <!-- Các chỉ số tùy chỉnh -->
-        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
-    <label style="font-weight: bold; font-size: 14px; color: #333;"> Tuổi:</label>
-    <input type="number" id="hs-edit-age" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-    
-    <label style="font-weight: bold; font-size: 14px; color: #333;"> Chiều cao (cm):</label>
-    <input type="number" id="hs-edit-height" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-    
-    <label style="font-weight: bold; font-size: 14px; color: #333;"> Cân nặng (kg):</label>
-    <input type="number" id="hs-edit-weight" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-    
-    <label style="font-weight: bold; font-size: 14px; color: #333;"> Bệnh lý đặc biệt:</label>
-    <select id="hs-edit-condition" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; margin-bottom: 10px;">
-        <option value="none">Bình thường</option>
-        <option value="asthma">Hen suyễn / Viêm xoang</option>
-        <option value="heart">Tim mạch / Huyết áp</option>
-    </select>
-    
-    <label style="font-weight: bold; font-size: 14px; color: #333;"> Sải chân (m/bước):</label>
-    <input type="number" step="0.01" id="hs-edit-stride" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-</div>
-        <!-- KHU VỰC ĐỔI MẬT KHẨU -->
-        <div style="text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-top: 2px dashed #ccc;">
-            <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 15px;">🔐 Đổi mật khẩu</h4>
-            
-            <div style="position: relative; margin-bottom: 10px;">
-                <input type="password" id="hs-old-pass" placeholder="Nhập mật khẩu cũ" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
-                <span id="eye-old" onclick="window.toggleEye('hs-old-pass', 'eye-old')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
+            <!-- Header Cố định -->
+            <div style="position: sticky; top: 0; background: white; padding: 15px; border-bottom: 2px solid #eee; z-index: 10; display: flex; justify-content: center; align-items: center;">
+                <h2 style="color: #004BAd; margin: 0; font-size: 20px;">⚙️ Cài Đặt</h2>
+                <span onclick="window.dongHoSo()" style="position: absolute; right: 20px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1;">&times;</span>
             </div>
 
-            <div style="position: relative; margin-bottom: 10px;">
-                <input type="password" id="hs-new-pass" placeholder="Nhập mật khẩu mới" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
-                <span id="eye-new" onclick="window.toggleEye('hs-new-pass', 'eye-new')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
-            </div>
+            <div style="padding: 20px;">
+                <!-- KHU VỰC 1: QUẢN LÝ TÀI KHOẢN & Y TẾ -->
+                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                        <div style="position: relative;">
+                            <img id="hs-avatar-preview" src="" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #004BAd; object-fit: cover; cursor: pointer;" onclick="document.getElementById('upload-avatar').click();">
+                            <input type="file" id="upload-avatar" accept="image/*" style="display: none;" onchange="window.thayDoiAnh(event)">
+                            <div style="position: absolute; bottom: 0; right: 0; background: white; border-radius: 50%; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 12px;">✏️</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #888; font-weight: bold;">Tài khoản</div>
+                            <div id="hs-display-username" style="font-size: 18px; font-weight: 900; color: #333;">...</div>
+                        </div>
+                    </div>
 
-            <div style="position: relative;">
-                <input type="password" id="hs-confirm-pass" placeholder="Xác nhận mật khẩu mới" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; padding-right: 35px;">
-                <span id="eye-confirm" onclick="window.toggleEye('hs-confirm-pass', 'eye-confirm')" style="position: absolute; right: 10px; top: 8px; cursor: pointer; font-size: 16px;" title="Hiện/Ẩn">👁️</span>
+                    <h4 style="margin: 0 0 10px 0; color: #d35400; font-size: 14px;">Chỉ số Y tế & Thể chất</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div><label style="font-size:12px; color:#888;">Tuổi</label><input type="number" id="hs-edit-age" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;"></div>
+                        <div><label style="font-size:12px; color:#888;">Nặng (kg)</label><input type="number" id="hs-edit-weight" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;"></div>
+                        <div><label style="font-size:12px; color:#888;">Cao (cm)</label><input type="number" id="hs-edit-height" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;"></div>
+                        <div><label style="font-size:12px; color:#888;">Sải chân (m)</label><input type="number" step="0.01" id="hs-edit-stride" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;"></div>
+                    </div>
+                    <label style="font-size:12px; color:#888;">Bệnh lý nền</label>
+                    <select id="hs-edit-condition" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+                        <option value="none">Bình thường</option>
+                        <option value="asthma">Hen suyễn / Viêm xoang</option>
+                        <option value="heart">Tim mạch / Huyết áp</option>
+                    </select>
+
+                    <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 14px;">Đổi mật khẩu</h4>
+                    <input type="password" id="hs-old-pass" placeholder="Mật khẩu cũ" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="password" id="hs-new-pass" placeholder="Mật khẩu mới" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 8px;">
+                </div>
+
+                <!-- KHU VỰC 2: THÔNG BÁO & QUYỀN RIÊNG TƯ -->
+                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+                    <h4 style="margin: 0 0 15px 0; color: #28a745; font-size: 16px;">🔔 Riêng tư & Thông báo</h4>
+                    <button onclick="window.xinQuyenThongBao()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 10px; font-weight: bold; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">KÍCH HOẠT THÔNG BÁO ĐẨY</button>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 14px; font-weight: bold; color: #444;">Cho người lạ xem Hồ sơ</span>
+                        <input type="checkbox" id="toggle-public-profile" style="transform: scale(1.5); accent-color: #28a745;">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: bold; color: #444;">Nhận bình luận Locket</span>
+                        <input type="checkbox" id="toggle-allow-comments" checked style="transform: scale(1.5); accent-color: #28a745;">
+                    </div>
+                </div>
+
+                <!-- KHU VỰC 3: ÂM THANH & TRẢI NGHIỆM -->
+                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+                    <h4 style="margin: 0 0 15px 0; color: #6f42c1; font-size: 16px;">🔊 Âm thanh hệ thống</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 14px; font-weight: bold; color: #444;">Hiệu ứng âm thanh (Pop, Up)</span>
+                        <input type="checkbox" id="toggle-sys-sound" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleAmThanhHeThong(this.checked)">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: bold; color: #444;">Mèo lải nhải (Voice/Chat)</span>
+                        <input type="checkbox" id="toggle-cat-voice" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleCatLaiNhaiSettings(this.checked)">
+                    </div>
+                </div>
+
+                <!-- KHU VỰC 4: QUẢN LÝ BỘ NHỚ -->
+                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+                    <h4 style="margin: 0 0 10px 0; color: #e67e22; font-size: 16px;">🧹 Dọn dẹp Bộ nhớ</h4>
+                    <button onclick="window.xoaLichSuChatMeo()" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: left;">🗑️ Xóa Lịch sử Chat với Mèo</button>
+                    <button onclick="window.moBangXoaChatNguoi()" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: left;">💬 Quản lý tin nhắn 1-1</button>
+                    <button onclick="alert('Đã xóa bộ nhớ đệm Bản đồ (Cache Layer)!')" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; text-align: left;">🗺️ Xóa Cache Bản đồ</button>
+                </div>
+
+                <!-- NÚT CHỐT SỔ -->
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="window.dangXuat()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #dc3545; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">Đăng xuất</button>
+                    <button onclick="window.luuHoSoCaiDatMoi()" style="flex: 2; padding: 12px; border-radius: 12px; border: none; background: #004BAd; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">Lưu Cài Đặt</button>
+                </div>
             </div>
         </div>
-
-<!-- KHU VỰC THÔNG BÁO HỆ THỐNG VÀ NÚT LƯU/ĐĂNG XUẤT -->
-<div style="text-align: left; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #28a745;">
-    <h4 style="margin: 0 0 5px 0; color: #28a745; font-size: 15px;">🔔 Thông báo ngoài màn hình</h4>
-    <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Nhận thông báo khi Mèo về nhà, tương tác bạn bè hoặc các báo cáo hệ thống.</p>
-    <button onclick="window.xinQuyenThongBao()" style="background-color: #28a745; color: white; width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-        KÍCH HOẠT THÔNG BÁO ĐẨY
-    </button>
-</div>
-
-<button onclick="window.luuHoSo()" style="background-color: #004BAd; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-     LƯU THAY ĐỔI
-</button>
-<button onclick="window.dangXuat()" style="background-color: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-     ĐĂNG XUẤT
-</button>
-</div>
-</div>
-</div>
+    </div>
     
 <!-- MÀN HÌNH ONE CONNECT (Sẽ bung nở từ nút 🗺️) -->
 <div id="one-connect-screen">
@@ -1288,6 +1298,12 @@
         
         <img id="public-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #28a745; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
         <h2 id="public-name" style="margin: 0 0 5px 0; color: #333; font-size: 22px;">Tên User</h2>
+
+        <!-- CẤY THÊM BADGE CẤP ĐỘ CỰC NGẦU -->
+        <div style="font-size: 14px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #ffc107, #d35400); padding: 4px 20px; border-radius: 20px; display: inline-block; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            Cấp <span id="public-level">1</span>
+        </div><br>
+
         <div id="public-status" style="font-size: 13px; color: #28a745; font-weight: bold; margin-bottom: 15px; background: #e8f5e9; display: inline-block; padding: 4px 10px; border-radius: 12px;">Đang hoạt động</div>
         
         <!-- Các chỉ số công khai -->
@@ -1678,174 +1694,177 @@ window.saveProfile = function(isSkip) {
 // --- GPS LÕI (ĐÃ TÍCH HỢP 3D VÀ HIỂN THỊ ĐỘ CAO) ---
 function initGPS() {
     const fog = document.getElementById('fog-layer');
-    polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
-    
-    gpsWatcherId = navigator.geolocation.watchPosition(position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const doChinhXac = position.coords.accuracy;
-        const currentTimestamp = Date.now();
-        
-        // 🛑 BỘ LỌC 1: Lọc Độ Chính Xác
-        if (doChinhXac > 25) return;
-        // 💡 KÍCH HOẠT API THỜI TIẾT & BỤI MỊN THEO TỌA ĐỘ HIỆN TẠI
-        if (typeof window.capNhatThoiTietAQI === 'function') {
-            window.capNhatThoiTietAQI(lat, lng);
-        }        
-        let username = localStorage.getItem('currentUser') || "Khach";
-        if (username && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
-            if (typeof window.banToaDoLenMay === 'function') window.banToaDoLenMay(username, lat, lng);
-        }
-        
-        const currentLatLng = L.latLng(lat, lng);
-        latestLatLng = currentLatLng;
-        // === RADAR BẮT MÈO 20M ===
-        if (localStorage.getItem('meo_bo_nha') === 'true') {
-            let catLat = localStorage.getItem('toa_do_meo_lat');
-            let catLng = localStorage.getItem('toa_do_meo_lng');
-            if (catLat && catLng) {
-                // Đo khoảng cách chim bay từ Cậu đến Mèo
-                let khoangCachMeo = map.distance(currentLatLng, L.latLng(catLat, catLng));
-                let btnRadar = document.getElementById('btn-radar-meo');
-                
-                if (btnRadar) {
-                    if (khoangCachMeo <= 20) {
-                        // VÀO VÙNG PHỤC KÍCH! MỞ NÚT AR!
-                        btnRadar.innerHTML = "📸 MỞ CAM BẮT MÈO";
-                        btnRadar.style.background = "#28a745"; 
-                        btnRadar.onclick = window.moManHinhBatMeo;
-                    } else {
-                        // CHƯA TỚI NƠI! Hiện khoảng cách
-                        btnRadar.innerHTML = `Đang dò... (${khoangCachMeo.toFixed(0)}m)`;
-                        btnRadar.style.background = "#dc3545"; 
-                        btnRadar.onclick = window.batDauDiTimMeo;
+    if (typeof polyline === 'undefined' || !polyline) {
+        polyline = L.polyline([], {color: '#007bff', weight: 6, opacity: 0.8}).addTo(map);
+    }
+
+    // ƯU TIÊN SỬ DỤNG PLUGIN NATIVE ĐỂ CHẠY NGẦM KHÔNG CHẾT
+    if (window.Capacitor && window.Capacitor.Plugins.BackgroundGeolocation) {
+        window.Capacitor.Plugins.BackgroundGeolocation.addWatcher(
+            {
+                backgroundMessage: "App đang âm thầm vẽ đường cho cậu đấy!",
+                backgroundTitle: "Hệ thống Cơ động Thông minh",
+                requestPermissions: true,
+                stale: false,
+                distanceFilter: 2 // Nhích 2m mới thèm gọi, tiết kiệm pin tối đa
+            },
+            function callback(location, error) {
+                if (error) {
+                    if (error.code === "NOT_AUTHORIZED") {
+                        if (window.confirm("Cậu phải cấp quyền vị trí 'Luôn luôn' (Always) thì mới chạy ngầm được. Mở cài đặt nhé?")) {
+                            window.Capacitor.Plugins.BackgroundGeolocation.openSettings();
+                        }
                     }
+                    return console.error(error);
                 }
+                // Bơm dữ liệu vào Não bộ xử lý
+                xuLyToaDoGPS(location.latitude, location.longitude, location.accuracy);
             }
-        }
-        
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn && startBtn.innerText === "ĐANG KẾT NỐI GPS...") {
-            if (typeof window.startTrackingAction === 'function') window.startTrackingAction();
-        }
-        
-        if (typeof isFirstLocation !== 'undefined' && isFirstLocation) {
-            map.setView([lat, lng], 18);
-            isFirstLocation = false;
-        }
-        
-        // 💡 LẤY ĐỘ CAO VÀ HIỂN THỊ VÀO MARKER
-        // Lấy tạm độ cao từ chip GPS điện thoại, sau đó sẽ được đè bằng độ cao chuẩn xác của NASA
-        if (typeof window.latestAltitude === 'undefined') window.latestAltitude = position.coords.altitude ? position.coords.altitude : 0;
-        
-        let altitudeInfo = "";
-        // Nếu đang bật Bản đồ Địa hình và đã lấy được độ cao -> Hiển thị
-        if (window.isHienDiaHinh && window.latestAltitude !== 0) {
-            altitudeInfo = ` |  ${Math.round(window.latestAltitude)}m`;
-        }
-
-        let myRealAvatar = localStorage.getItem("avatar_" + username);
-        let myAvatar = myRealAvatar ? myRealAvatar : `https://ui-avatars.com/api/?name=${username}&background=random`;
-        const myGPSHtml = `
-        <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
-            <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;">
-                <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
-            </svg>
-            <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box; z-index: 2;" />
-            <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); background: #dc3545; color: white; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 12px; z-index: 3; white-space: nowrap; border: 1px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                ${username} (Bạn)${altitudeInfo}
-            </div>
-        </div>`;
-        const myIcon = L.divIcon({ className: 'user-icon', html: myGPSHtml, iconSize: L.point(44, 55), iconAnchor: L.point(22, 55) });
-        if (!userMarker) { userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map); }
-        else { userMarker.setLatLng([lat, lng]); userMarker.setIcon(myIcon); }
-
-// VẼ ĐƯỜNG ĐI CHUẨN XÁC VÀ TÍNH QUÃNG ĐƯỜNG
-if (pathLatLngs.length > 0 && isTracking && !isPaused) {
-    const lastPoint = pathLatLngs[pathLatLngs.length - 1];
-    const dist2D = map.distance(lastPoint, currentLatLng);
-
-    // 🛑 BỘ LỌC CHỐNG TRÔI GPS ĐỘT NGỘT (MULTIPATH FILTER)
-    const timeDiff = (currentTimestamp - lastTimestamp) / 1000; // Số giây trôi qua
-    const currentSpeed = timeDiff > 0 ? (dist2D / timeDiff) : 0; // Vận tốc: mét/giây
-
-    // Nếu tốc độ > 12 m/s (~43 km/h), đây 100% là nhiễu sóng GPS -> 
-            const currentSpeedMs = timeDiff > 0 ? (dist2D / timeDiff) : 0; // m/s
-            const currentSpeedKmh = currentSpeedMs * 3.6; // Đổi sang km/h cho chuẩn bài
-
-            // 🛑 BỘ LỌC CHỐNG GIAN LẬN THEO MÔN THỂ THAO
-            let maxSpeedKmh = 24; // Chạy bộ max 24 km/h
-            if (typeof window.currentSportMode !== 'undefined' && window.currentSportMode === 'walk') {
-                maxSpeedKmh = 6.5; // Đi bộ max 6.5 km/h
-            }
-
-            // MỨC 1: TRÊN 30 KM/H -> BÁO ĐỘNG GIAN LẬN ĐI XE MÁY HOẶC NHIỄU SÓNG NẶNG
-            if (currentSpeedKmh > 30) {
-                console.warn(`[CẢNH BÁO] Tốc độ ${currentSpeedKmh.toFixed(1)} km/h! Block!`);
-                if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
-                    catImgObj.src = typeof imgChongMat !== 'undefined' ? imgChongMat : getAnhMacDinh();
-                    catBubble.innerText = "Đi xe máy ăn gian hả? Mèo hủy kết quả luôn! 🛵😾";
-                    catBubble.style.backgroundColor = '#ffebee';
-                    catBubble.style.border = '2px solid #dc3545';
-                    catBubble.style.color = '#dc3545';
-                    catBubble.style.display = 'block';
-                    setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-                    setTimeout(() => { 
-                        catBubble.classList.remove('show-bubble'); 
-                        setTimeout(() => catBubble.style.display = 'none', 600); 
-                    }, 4000);
-                }
-                return; // 🛑 Khóa sập cửa, KHÔNG CỘNG KHOẢNG CÁCH
-            }
-
-            // MỨC 2: VƯỢT QUÁ GIỚI HẠN MÔN THỂ THAO (VD: Chọn Đi Bộ nhưng chạy 10km/h)
-            if (currentSpeedKmh > maxSpeedKmh) {
-                console.warn(`[CHẶN] Chọn ${window.currentSportMode} mà đi ${currentSpeedKmh.toFixed(1)} km/h!`);
-                return; // 🛑 Tịch thu khoảng cách điểm này, bắt buộc phải đi chậm lại
-            }
-
-    // 1. BỘ ĐẾM SIÊU NHẠY: Nhích > 2 mét (và tốc độ người thường) thì nhảy số
-    if (dist2D > 2) {
-        totalDistanceMeter += dist2D;
-        let canNang = parseFloat(userWeight) || 65;
-        let buoc = parseFloat(stepsPerMeter) || 1.42;
-
-        // Cập nhật giao diện NGAY LẬP TỨC (Không bị phụ thuộc mạng)
-        if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
-        if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
-        // Gọi Não AI tính Calo chuẩn y khoa (Mifflin-St Jeor + Nhiệt độ môi trường)
-if (typeof window.tinhCaloThucTe === 'function') {
-    let caloDungChuan = window.tinhCaloThucTe(totalDistanceMeter, elapsedSeconds);
-    if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = caloDungChuan.toFixed(1);
-        // Lưu tọa độ để vẽ đường lập tức
-        pathLatLngs.push(currentLatLng);
-        if(polyline) polyline.setLatLngs(pathLatLngs);
-        lastTimestamp = currentTimestamp;
-
-        // Bắn lên Firebase nếu đang bật tính năng chia sẻ vị trí cộng đồng
-        if (currentUser && window.isSharingLocation && window.db) {
-            window.db.ref('lich_su_di_chuyen/' + currentUser).push({ lat: currentLatLng.lat, lng: currentLatLng.lng, thoi_gian: currentTimestamp });
-        }
-
-        // 2. GỌI API ĐỘ CAO NGẦM
-        if (dist2D > 10) {
-            fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${currentLatLng.lat},${currentLatLng.lng}`)
-            .then(res => res.json())
-            .then(apiData => {
-                if (apiData && apiData.results && apiData.results.length > 0) {
-                    window.latestAltitude = apiData.results.elevation || 0;
-                }
-            }).catch(e => console.log("Lỗi tải độ cao ngầm"));
-        }
+        ).then(function(watcher_id) {
+            gpsWatcherId = watcher_id; // Lưu ID lại
+        });
+    } else {
+        // FALLBACK DÀNH CHO LÚC TEST TRÊN WEB/PC BÌNH THƯỜNG
+        gpsWatcherId = navigator.geolocation.watchPosition(position => {
+            xuLyToaDoGPS(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+        }, err => {
+            alert("Lỗi GPS: Vui lòng bật định vị :v ");
+        }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
     }
 }
-} else if (!isTracking || isPaused || pathLatLngs.length === 0) {
-    pathLatLngs.push(currentLatLng);
-    lastTimestamp = currentTimestamp;
-}
-    }, err => {
-        alert("Lỗi GPS: Vui lòng bật định vị :v ");
-    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+
+// --- NÃO BỘ XỬ LÝ TOÁN HỌC GPS (ĐƯỢC TÁCH RA CHO GỌN) ---
+function xuLyToaDoGPS(lat, lng, doChinhXac) {
+    const currentTimestamp = Date.now();
+    if (doChinhXac > 25) return;
+
+    if (typeof window.capNhatThoiTietAQI === 'function') window.capNhatThoiTietAQI(lat, lng);
+
+    let username = localStorage.getItem('currentUser') || "Khach";
+    if (username && typeof window.isSharingLocation !== 'undefined' && window.isSharingLocation === true) {
+        if (typeof window.banToaDoLenMay === 'function') window.banToaDoLenMay(username, lat, lng);
+    }
+
+    const currentLatLng = L.latLng(lat, lng);
+    latestLatLng = currentLatLng;
+
+    // RADAR BẮT MÈO 20M
+    if (localStorage.getItem('meo_bo_nha') === 'true') {
+        let catLat = localStorage.getItem('toa_do_meo_lat');
+        let catLng = localStorage.getItem('toa_do_meo_lng');
+        if (catLat && catLng) {
+            let khoangCachMeo = map.distance(currentLatLng, L.latLng(catLat, catLng));
+            let btnRadar = document.getElementById('btn-radar-meo');
+            if (btnRadar) {
+                if (khoangCachMeo <= 20) {
+                    btnRadar.innerHTML = "📸 MỞ CAM BẮT MÈO";
+                    btnRadar.style.background = "#28a745";
+                    btnRadar.onclick = window.moManHinhBatMeo;
+                } else {
+                    btnRadar.innerHTML = `Đang dò... (${khoangCachMeo.toFixed(0)}m)`;
+                    btnRadar.style.background = "#dc3545";
+                    btnRadar.onclick = window.batDauDiTimMeo;
+                }
+            }
+        }
+    }
+
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn && startBtn.innerText === "ĐANG KẾT NỐI GPS...") {
+        if (typeof window.startTrackingAction === 'function') window.startTrackingAction();
+    }
+
+    if (typeof isFirstLocation !== 'undefined' && isFirstLocation) {
+        map.setView([lat, lng], 18);
+        isFirstLocation = false;
+    }
+
+    let altitudeInfo = "";
+    if (window.isHienDiaHinh && window.latestAltitude !== 0 && window.latestAltitude !== undefined) {
+        altitudeInfo = ` |  ${Math.round(window.latestAltitude)}m`;
+    }
+
+    let myRealAvatar = localStorage.getItem("avatar_" + username);
+    let myAvatar = myRealAvatar ? myRealAvatar : `https://ui-avatars.com/api/?name=${username}&background=random`;
+    const myGPSHtml = `
+    <div style="position: relative; width: 44px; height: 55px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
+        <svg viewBox="0 0 32 40" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;">
+            <path d="M16 0 C7.163 0 0 7.163 0 16 C0 27 16 40 16 40 C16 40 32 27 32 16 C32 7.163 24.837 0 16 0 Z" fill="#dc3545" />
+        </svg>
+        <img src="${myAvatar}" style="position: absolute; top: 5px; left: 5px; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid white; background-color: white; box-sizing: border-box; z-index: 2;" />
+        <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); background: #dc3545; color: white; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 12px; z-index: 3; white-space: nowrap; border: 1px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            ${username} (Bạn)${altitudeInfo}
+        </div>
+    </div>`;
+    const myIcon = L.divIcon({ className: 'user-icon', html: myGPSHtml, iconSize: L.point(44, 55), iconAnchor: L.point(22, 55) });
+
+    if (!userMarker) { userMarker = L.marker([lat, lng], {icon: myIcon, zIndexOffset: 1000}).addTo(map); }
+    else { userMarker.setLatLng([lat, lng]); userMarker.setIcon(myIcon); }
+
+    if (pathLatLngs.length > 0 && isTracking && !isPaused) {
+        const lastPoint = pathLatLngs[pathLatLngs.length - 1];
+        const dist2D = map.distance(lastPoint, currentLatLng);
+        const timeDiff = (currentTimestamp - lastTimestamp) / 1000;
+        const currentSpeedMs = timeDiff > 0 ? (dist2D / timeDiff) : 0;
+        const currentSpeedKmh = currentSpeedMs * 3.6;
+
+        let maxSpeedKmh = 30; // Chạy bộ max 30 km/h (Anh em mình vừa nới lỏng)
+        if (typeof window.currentSportMode !== 'undefined' && window.currentSportMode === 'walk') maxSpeedKmh = 10;
+
+        if (currentSpeedKmh > 35) { // Báo động xe máy nâng lên 35km/h
+            console.warn(`[CẢNH BÁO] Tốc độ ${currentSpeedKmh.toFixed(1)} km/h! Block!`);
+            if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
+                catImgObj.src = typeof imgChongMat !== 'undefined' ? imgChongMat : getAnhMacDinh();
+                catBubble.innerText = "Đi xe máy ăn gian hả? Mèo hủy kết quả luôn! 🛵😾";
+                catBubble.style.backgroundColor = '#ffebee';
+                catBubble.style.border = '2px solid #dc3545';
+                catBubble.style.color = '#dc3545';
+                catBubble.style.display = 'block';
+                setTimeout(() => catBubble.classList.add('show-bubble'), 50);
+                setTimeout(() => {
+                    catBubble.classList.remove('show-bubble');
+                    setTimeout(() => { catBubble.style.display = 'none'; catImgObj.src = getAnhMacDinh(); }, 600);
+                }, 4000);
+            }
+            return;
+        }
+
+        if (dist2D > 2) {
+            totalDistanceMeter += dist2D;
+            let canNang = parseFloat(userWeight) || 65;
+            let buoc = parseFloat(stepsPerMeter) || 1.42;
+
+            if(document.getElementById('dist-display')) document.getElementById('dist-display').innerText = (totalDistanceMeter / 1000).toFixed(2);
+            if(document.getElementById('step-display')) document.getElementById('step-display').innerText = Math.floor(totalDistanceMeter * buoc);
+
+            if (typeof window.tinhCaloThucTe === 'function') {
+                let caloDungChuan = window.tinhCaloThucTe(totalDistanceMeter, elapsedSeconds);
+                if(document.getElementById('cal-display')) document.getElementById('cal-display').innerText = caloDungChuan.toFixed(1);
+                pathLatLngs.push(currentLatLng);
+                if(polyline) polyline.setLatLngs(pathLatLngs);
+                lastTimestamp = currentTimestamp;
+
+                // MÓC NỐI TÍNH NĂNG RƯƠNG BÍ ẨN
+                if (typeof window.kiemTraVaTaoRuong === 'function') window.kiemTraVaTaoRuong(lat, lng);
+                if (typeof window.kiemTraKhoangCachRuong === 'function') window.kiemTraKhoangCachRuong(lat, lng);
+
+                if (currentUser && window.isSharingLocation && window.db) {
+                    window.db.ref('lich_su_di_chuyen/' + currentUser).push({ lat: currentLatLng.lat, lng: currentLatLng.lng, thoi_gian: currentTimestamp });
+                }
+
+                if (dist2D > 10) {
+                    fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${currentLatLng.lat},${currentLatLng.lng}`)
+                    .then(res => res.json())
+                    .then(apiData => {
+                        if (apiData && apiData.results && apiData.results.length > 0) window.latestAltitude = apiData.results.elevation || 0;
+                    }).catch(e => console.log("Lỗi tải độ cao ngầm"));
+                }
+            }
+        }
+    } else if (!isTracking || isPaused || pathLatLngs.length === 0) {
+        pathLatLngs.push(currentLatLng);
+        lastTimestamp = currentTimestamp;
+    }
 }
 </script>
 
@@ -2071,7 +2090,11 @@ window.luuTienTrinh = function() {
         buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
     };
         if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
-            
+                // MẮT THẦN: CÚP MA CÀ RỒNG
+        const hour = new Date().getHours();
+        if ((hour >= 0 && hour < 3) && totalDistanceMeter >= 1000) {
+            window.kiemTraVaNoHuyHieuAn('ma_ca_rong');
+        }
             // --- LOGIC TÍNH CHUỖI NGÀY HOẠT ĐỘNG (STREAK 👟) ---
             let currentStreak = parseInt(localStorage.getItem('user_streak_' + username)) || 0;
             let lastActiveDate = localStorage.getItem('last_active_date_' + username);
@@ -2218,9 +2241,9 @@ window.veTheTienTrinh = function(recordKey, data) {
          onmousedown="window.batDauXoa('${recordKey}', this)" 
          onmouseup="window.huyBamGiu()" 
          onmouseleave="window.huyBamGiu()" 
-         ontouchstart="window.batDauXoa('${recordKey}', this)" 
-         ontouchend="window.huyBamGiu()" 
-         ontouchmove="window.huyBamGiu()"
+         ontouchstart="window.batDauXoa('${recordKey}', this)"
+         ontouchend="window.huyBamGiu()"
+
          style="background: #e0e0e0; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;">
         
         <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333; pointer-events: none;">
@@ -2773,6 +2796,10 @@ window.startRunningProxy = function() {
     if (typeof startTrackingAction === 'function') {
         startTrackingAction();
     }
+        // MẮT THẦN: CÚP PHỔI TỐT
+    if (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1" || window.currentAQIColor === "#7e0023") {
+        window.kiemTraVaNoHuyHieuAn('phoi_tot');
+    }
 };
 
 // TÍNH TOÁN CẤP ĐỘ & KINH NGHIỆM (HÀM 0.00691)
@@ -2872,40 +2899,45 @@ const DANH_SACH_HUY_HIEU = [
     { cap: 1203, icon: '🌍', title: 'Kẻ chinh phục Địa Cầu', desc: 'Cột mốc tối thượng! Cậu đã hoàn thành khoảng cách vĩ đại từ Xích Đạo lên thẳng Bắc Cực. Không còn giới hạn nào cho cậu nữa!' }
 ];
 
+// NHÓM THÀNH TỰU ẨN (LẦY LỘI & CÀ KHỊA)
+const DANH_SACH_HUY_HIEU_AN = [
+    { id: 'ma_ca_rong', icon: '🧛‍♂️', title: 'Ma cà rồng', desc: 'Đêm hôm rồi còn thể dục thể thao, bộ đi săn ma hay gì 👻' },
+    { id: 'tho_san_tien', icon: '💰', title: 'Thợ săn tiền thưởng', desc: 'Không sót một xu ! Hôm nay chăm chỉ quá rồi đấy 🤑' },
+    { id: 'phoi_tot', icon: '😷', title: 'Phổi bạn thì tốt rồi', desc: 'Thời tiết khói bụi như kia vẫn ra ngoài chạy được, đúng âm bù dương ! 🚬' },
+    { id: 'simp_chua', icon: '💔', title: 'Simp chúa', desc: 'Mở profile nhà người ta xem gì mà lắm thế? Yêu thì nói một tiếng đi lại còn 😏' }
+];
+
 window.veBangThanhTuu = function() {
     const container = document.getElementById('danh-sach-thanh-tuu');
     if (!container) return;
     const user = localStorage.getItem('currentUser');
     let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
-    let html = '';
 
+    let html = `<h4 style="text-align:left; color:#004BAd; margin-top:0;"> Hành trình Cấp độ</h4>`;
+
+    // 1. VẼ CÚP CẤP ĐỘ
     DANH_SACH_HUY_HIEU.forEach(hh => {
         const isUnlocked = currentLevel >= hh.cap;
-        const isNew = localStorage.getItem(`badge_new_${user}_${hh.cap}`) === 'true'; // Chưa bóc tem
-        
+        const isNew = localStorage.getItem(`badge_new_${user}_${hh.cap}`) === 'true';
         let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
         let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
-        
+
         let descText = `<i>Đạt Cấp ${hh.cap} để khám phá bí mật này...</i>`;
         let titleText = `Thử thách Cấp ${hh.cap}`;
         let clickEvent = '';
 
         if (isUnlocked) {
             if (isNew) {
-                // TRẠNG THÁI: MỚI NHẬN - CHƯA BÓC TEM (Viền chớp nháy, bắt bấm vào)
                 titleText = "🎁 CÓ QUÀ MỚI!";
                 descText = "<b>👉 CHẠM VÀO ĐÂY ĐỂ ĐẬP HỘP!</b>";
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
-                clickEvent = `onclick="window.moHuyHieuMoi(${hh.cap}, '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+                clickEvent = `onclick="window.moHuyHieuMoi('${hh.cap}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
             } else {
-                // TRẠNG THÁI: ĐÃ BÓC TEM (Hiện thông tin bình thường)
-                titleText = hh.title;
-                descText = hh.desc;
+                titleText = hh.title; descText = hh.desc;
             }
         }
-
         html += `
         <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
             <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
@@ -2916,7 +2948,62 @@ window.veBangThanhTuu = function() {
             ${lockIcon}
         </div>`;
     });
+
+    // 2. VẼ CÚP ẨN (CHỈ HIỆN TÊN, ẨN HOÀN TOÀN MÔ TẢ)
+    html += `<h4 style="text-align:left; color:#dc3545; margin-top:20px;">🔮 Kỷ lục Bí ẩn</h4>`;
+    DANH_SACH_HUY_HIEU_AN.forEach(hh => {
+        const isUnlocked = localStorage.getItem(`badge_${user}_${hh.id}`) === 'true';
+        const isNew = localStorage.getItem(`badge_new_${user}_${hh.id}`) === 'true';
+        let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
+        let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
+        let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #dc3545);' : 'filter: grayscale(1); opacity: 0.3;';
+
+        let titleText = "???";
+        let clickEvent = '';
+
+        if (isUnlocked) {
+            if (isNew) {
+                titleText = "🎁 CÓ QUÀ MỚI!";
+                trangThaiClass = 'badge-unlocked';
+                glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
+                clickEvent = `onclick="window.moHuyHieuMoi('${hh.id}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+            } else {
+                titleText = hh.title;
+            }
+        }
+
+        html += `
+        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
+            <div class="badge-icon" style="${glowStyle}">${isUnlocked ? hh.icon : '❓'}</div>
+            <div style="flex: 1; text-align: left; padding-right: 20px;">
+                <div style="font-weight: 900; font-size: 15px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#888'};">${titleText}</div>
+                <!-- Cố tình KHÔNG in dòng badge-desc ra đây để giấu kỹ mô tả -->
+            </div>
+            ${lockIcon}
+        </div>`;
+    });
+
     container.innerHTML = html;
+};
+
+// HÀM MẮT THẦN: CHUYÊN QUÉT VÀ NỔ CÚP ẨN
+window.kiemTraVaNoHuyHieuAn = function(badgeId) {
+    const user = localStorage.getItem('currentUser');
+    if(!user) return;
+    const key = `badge_${user}_${badgeId}`;
+    if (localStorage.getItem(key) === 'true') return; // Đã lấy rồi thì tha
+
+    // Đánh dấu đã nhận & Gắn mác hàng mới
+    localStorage.setItem(key, 'true');
+    localStorage.setItem(`badge_new_${user}_${badgeId}`, 'true');
+
+    // Bật chấm đỏ ở Tab 5
+    const chamDo = document.getElementById('cham-do-thanh-tuu');
+    if(chamDo) chamDo.style.display = 'block';
+
+    // Bắn thông báo ngoài màn hình để dụ bấm vào Tab 5
+    alert("🏆 Cậu vừa vô tình phá vỡ một KỶ LỤC BÍ ẨN!\nVào Phòng Trưng Bày (Tab 5) đập hộp ngay!");
+    if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
 };
 
 // Gắn cơ chế tự động load bảng thành tựu khi bấm sang Tab 5
@@ -2988,6 +3075,128 @@ window.dongHuyHieuMoi = function() {
         if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
     }, 400); // Khớp với transition 0.5s
 };
+
+// 🎁 HỆ THỐNG RƯƠNG BÍ ẨN (GAMIFICATION)
+// ==========================================
+window.chestLayerGroup = null;
+
+window.kiemTraVaTaoRuong = function(userLat, userLng) {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    if (user === "Khach") return;
+
+    const now = new Date();
+    let lastSpawnStr = localStorage.getItem('last_chest_spawn_' + user);
+    let lastSpawn = lastSpawnStr ? new Date(parseInt(lastSpawnStr)) : new Date(0);
+
+    // THUẬT TOÁN ĐỊNH NGHĨA 2:00 SÁNG
+    let resetTime = new Date(now);
+    resetTime.setHours(2, 0, 0, 0);
+    // Nếu bây giờ là 1h sáng, mốc reset phải là 2h sáng của NGÀY HÔM QUA
+    if (now.getTime() < resetTime.getTime()) {
+        resetTime.setDate(resetTime.getDate() - 1);
+    }
+
+    // Nếu thời gian tạo rương lần cuối nhỏ hơn mốc 2h sáng gần nhất -> Reset Rương mới!
+    if (lastSpawn.getTime() < resetTime.getTime()) {
+        if (window.chestLayerGroup) window.chestLayerGroup.clearLayers();
+        else window.chestLayerGroup = L.layerGroup().addTo(map);
+
+        let newChests = [];
+        // Spawn 5 điểm random quanh nhà (Bán kính ~4km tương đương tọa độ xê dịch 0.036 độ)
+        for (let i = 0; i < 5; i++) {
+            let cLat = userLat + (Math.random() - 0.5) * 0.072;
+            let cLng = userLng + (Math.random() - 0.5) * 0.072;
+            newChests.push({ id: 'chest_' + Date.now() + '_' + i, lat: cLat, lng: cLng, opened: false });
+        }
+        localStorage.setItem('daily_chests_' + user, JSON.stringify(newChests));
+        localStorage.setItem('last_chest_spawn_' + user, now.getTime().toString());
+        window.veRuongLenBanDo();
+    } else if (!window.chestLayerGroup) {
+        // Đã tạo rương hôm nay rồi nhưng chưa vẽ (do người dùng mới mở lại app)
+        window.chestLayerGroup = L.layerGroup().addTo(map);
+        window.veRuongLenBanDo();
+    }
+};
+
+window.veRuongLenBanDo = function() {
+    if (!window.chestLayerGroup) return;
+    window.chestLayerGroup.clearLayers();
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let chests = JSON.parse(localStorage.getItem('daily_chests_' + user)) || [];
+
+    chests.forEach(chest => {
+        if (!chest.opened) {
+            let icon = L.divIcon({
+                className: 'chest-icon',
+                html: `<div style="font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: catPulse 2s infinite;">❓</div>`,
+                iconSize: L.point(30, 30), iconAnchor: L.point(15, 15)
+            });
+            let m = L.marker([chest.lat, chest.lng], {icon: icon}).addTo(window.chestLayerGroup);
+
+            // Tích hợp Popup Chỉ đường thần tốc
+            let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+            m.bindPopup(`
+                <div style="text-align:center; min-width: 140px;">
+                    <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
+                    <strong style="color:#333;">Lại gần dưới 20m để nhận xu!</strong>
+                    <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                    <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chest.lat}, ${chest.lng})">📍 Chỉ đường đến đây</button>
+                </div>
+            `);
+        }
+    });
+};
+
+window.kiemTraKhoangCachRuong = function(userLat, userLng) {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    if (user === "Khach") return;
+    let chests = JSON.parse(localStorage.getItem('daily_chests_' + user)) || [];
+    let changed = false;
+
+    chests.forEach(chest => {
+        if (!chest.opened) {
+            let d = map.distance([userLat, userLng], [chest.lat, chest.lng]);
+            if (d <= 20) { // BÁN KÍNH ĂN XU LÀ 20 MÉT
+                chest.opened = true;
+                changed = true;
+
+                // Thuật toán thưởng chống lạm phát: Random 1 đến 3 xu
+                let xuNhanDuoc = Math.floor(Math.random() * 3) + 1;
+                let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+                currentCoin += xuNhanDuoc;
+                localStorage.setItem('user_coins_' + user, currentCoin);
+
+                window.phatAmThanh('thanh_tuu'); // Tiếng bùm chíu mở rương
+                alert(`🎉 MỞ RƯƠNG BÍ ẨN!\nCậu vừa tìm thấy một rương ẩn và nhận được ${xuNhanDuoc} 💰 Xu Cơ Động!\nHãy tiếp tục di chuyển để tìm các rương khác nhé!`);
+                window.capNhatGiaoDienXu();
+            }
+        }
+    });
+
+    if (changed) {
+        localStorage.setItem('daily_chests_' + user, JSON.stringify(chests));
+        // MẮT THẦN 4: CÚP THỢ SĂN TIỀN THƯỞNG
+        let ruongHomNay = JSON.parse(localStorage.getItem('daily_chests_' + currentUser)) || [];
+        // Lọc và đếm xem trong mảng rương hôm nay có bao nhiêu cái đã được mở
+        let soRuongDaMo = ruongHomNay.filter(r => r.opened === true).length;
+        if (soRuongDaMo >= 5) {
+            window.kiemTraVaNoHuyHieuAn('tho_san_tien');
+            }
+
+        window.veRuongLenBanDo(); // Vẽ lại để Rương đã ăn biến mất khỏi bản đồ
+    }
+};
+
+window.capNhatGiaoDienXu = function() {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+    let coinDisplay = document.getElementById('coin-balance-display');
+    if (coinDisplay) coinDisplay.innerText = currentCoin;
+};
+
+// Tự động load xu khi mở app
+window.addEventListener('load', () => { setTimeout(() => window.capNhatGiaoDienXu(), 1500); });
+
 // === 6. HỆ THỐNG MẠNG XÃ HỘI & CỘNG ĐỒNG ===
     
 // BỘ NHỊP TIM - DUY TRÌ TRẠNG THÁI ONLINE THỜI GIAN THỰC
@@ -3365,41 +3574,54 @@ window.toggleConnectExpandReal = function(element) {
         }
     }
 };
-// === HỆ THỐNG RADAR QUÉT BẠN BÈ THẬT (CÓ LƯU VẾT THỜI GIAN) ===
+
 // === HỆ THỐNG GỘP: RADAR BẠN BÈ THẬT & ĐỊA ĐIỂM ƯA THÍCH ===
 window.fetchRealFriends = function() {
     const container = document.getElementById('danh-sach-ban-be-that');
     container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 50px;">Đang dò sóng radar & Mở sổ tay...</div>';
+
     const currentUsername = localStorage.getItem('currentUser') || "Khach";
 
     // ==================================================
     // PHẦN 1: TẢI ĐỊA ĐIỂM ƯA THÍCH (TỪ LOCAL STORAGE)
     // ==================================================
     const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + currentUsername)) || [];
-    let htmlDiaDiem = '<h3 style="color: #d35400; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 5px; margin-bottom: 10px; font-size: 16px;">⭐ Sổ tay địa điểm</h3>';
-    
+    let htmlDiaDiem = '<h3 style="color: #d35400; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 5px; margin-bottom: 15px; font-size: 18px; font-weight: 900;">⭐ Sổ tay địa điểm</h3>';
+
     if (dsDiaDiem.length === 0) {
         htmlDiaDiem += '<div style="text-align: center; color: #888; font-style: italic; font-size: 13px; margin-bottom: 25px;">Cậu chưa lưu địa điểm nào. Mở bản đồ và ghim lại những nơi hay tới nhé!</div>';
     } else {
         dsDiaDiem.forEach((diem, index) => {
+            let icn = diem.icon || "📍"; // Hiển thị Icon cá nhân hóa
+            let isChecked = diem.hienThi !== false ? "checked" : ""; // Trạng thái Công tắc
+
             htmlDiaDiem += `
-            <div style="background: #fff9c4; border: 2px solid #ffc107; border-radius: 15px; padding: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="flex: 1; text-align: left;">
-                    <div style="font-weight: 900; font-size: 16px; color: #333;">📍 ${diem.ten}</div>
+            <div style="background: #ffffff; border-radius: 20px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 12px rgba(0,0,0,0.08); border-left: 6px solid #ffc107;">
+
+                <!-- Bảng điều khiển: Nút Tích Bật/Tắt -->
+                <div style="margin-right: 15px; display: flex; align-items: center; justify-content: center;">
+                    <input type="checkbox" ${isChecked} onchange="window.toggleHienThiDiaDiem(${index}, this.checked)" style="transform: scale(1.5); accent-color: #28a745; cursor: pointer;">
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="window.closeOneConnect(); window.switchTab(1); window.routeFromCurrentTo(${diem.lat}, ${diem.lng})" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Chỉ đường</button>
-                    <button onclick="window.xoaDiaDiemCaNhan(${index})" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Xóa</button>
+
+                <!-- Tên & Icon -->
+                <div style="flex: 1; text-align: left; padding-right: 10px;">
+                    <div style="font-weight: 900; font-size: 16px; color: #333; margin-bottom: 5px;">${icn} ${diem.ten}</div>
+                </div>
+
+                <!-- 2 Nút Chức năng -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button onclick="window.closeOneConnect(); window.switchTab(1); window.routeFromCurrentTo(${diem.lat}, ${diem.lng})" style="background: #004BAd; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; box-shadow: 0 2px 4px rgba(0,75,173,0.3);">Chỉ đường</button>
+                    <button onclick="window.xoaDiaDiemCaNhan(${index})" style="background: #e0e0e0; color: #dc3545; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Xóa</button>
                 </div>
             </div>`;
         });
-        htmlDiaDiem += '<div style="margin-bottom: 25px;"></div>'; // Khoảng cách giữa 2 phần
+        htmlDiaDiem += '<div style="margin-bottom: 25px;"></div>'; // Khoảng cách giữa 2 phần Sổ Tay và Bạn Bè
     }
 
     // ==================================================
     // PHẦN 2: TẢI RADAR BẠN BÈ (TỪ FIREBASE)
     // ==================================================
-    let htmlBanBe = '<h3 style="color: #004BAd; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 10px; margin-bottom: 10px; font-size: 16px;">👥 Radar Bạn bè</h3>';
+    let htmlBanBe = '<h3 style="color: #004BAd; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 10px; margin-bottom: 15px; font-size: 18px; font-weight: 900;">👥 Radar Bạn bè</h3>';
 
     if (!window.db) {
         container.innerHTML = htmlDiaDiem + htmlBanBe + '<div style="text-align: center; color: #888;">Mất kết nối đám mây Firebase.</div>';
@@ -3408,9 +3630,9 @@ window.fetchRealFriends = function() {
 
     window.db.ref('nguoi_dung').once('value').then((snapshot) => {
         const data = snapshot.val();
-        if (!data) { 
-            container.innerHTML = htmlDiaDiem + htmlBanBe + '<div style="text-align: center; color: #888; font-style: italic;">Chưa có ai từng chia sẻ vị trí.</div>'; 
-            return; 
+        if (!data) {
+            container.innerHTML = htmlDiaDiem + htmlBanBe + '<div style="text-align: center; color: #888; font-style: italic;">Chưa có ai từng chia sẻ vị trí.</div>';
+            return;
         }
 
         const now = Date.now();
@@ -3421,14 +3643,13 @@ window.fetchRealFriends = function() {
             const user = data[userId];
             if (userId === currentUsername) continue;
             if (!danhSachBanBe.includes(userId)) continue;
-            coBanBe = true;
 
+            coBanBe = true;
             let lat = user.toa_do_lat;
             let lng = user.toa_do_lng;
             let hasLoc = (lat && lng) ? true : false;
             let statusText = "đang hoạt động";
             let dotColor = "#28a745";
-            let lastActiveText = "Vừa xong";
 
             if (!hasLoc) {
                 statusText = "Chưa bật định vị";
@@ -3441,10 +3662,8 @@ window.fetchRealFriends = function() {
                     dotColor = "#dc3545";
                     if (diffMinutes < 60) {
                         statusText = `hoạt động ${diffMinutes} phút trước`;
-                        lastActiveText = `${diffMinutes} phút trước`;
                     } else {
                         statusText = `hoạt động ${Math.floor(diffMinutes / 60)} giờ trước`;
-                        lastActiveText = `${Math.floor(diffMinutes / 60)} giờ trước`;
                     }
                 }
             }
@@ -3453,23 +3672,24 @@ window.fetchRealFriends = function() {
             window.mapAvatars[userId] = avatar;
             const mapId = `minimap-${userId}`;
             const distId = `khoang-cach-${userId}`;
-
             let expandedContentHTML = "";
+
             if (hasLoc) {
                 expandedContentHTML = `
-                <div style="padding: 15px;">
-                    <div id="${mapId}" style="width: 100%; aspect-ratio: 1; background-color: #ddd; border-radius: 15px; border: 3px solid #333; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); z-index: 1;"></div>
-                    <div style="margin-top: 15px; background: #a8b0b5; padding: 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 16px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
-                        bạn cách ${userId} <span id="${distId}">đang tính...</span>
-                    </div>
-                    <div style="text-align: center; margin-top: 8px; font-size: 13px; color: #d35400; font-weight: bold; font-style: italic;">
-                        📍 Vị trí lưu vết lần cuối: ${lastActiveText}
+                <div style="padding: 10px; padding-top: 0;">
+                    <div style="position: relative; width: 100%; aspect-ratio: 1; background-color: #fcdab0; border-radius: 20px; overflow: hidden; box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);">
+                        <div id="${mapId}" style="width: 100%; height: 100%; z-index: 1;"></div>
+
+                        <!-- Thẻ khoảng cách bám đáy bản đồ y hệt thiết kế connect.png -->
+                        <div style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(168, 176, 181, 0.9); padding: 8px 20px; border-radius: 20px; text-align: center; font-weight: 900; font-size: 14px; color: white; white-space: nowrap; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.2); backdrop-filter: blur(5px);">
+                            bạn cách ${userId} <span id="${distId}">đang tính...</span>
+                        </div>
                     </div>
                 </div>`;
             } else {
                 expandedContentHTML = `
-                <div style="padding: 15px;">
-                    <div style="width: 100%; aspect-ratio: 1; background-color: #e0e0e0; border-radius: 15px; border: 3px dashed #888; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #555; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);">
+                <div style="padding: 10px; padding-top: 0;">
+                    <div style="width: 100%; aspect-ratio: 1; background-color: #d9e2e8; border-radius: 20px; border: 3px dashed #888; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #555; text-align: center; padding: 20px; box-sizing: border-box;">
                         <span style="font-size: 50px; margin-bottom: 10px; filter: grayscale(1);">📡</span>
                         <strong style="font-size: 18px; color: #333;">Chưa có dữ liệu</strong>
                         <span style="font-size: 14px; margin-top: 5px; font-weight: bold;">Hãy chờ họ online nhé!</span>
@@ -3478,20 +3698,22 @@ window.fetchRealFriends = function() {
             }
 
             htmlBanBe += `
-            <div class="friend-connect-item" style="background: #e0e0e0; border-radius: 20px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;"
+            <div class="friend-connect-item" style="background: #b0bec5; border-radius: 25px; overflow: hidden; transition: background 0.3s ease; box-shadow: 0 6px 12px rgba(0,0,0,0.15); margin-bottom: 20px;"
                 data-name="${userId}" data-lat="${lat}" data-lng="${lng}" data-mapid="${mapId}" data-distid="${distId}" data-hasloc="${hasLoc}">
-                <div onclick="window.toggleConnectExpandReal(this)" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
-                    <div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
-                        <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #333; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
-                        <div style="position: absolute; bottom: -2px; right: -5px; width: 15px; height: 15px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
+
+                <div onclick="window.toggleConnectExpandReal(this)" style="padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; user-select: none;">
+                    <div style="position: relative; width: 55px; height: 55px; flex-shrink: 0;">
+                        <img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" />
+                        <div style="position: absolute; bottom: 0px; right: -2px; width: 18px; height: 18px; background-color: ${dotColor}; border-radius: 50%; border: 2px solid white; z-index: 2;"></div>
                     </div>
                     <div style="flex: 1; text-align: left;">
-                        <div style="font-weight: 900; font-size: 18px; color: #333;">${userId}</div>
-                        <div style="font-size: 14px; color: #333; font-weight: 700;">${statusText}</div>
+                        <div style="font-weight: 900; font-size: 18px; color: #222;">${userId}</div>
+                        <div style="font-size: 14px; color: #444; font-weight: bold;">${statusText}</div>
                     </div>
-                    <div class="expand-icon" style="font-size: 20px; font-weight: bold; color: #333; transition: transform 0.4s ease;">▼</div>
+                    <div class="expand-icon" style="font-size: 20px; font-weight: bold; color: #222; transition: transform 0.4s ease;">▼</div>
                 </div>
-                <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; background-color: #fcdab0;">
+
+                <div class="connect-expanded-content" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); background-color: #b0bec5;">
                     ${expandedContentHTML}
                 </div>
             </div>`;
@@ -3721,36 +3943,56 @@ window.ganSuKienVuot();
 };
 
 // === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
-window.xinQuyenThongBao = function() {
-    if (!("Notification" in window)) {
-        alert("Trình duyệt/Điện thoại của cậu không hỗ trợ thông báo đẩy!");
-        return;
-    }
-    
-    // Nếu dùng iPhone/iOS, phải nhắc người dùng Thêm vào Màn hình chính trước
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
-    if (isIOS && !isStandalone) {
-        alert(" iOS BẮT BUỘC: Cậu phải bấm nút Chia sẻ (Share) -> 'Thêm vào MH chính' (Add to Home Screen) rồi mở App từ ngoài màn hình thì mới bật được thông báo nhé!");
-        return;
-    }
+window.xinQuyenThongBao = async function() {
+    if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+        let permStatus = await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+        if (permStatus.display === 'granted') {
+            alert("✅ Đã cấp quyền thành công! ");
+            // Bắn test thử 1 cái
+            window.banThongBaoNative(1, "Hệ thống Cơ động Thông minh", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
 
-    Notification.requestPermission().then(function (permission) {
-        if (permission === "granted") {
-            window.phatAmThanh('thong_bao'); // Kêu cái ting!
-            navigator.serviceWorker.ready.then(function(registration) {
-                registration.showNotification("🎉 Kích hoạt thành công!", {
-                    body: "Trợ lý Mèo đã nắm quyền gửi thông báo cho cậu. Cứ yên tâm tắt app",
-                    icon: "meo_binh_thuong.png",
-                    vibrate: [1, 2]
-                });
-            });
-            alert(" Đã bật thông báo thành công! Cậu có thể nhận thông báo kể cả khi khóa máy.");
+            // Cài luôn nhắc nhở thói quen 17:30 mỗi ngày
+            window.caiDatNhacNhoHangNgay();
         } else {
-            alert(" Đã từ chối cấp quyền. Hãy vào cài đặt trình duyệt để mở lại nhé.");
+            alert("❌ Đã từ chối quyền. Hãy vào Cài đặt ứng dụng để mở lại nhé.");
         }
-    });
+    } else {
+        alert("⚠️ Tính năng này cần chạy trên App để hoạt động tốt nhất.");
+    }
+};
+
+// HÀM GỌI THÔNG BÁO XUYÊN MÀN HÌNH KHÓA
+window.banThongBaoNative = function(idGoc, tieuDe, noiDung, delayGiay = 0) {
+    if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+        const timeToFire = new Date(Date.now() + (delayGiay * 1000));
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+            notifications: [{
+                title: tieuDe,
+                body: noiDung,
+                id: idGoc,
+                schedule: { at: timeToFire },
+                smallIcon: "logo_nho", // 👈 Ép dùng logo trắng trong suốt của cậu
+                sound: null,
+                actionTypeId: "",
+                extra: null
+            }]
+        });
+    }
+};
+
+// HÀM CÀI ĐẶT THÓI QUEN: NHẮC ĐI CHẠY LÚC 17:30 MỖI NGÀY
+window.caiDatNhacNhoHangNgay = function() {
+    if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+            notifications: [{
+                title: "Đến giờ chạm cỏ rồi! 🌿",
+                body: "Mèo chờ ở cửa nãy giờ. Xách giày lên và ra ngoài vận động thôi!",
+                id: 8888, // ID riêng cho nhắc nhở hàng ngày
+                smallIcon: "logo_nho", // 👈
+                schedule: { on: { hour: 17, minute: 00 }, repeats: true }
+            }]
+        });
+    }
 };
 
 // HÀM ĐÁNH DẤU ĐÃ ĐỌC
@@ -3821,6 +4063,10 @@ window.themThongBaoLocket = function(avatar, ten, noiDung) {
     window.ganSuKienVuot(); // Gắn lại sự kiện vuốt cho tin mới
     const chamDo = document.getElementById('cham-do-thong-bao');
     if(chamDo) chamDo.style.display = 'block';
+        // Bắn song song ra màn hình khóa điện thoại
+    if (typeof window.banThongBaoNative === 'function') {
+        window.banThongBaoNative(Math.floor(Math.random() * 1000), "Cộng đồng Cơ động", `${ten} ${noiDung}`, 0);
+    }
 };
 
 // CƠ CHẾ VUỐT (SWIPE TO DELETE) ĐỈNH CAO
@@ -3906,7 +4152,7 @@ window.langNgheLocket = function() {
 
             // NẾU LÀ BÀI CỦA MÌNH -> HIỆN NÚT XÓA ẢNH
             if (data.nguoi_gui === currentUser) {
-                touchEvents = `onmousedown="window.batDauXoaBai('${data.key}')" onmouseup="window.huyXoaBai()" onmouseleave="window.huyXoaBai()" ontouchstart="window.batDauXoaBai('${data.key}')" ontouchend="window.huyXoaBai()" ontouchmove="window.huyXoaBai()"`;
+                touchEvents = `onmousedown="window.batDauXoaBai('${data.key}')" onmouseup="window.huyXoaBai()" onmouseleave="window.huyXoaBai()" ontouchstart="window.batDauXoaBai('${data.key}')" ontouchend="window.huyXoaBai()"`;
                 
                 // FIX: Thêm z-index: 9999 và pointer-events: auto để chống liệt nút
                 interactionBar = `
@@ -4077,25 +4323,38 @@ document.addEventListener('click', function(event) {
     
 // HỆ THỐNG ÂM THANH (AUDIO ENGINE)
 // ==========================================
-window.KhoAmThanh = {
-    bam_chuong: new Audio('bam_chuong.wav'), // Mèo về nhà
-    thanh_tuu: new Audio('thanh_tuu.wav'),   // Mở hộp quà Tab 5
-    lv_up: new Audio('lv_up.mp3'),           // Lên cấp độ Tab 2
-    pop: new Audio('pop.mp3'),               // Nút bấm UI
-    thong_bao: new Audio('thong_bao.wav'),   // Thông báo mạng xã hội Locket
-    meow_1: new Audio('meow_1.mp3')          // Đuổi mèo / Bấm vào mèo
+window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+window.KhoAmThanhBuffer = {};
+
+// Hàm tải âm thanh vào RAM dưới dạng Buffer (Không tranh giành Audio Focus của HĐH)
+window.taiAmThanhVaoRAM = async function(ten, url) {
+    try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await window.audioCtx.decodeAudioData(arrayBuffer);
+        window.KhoAmThanhBuffer[ten] = audioBuffer;
+    } catch (e) { console.warn("Lỗi tải âm thanh:", e); }
 };
 
-// Ép tải sẵn âm thanh vào RAM để không bị lag khi bấm
-Object.values(window.KhoAmThanh).forEach(audio => audio.preload = 'auto');
+// Khởi chạy tải nền toàn bộ âm thanh
+window.taiAmThanhVaoRAM('bam_chuong', 'bam_chuong.wav');
+window.taiAmThanhVaoRAM('thanh_tuu', 'thanh_tuu.wav');
+window.taiAmThanhVaoRAM('lv_up', 'lv_up.mp3');
+window.taiAmThanhVaoRAM('pop', 'pop.mp3');
+window.taiAmThanhVaoRAM('thong_bao', 'thong_bao.wav');
+window.taiAmThanhVaoRAM('meow_1', 'meow_1.mp3');
 
-// Hàm gọi phát âm thanh mọi nơi
+// Hàm phát âm thanh (Mix thẳng vào luồng hệ thống, không làm nhỏ nhạc Spotify)
 window.phatAmThanh = function(ten) {
-    try { 
-        if (window.KhoAmThanh[ten]) { 
-            window.KhoAmThanh[ten].currentTime = 0; 
-            window.KhoAmThanh[ten].play().catch(e=>console.warn("Trình duyệt tạm chặn âm thanh:", e)); 
-        } 
+    try {
+        if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
+        const buffer = window.KhoAmThanhBuffer[ten];
+        if (buffer) {
+            const source = window.audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(window.audioCtx.destination);
+            source.start(0);
+        }
     } catch (err) {}
 };
     
@@ -5505,15 +5764,80 @@ window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
     });
 };
 
-window.luuDiaDiemCaNhan = function(lat, lng) {
-    let tenDiaDiem = prompt("Cậu muốn đặt tên điểm này là gì? (VD: Quán cafe, Chỗ chạy mát...)");
-    if (!tenDiaDiem) return;
+// === HỆ THỐNG QUẢN LÝ SỔ TAY ĐỊA ĐIỂM (CÓ ICON & ẨN HIỆN) ===
+window.soTayLayerGroup = null;
+
+window.veSoTayLenBanDo = function() {
+    if (!window.soTayLayerGroup) window.soTayLayerGroup = L.layerGroup().addTo(map);
+    window.soTayLayerGroup.clearLayers();
+
     const user = localStorage.getItem('currentUser') || "Khach";
     let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
-    dsDiaDiem.push({ ten: tenDiaDiem, lat: lat, lng: lng });
+
+    dsDiaDiem.forEach(diem => {
+        if (diem.hienThi !== false) { // Nếu không bị tắt thì vẽ ra bản đồ
+            let icn = diem.icon || "📍";
+            let iconHtml = L.divIcon({
+                className: '',
+                html: `<div style="font-size:26px; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.5));">${icn}</div>`,
+                iconSize: L.point(30, 30), iconAnchor: L.point(15, 30)
+            });
+            let marker = L.marker([diem.lat, diem.lng], {icon: iconHtml}).addTo(window.soTayLayerGroup);
+
+            let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+            marker.bindPopup(`
+                <div style="text-align:center; min-width: 150px;">
+                    <div style="font-size:24px;">${icn}</div>
+                    <strong style="color:#004BAd;">${diem.ten}</strong>
+                    <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                    <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${diem.lat}, ${diem.lng})">📍 Chỉ đường đến đây</button>
+                </div>
+            `);
+        }
+    });
+};
+
+// Tự động load Icon sổ tay lên bản đồ khi mở app
+window.addEventListener('load', () => { setTimeout(() => { if(typeof window.veSoTayLenBanDo === 'function') window.veSoTayLenBanDo(); }, 2000); });
+
+window.luuDiaDiemCaNhan = function(lat, lng) {
+    let tenDiaDiem = prompt("Cậu muốn đặt tên điểm này là gì? (VD: Nhà, Quán Cafe, Công ty...)");
+    if (!tenDiaDiem) return;
+    let iconDiaDiem = prompt("Cậu muốn dùng Icon gì cho chỗ này? (Gõ 1 emoji như 🏠, ☕, 🍔, 🏫)", "📍") || "📍";
+
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
+
+    // Lưu thêm thuộc tính icon và trạng thái hiển thị
+    dsDiaDiem.push({ ten: tenDiaDiem, icon: iconDiaDiem, lat: lat, lng: lng, hienThi: true });
     localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(dsDiaDiem));
-    alert("✅ Đã lưu '" + tenDiaDiem + "' vào cẩm nang của cậu! 😎");
+
+    alert("✅ Đã lưu '" + tenDiaDiem + "' (" + iconDiaDiem + ") vào Sổ tay của cậu! 😎");
     map.closePopup();
+    window.veSoTayLenBanDo(); // Cập nhật rải icon lên bản đồ ngay lập tức
+};
+
+// Công tắc gạt ẩn/hiện Icon từ màn hình One Connect
+window.toggleHienThiDiaDiem = function(index, isChecked) {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
+    if(dsDiaDiem[index]) {
+        dsDiaDiem[index].hienThi = isChecked;
+        localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(dsDiaDiem));
+        window.veSoTayLenBanDo(); // Quét lại bản đồ
+    }
+};
+
+// HÀM CHỈ ĐƯỜNG THẦN TỐC TỪ VỊ TRÍ HIỆN TẠI (Tích hợp định tuyến A-B)
+window.routeFromCurrentTo = function(destLat, destLng) {
+    if (!latestLatLng) {
+        alert("⚠️ Chưa có GPS hiện tại. Hãy bật định vị và đợi mũi tên đỏ xuất hiện nhé!");
+        return;
+    }
+    map.closePopup();
+    if(!window.isRouteMode) window.toggleRouteMode(); // Tự động kích hoạt màn hình Route A-B
+    window.setPointA(latestLatLng.lat, latestLatLng.lng);
+    window.setPointB(destLat, destLng); // App sẽ tự động kéo ORS API vẽ vạch chỉ đường
 };
 
 // ==========================================
@@ -5560,13 +5884,23 @@ window.moHoSoCongKhai = function(username) {
     if (!window.db) return;
     const currentUser = localStorage.getItem('currentUser');
     if (username === currentUser) { window.moHoSo(); return; } // Nếu là mình thì mở profile cá nhân
-
+    // MẮT THẦN: CÚP SIMP CHÚA
+    let simpKey = 'simp_count_' + currentUser + '_' + username;
+    let simpCount = parseInt(localStorage.getItem(simpKey)) || 0;
+    localStorage.setItem(simpKey, simpCount + 1);
+    // Quét nếu bấm > 10 lần trong lịch sử
+    if (simpCount + 1 >= 10) window.kiemTraVaNoHuyHieuAn('simp_chua');
     window.db.ref('nguoi_dung/' + username).once('value').then(snap => {
         if (!snap.exists()) return alert("Không tìm thấy người dùng này!");
         const data = snap.val();
         
         document.getElementById('public-avatar').src = data.avatar || `https://ui-avatars.com/api/?name=${username}&background=random`;
         document.getElementById('public-name').innerText = username;
+        // Bơm Cấp độ ra màn hình bằng thuật toán đảo ngược (0.00691)
+        let totalKm = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000) : 0;
+        let pLevel = Math.floor(Math.sqrt(totalKm / 0.00691));
+        if (pLevel < 1) pLevel = 1; if (pLevel > 1203) pLevel = 1203;
+        document.getElementById('public-level').innerText = pLevel;
         document.getElementById('public-km').innerText = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000).toFixed(1) : "0.0";
         document.getElementById('public-calo').innerText = data.calo_tieu_thu ? data.calo_tieu_thu.toFixed(1) : "0";
         
@@ -5647,6 +5981,10 @@ window.renderTinNhanDon = function(msg) {
     </div>`;
     container.insertAdjacentHTML('beforeend', html);
     container.scrollTop = container.scrollHeight;
+        // Nếu không phải mình gửi, bắn thông báo Native ra màn hình chờ
+    if (!isMe && typeof window.banThongBaoNative === 'function') {
+        window.banThongBaoNative(Math.floor(Math.random() * 1000), "Tin nhắn từ " + msg.nguoi_gui, msg.noi_dung, 0);
+    }
 };
 
 // Hàm mở khung chat và kết nối bưu điện
@@ -5970,6 +6308,11 @@ window.hieuUngMeoBoNha = function(isAuto = false) {
 
     let thoiGianVe = Date.now() + msToAdd;
     localStorage.setItem('meo_ve_nha_luc', thoiGianVe);
+    // BÁO THỨC LÚC MÈO VỀ NHÀ XUYÊN MÀN HÌNH KHÓA
+    let delayGiay = msToAdd / 1000;
+    if (typeof window.banThongBaoNative === 'function') {
+        window.banThongBaoNative(999, "Mèo đã về nhà rồi! 😼", "Mở cửa ra lẹ lên, đi bụi về mỏi chân quá đây này!", delayGiay);
+    }
 
     // Random tọa độ Mèo lẩn trốn (Cách khoảng 1 - 2.5km) dựa trên GPS hiện tại
     let catLat = latestLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.015 + 0.005);

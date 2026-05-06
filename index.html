@@ -769,6 +769,7 @@
     <div class="mode-items">
         <div id="btn-run" class="mode-btn active-mode" onclick="window.chonCheDoTheThao(event, 'run')" title="Chạy bộ">🏃</div>
         <div id="btn-walk" class="mode-btn" onclick="window.chonCheDoTheThao(event, 'walk')" title="Đi bộ">🚶</div>
+        <div id="btn-cycle" class="mode-btn" onclick="window.chonCheDoTheThao(event, 'cycle')" title="Đạp xe">🚴</div>
         <div id="btn-radar-share" class="mode-btn" onclick="window.toggleRadarAndShare(); window.dongModeMenu();" title="Bật/Tắt Radar Cộng đồng" style="border: 2px solid transparent; box-sizing: border-box;">
             📡
         </div>
@@ -1681,7 +1682,7 @@ window.saveProfile = function(isSkip) {
     // --- TRACKING ACTIONS ---
     //  XỬ LÝ NÚT BẮT ĐẦU
     function startTrackingAction() {
-    if (!navigator.geolocation && !window.Capacitor) return alert("Trình duyệt không hỗ trợ GPS/Location!");
+    if (!navigator.geolocation && !window.Capacitor) return alert("Thiết bị không hỗ trợ GPS!");
 
         //  Reset sạch sẽ dữ liệu
         latestLatLng = null; 
@@ -1753,7 +1754,27 @@ function initGPS() {
         });
     } else {
         // FALLBACK DÀNH CHO LÚC TEST TRÊN WEB/PC BÌNH THƯỜNG
-        gpsWatcherId = navigator.geolocation.watchPosition(position => {
+        // 🛡️ BỘ NÃO TRUNG GIAN CHỐNG SẬP: Tự động chọn lõi GPS Native nếu đang chạy APK
+    const batDauTheoDoi = (successCB, errorCB, options) => {
+        if (window.Capacitor && window.Capacitor.Plugins.BackgroundGeolocation) {
+            window.Capacitor.Plugins.BackgroundGeolocation.addWatcher(
+                { backgroundMessage: "Mèo đang vẽ đường cho cậu đấy!", requestPermissions: true, distanceFilter: 2 },
+                (loc, err) => { if (loc) successCB({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy } }); }
+            ).then(id => { gpsWatcherId = id; });
+            return "capacitor_bg_gps";
+        } else if (window.Capacitor && window.Capacitor.Plugins.Geolocation) {
+            window.Capacitor.Plugins.Geolocation.watchPosition(options, (pos, err) => {
+                if (pos) successCB(pos);
+            }).then(id => { gpsWatcherId = id; });
+            return "capacitor_fg_gps";
+        } else if (navigator.geolocation) {
+            return navigator.geolocation.watchPosition(successCB, errorCB, options);
+        } else {
+            return null;
+        }
+    };
+
+    gpsWatcherId = batDauTheoDoi(position => {
             xuLyToaDoGPS(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
         }, err => {
             alert("Lỗi GPS: Vui lòng bật định vị :v ");
@@ -1840,10 +1861,22 @@ function xuLyToaDoGPS(lat, lng, doChinhXac) {
         const currentSpeedMs = timeDiff > 0 ? (dist2D / timeDiff) : 0;
         const currentSpeedKmh = currentSpeedMs * 3.6;
 
-        let maxSpeedKmh = 30; // Chạy bộ max 30 km/h (Anh em mình vừa nới lỏng)
-        if (typeof window.currentSportMode !== 'undefined' && window.currentSportMode === 'walk') maxSpeedKmh = 10;
+        // 🛑 BỘ LỌC CHỐNG GIAN LẬN THEO MÔN THỂ THAO
+        let maxSpeedKmh = 30; // Chạy bộ max 30 km/h
+        let absoluteMax = 35; // Chạy bộ lố 35km/h là phạt thẻ đỏ (Mèo chửi)
+        
+        if (typeof window.currentSportMode !== 'undefined') {
+            if (window.currentSportMode === 'walk') {
+                maxSpeedKmh = 10; 
+                absoluteMax = 15;
+            } else if (window.currentSportMode === 'cycle') {
+                maxSpeedKmh = 45; // Đạp xe được phép vít lên 45 km/h
+                absoluteMax = 55; // Vượt 55 km/h mới tính là đi xe máy
+            }
+        }
 
-        if (currentSpeedKmh > 35) { // Báo động xe máy nâng lên 35km/h
+        // MỨC 1: TRÊN GIỚI HẠN TUYỆT ĐỐI -> BÁO ĐỘNG GIAN LẬN (MÈO CHỬI)
+        if (currentSpeedKmh > absoluteMax) {
             console.warn(`[CẢNH BÁO] Tốc độ ${currentSpeedKmh.toFixed(1)} km/h! Block!`);
             if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
                 catImgObj.src = typeof imgChongMat !== 'undefined' ? imgChongMat : getAnhMacDinh();
@@ -1858,7 +1891,13 @@ function xuLyToaDoGPS(lat, lng, doChinhXac) {
                     setTimeout(() => { catBubble.style.display = 'none'; catImgObj.src = getAnhMacDinh(); }, 600);
                 }, 4000);
             }
-            return;
+            return; // 🛑 Khóa sập cửa, KHÔNG CỘNG KHOẢNG CÁCH
+        }
+
+        // MỨC 2: VƯỢT QUÁ GIỚI HẠN MÔN THỂ THAO (Chỉ chặn khoảng cách, không chửi)
+        if (currentSpeedKmh > maxSpeedKmh) {
+            console.warn(`[CHẶN] Chọn môn ${window.currentSportMode} mà đi ${currentSpeedKmh.toFixed(1)} km/h!`);
+            return; // 🛑 Tịch thu khoảng cách điểm này, bắt buộc phải giảm ga lại
         }
 
         if (dist2D > 2) {
@@ -2336,37 +2375,43 @@ window.dongModeMenu = function() {
 
 window.chonCheDoTheThao = function(e, mode) {
     if(e) e.stopPropagation();
-    window.currentSportMode = mode;
-    
+    window.currentSportMode = mode; // LƯU LẠI CHẾ ĐỘ ĐỂ PHÂN XỬ TỐC ĐỘ!
+
     // Đổi màu Nút bên trong (Bỏ qua nút Radar)
     document.querySelectorAll('.mode-btn').forEach(b => {
         if (b.id !== 'btn-radar-share') b.classList.remove('active-mode');
     });
     if(mode === 'walk') document.getElementById('btn-walk').classList.add('active-mode');
+    else if(mode === 'cycle') document.getElementById('btn-cycle').classList.add('active-mode');
     else document.getElementById('btn-run').classList.add('active-mode');
-    
+
     // Đổi Icon của Nút Lõi bên ngoài
     const mainIcon = document.getElementById('main-mode-icon');
     if (mainIcon) {
         if (mode === 'walk') mainIcon.innerHTML = '🚶';
+        else if (mode === 'cycle') mainIcon.innerHTML = '🚴';
         else mainIcon.innerHTML = '🏃';
     }
-    
+
     // Đóng menu lại mượt mà
     window.dongModeMenu();
-    
+
     // Báo cho AI Mèo biết
     if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
-        catBubble.innerText = mode === 'walk' ? "Đi bộ tản mạn à? Nhớ xoay khớp cổ chân nhé cậu! 😼" : "Chạy bộ đốt mỡ hả? Cháy lên cậu ơi! 🔥";
+        if (mode === 'walk') catBubble.innerText = "Đi bộ tản mạn à? Nhớ xoay khớp cổ chân nhé cậu! 😼";
+        else if (mode === 'cycle') catBubble.innerText = "Đạp xe bứt tốc à? Nhớ đi sát lề phải và cẩn thận xe cộ nhé! 🚴💨";
+        else catBubble.innerText = "Chạy bộ đốt mỡ hả? Cháy lên cậu ơi! 🔥";
+
+        catImgObj.src = getAnhMacDinh();
         catBubble.style.backgroundColor = '#e3f2fd';
-        catBubble.style.border = '2px solid #0d47a1';
+        catBubble.style.border = '2px solid #004BAd';
         catBubble.style.color = '#333';
         catBubble.style.display = 'block';
         setTimeout(() => catBubble.classList.add('show-bubble'), 50);
-        setTimeout(() => { 
-            catBubble.classList.remove('show-bubble'); 
-            setTimeout(() => catBubble.style.display = 'none', 600); 
-        }, 3000);
+        setTimeout(() => {
+            catBubble.classList.remove('show-bubble');
+            setTimeout(() => catBubble.style.display = 'none', 600);
+        }, 4000);
     }
 };
 
@@ -6709,7 +6754,7 @@ window.taiLopBanDoChonLoc = function() {
                 👟 <span id="wdg2-streak">0</span>
             </div>
             <div>
-                <div style="font-size: 12px; opacity: 0.9;">Hành trình của cậu</div>
+                <div style="font-size: 12px; opacity: 0.9;">Hành trình của bạn</div>
                 <div style="font-size: 22px; font-weight: 900;">Cấp <span id="wdg2-lv">1</span></div>
             </div>
             <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 5px;">

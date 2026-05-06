@@ -936,35 +936,39 @@
 <!-- LAYER TAB 2: TIẾN TRÌNH  -->
 <div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; height: 100%; box-sizing: border-box; padding-bottom: calc(100px + env(safe-area-inset-bottom)); pointer-events: auto;">
        
+    <div style="padding: 4%; text-align: center; width: 100%; box-sizing: border-box;">
+        
         <!-- BẢNG CẤP ĐỘ VÀ THÀNH TỰU TÍCH LŨY -->
-        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px 15px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: left; position: relative;">
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 6%; border-radius: 15px; margin-bottom: 5%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: left; position: relative; width: 100%; box-sizing: border-box;">
+            
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
-                    <span style="font-size: 12px; opacity: 0.9;">Hành trình của cậu</span>
-                    <h3 style="margin: 0; font-size: 26px;">Cấp <span id="current-lv">1</span></h3>
+                    <span style="font-size: 3.5vw; opacity: 0.9;">Hành trình của cậu</span>
+                    <h3 style="margin: 0; font-size: 9vw; font-weight: 900;">Cấp <span id="current-lv">1</span></h3>
                 </div>
                 <div style="text-align: right;">
-                    <span style="font-size: 12px; opacity: 0.9;">Mục tiêu tiếp theo</span>
-                    <div style="font-size: 18px; font-weight: bold;">Cấp <span id="next-lv">2</span></div>
+                    <span style="font-size: 3.5vw; opacity: 0.9;">Mục tiêu tiếp theo</span>
+                    <div style="font-size: 5.5vw; font-weight: bold;">Cấp <span id="next-lv">2</span></div>
                 </div>
             </div>
 
             <!-- Thanh kinh nghiệm (Dựa trên Hàm 0.00691) -->
-            <div class="level-bar-container">
+            <div class="level-bar-container" style="margin: 4% 0;">
                 <div id="level-bar-fill" class="level-bar-fill" style="width: 0%;"></div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold;">
+            
+            <div style="display: flex; justify-content: space-between; font-size: 3.2vw; font-weight: bold;">
                 <span id="xp-current">0.00 km</span>
                 <span id="xp-need">0.00 km</span>
             </div>
 
             <!-- NÚT NHẬN THƯỞNG LÊN CẤP -->
-            <div style="text-align: center; margin-top: 10px;">
-                <button id="btn-claim-level" class="btn-level-up" style="display: none; background: #ffc107; color: #d35400; font-weight: 900; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; animation: catPulse 1s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.nhanThuongLenCap()">🚀 LÊN CẤP NGAY!</button>
+            <div style="text-align: center; margin-top: 3%;">
+                <button id="btn-claim-level" class="btn-level-up" style="display: none; background: #ffc107; color: #d35400; font-weight: 900; border: none; padding: 3% 6%; border-radius: 20px; cursor: pointer; animation: catPulse 1s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 4vw;" onclick="window.nhanThuongLenCap()">🚀 LÊN CẤP NGAY!</button>
             </div>
 
-            <!-- Tổng kết nhỏ -->
-            <div style="background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px; font-size: 13px; line-height: 1.6; font-weight: bold; margin-top: 15px; display: flex; justify-content: space-between;">
+            <!-- Tổng kết nhỏ đáy bảng (Pill) -->
+            <div style="background: rgba(0,0,0,0.15); padding: 3% 4%; border-radius: 10px; font-size: 3.2vw; font-weight: bold; margin-top: 6%; display: flex; justify-content: space-between; align-items: center;">
                 <div>📏 <span id="tong-km-tab2">0.0</span> km</div>
                 <div>🔥 <span id="tong-calo-tab2">0</span> kcal</div>
                 <div>⏱️ <span id="tong-thoigian-tab2">0h 0m</span></div>

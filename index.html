@@ -3107,9 +3107,9 @@ window.dongHuyHieuMoi = function() {
     }, 400); // Khớp với transition 0.5s
 };
 
-// 🎁 HỆ THỐNG RƯƠNG BÍ ẨN (GAMIFICATION)
+//  HỆ THỐNG RƯƠNG BÍ ẨN (GAMIFICATION)
 // ==========================================
-window.chestLayerGroup = L.layerGroup().addTo(map); // 👈 Ép ghim lớp Rương lên bản đồ ngay lập tức
+window.chestLayerGroup = L.layerGroup().addTo(map); // 
 
 window.kiemTraVaTaoRuong = function(userLat, userLng) {
     const user = localStorage.getItem('currentUser') || "Khach";
@@ -3117,9 +3117,6 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
     const now = new Date();
     let lastSpawnStr = localStorage.getItem('last_chest_spawn_' + user);
     let lastSpawn = lastSpawnStr ? new Date(parseInt(lastSpawnStr)) : new Date(0);
-
-    // [TESTING] Ép hệ thống quên lịch sử để test đẻ rương (Test xong cậu nhớ XÓA dòng này đi nhé)
-    lastSpawn = new Date(0); 
 
     // THUẬT TOÁN ĐỊNH NGHĨA 2:00 SÁNG
     let resetTime = new Date(now);
@@ -3135,21 +3132,21 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
         if (window.chestLayerGroup) window.chestLayerGroup.clearLayers();
         let newChests = [];
         
-        // Spawn 5 điểm random quanh nhà (Đang để 0.001 để test ~50m. Test xong nhớ đổi lại 0.045 nhé!)
+        // Spawn 5 điểm random quanh nhà (Bán kính ~2.5km)
         for (let i = 0; i < 5; i++) {
-            let cLat = userLat + (Math.random() - 0.5) * 0.045; 
-            let cLng = userLng + (Math.random() - 0.5) * 0.045; 
+            let cLat = userLat + (Math.random() - 0.5) * 0.045;
+            let cLng = userLng + (Math.random() - 0.5) * 0.045;
             newChests.push({ id: 'chest_' + Date.now() + '_' + i, lat: cLat, lng: cLng, opened: false });
         }
         localStorage.setItem('daily_chests_' + user, JSON.stringify(newChests));
         localStorage.setItem('last_chest_spawn_' + user, now.getTime().toString());
-        canVeLai = true;
+        canVeLai = true; // Bật cờ cho phép vẽ mới
     } else if (window.chestLayerGroup && window.chestLayerGroup.getLayers().length === 0) {
-        // Mới mở app, bản đồ đang trống trơn -> Cho phép vẽ lần đầu
+        // Mới mở app, bản đồ đang trống trơn chưa hiện rương -> Cho phép vẽ lần đầu tiên
         canVeLai = true;
     }
 
-    // CHỈ VẼ KHI CÓ RƯƠNG MỚI HOẶC MỚI MỞ APP (Chống sập Popup khi đang di chuyển)
+    // CHỈ VẼ KHI CÓ RƯƠNG MỚI HOẶC MỚI MỞ APP (Khóa tĩnh chống nhấp nháy)
     if (canVeLai) {
         window.veRuongLenBanDo();
     }

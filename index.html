@@ -2426,39 +2426,55 @@ window.huyBamGiu = function() {
 };
 
 // === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
+// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
 window.veTheTienTrinh = function(recordKey, data) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
-    if (emptyMsg) emptyMsg.style.display = 'none'; 
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // KIỂM TRA PHÂN LOẠI THẺ
+    const isIndoor = data.loai_hinh === 'trong_nha';
+
+    // RẼ NHÁNH: CSS Giao diện (Trong nhà: Xanh lá nhạt viền đậm | Chạy bộ: Xám như cũ)
+    const cardStyle = isIndoor 
+        ? "background: #e8f5e9; border: 2px solid #28a745; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(40,167,69,0.2); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;"
+        : "background: #e0e0e0; border: none; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;";
+
+    // RẼ NHÁNH: Cấu trúc Nội dung bên Trái
+    const contentLeft = isIndoor
+        ? `🧘‍♂️ <b>Bài tập:</b> <span style="color:#004BAd;">${data.ten_bai_tap}</span><br>
+           ⏱ <b>Vận động:</b> <span style="color:#28a745;">${data.thoi_gian}</span><br>
+           🎯 <b>Đã tập:</b> <span style="color:#dc3545; font-size:16px;">${data.so_reps}</span> cái<br>
+           🔥 <b>Calo đốt:</b> ${data.calo} kcal`
+        : `⏱ Thời gian: ${data.thoi_gian || "00:00"}<br>
+           ⚡ Vận tốc TB: ${data.van_toc || "0"} km/h<br>
+           📏 Quãng đường: ${data.quang_duong || "0"}<br>
+           👟 Bước chân: ${data.buoc_chan || "0"} bước<br>
+           🔥 Calo tiêu thụ: ${data.calo || "0"} kcal`;
 
     const cardHTML = `
-    <div class="progress-card" 
-         onmousedown="window.batDauXoa('${recordKey}', this)" 
-         onmouseup="window.huyBamGiu()" 
-         onmouseleave="window.huyBamGiu()" 
-         ontouchstart="window.batDauXoa('${recordKey}', this)"
-         ontouchend="window.huyBamGiu()"
+    <div class="progress-card"
+        onmousedown="window.batDauXoa('${recordKey}', this)"
+        onmouseup="window.huyBamGiu()"
+        onmouseleave="window.huyBamGiu()"
+        ontouchstart="window.batDauXoa('${recordKey}', this)"
+        ontouchend="window.huyBamGiu()"
+        style="${cardStyle}">
 
-         style="background: #e0e0e0; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;">
-        
         <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333; pointer-events: none;">
-            ⏱ Thời gian: ${data.thoi_gian}<br>
-            ⚡ Vận tốc TB: ${data.van_toc} km/h<br>
-            📏 Quãng đường: ${data.quang_duong}<br>
-            👟 Bước chân: ${data.buoc_chan} bước<br>
-            🔥 Calo tiêu thụ: ${data.calo} kcal
+            ${contentLeft}
         </div>
-        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed #aaa; padding-left: 15px; min-width: 80px; pointer-events: none;">
+
+        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${isIndoor ? '#28a745' : '#aaa'}; padding-left: 15px; min-width: 80px; pointer-events: none;">
             <div style="margin-bottom: 5px;">${data.ngay}</div>
             <div>${data.gio_bat_dau}</div>
             <div style="font-size: 10px; color: #888; margin: 2px 0;">-----</div>
             <div>${data.gio_ket_thuc}</div>
         </div>
     </div>`;
-    
+
     listContainer.insertAdjacentHTML('afterbegin', cardHTML);
 };
-
 // === TỰ ĐỘNG TẢI LỊCH SỬ KHI MỞ TRANG ===
 window.addEventListener('load', function() {
     setTimeout(() => {
@@ -2809,15 +2825,16 @@ window.luuTienTrinhTrongNha = function() {
     };
 
     const recordData = {
-        ngay: endDateTime.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}), 
-        gio_bat_dau: formatAMPM(startDateTime), 
+        ngay: endDateTime.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}),
+        gio_bat_dau: formatAMPM(startDateTime),
         gio_ket_thuc: formatAMPM(endDateTime),
-        thoi_gian: timeVal, 
-        van_toc: "0 (Tập tại chỗ)", 
-        quang_duong: "0 km",
-        buoc_chan: window.reps + " reps", 
-        calo: caloVal, 
-        timestamp: Date.now()
+        thoi_gian: timeVal,
+        calo: caloVal,
+        timestamp: Date.now(),
+        // ĐÃ THÊM: Các cờ đánh dấu cho thẻ Tập Trong Nhà
+        loai_hinh: 'trong_nha',
+        ten_bai_tap: document.getElementById('indoor-exercise-name').innerText,
+        so_reps: window.reps
     };
 
     window.db.ref('tien_trinh_tap_luyen/' + user).push().set(recordData).then(() => {

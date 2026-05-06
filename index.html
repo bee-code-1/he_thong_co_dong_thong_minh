@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CMD Run</title>
     <!-- Icon hiển thị trên tab trình duyệt (Tạm dùng mặt Mèo) -->
-    <link rel="icon" type="image/png" href="meo_binh_thuong.png">
+    <link rel="icon" type="image/png" href="logo_app_nen_trang.png">
     <!-- Khai báo cho iOS/Android biết đây là Web App xịn -->
     <meta name="apple-mobile-web-app-title" content="CMD Run">
     <meta name="application-name" content="CMD Run">
@@ -832,7 +832,7 @@
         </div>
 
         <!-- TRỤC CUỘN DỌC CHÍNH  -->
-        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1 1 0; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 150px;">
+        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1 1 0; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 180px;">
             
             <!-- ITEM 1: KHUNG CAMERA & BỘ 4 NÚT CHỨC NĂNG -->
             <div class="snap-item" style="position: relative; margin-top: 10px; scroll-snap-align: start;">
@@ -879,7 +879,7 @@
 </div>
 
 <!-- LAYER TAB 4: CỘNG ĐỒNG -->
-<div id="tab-4" class="tab-screen" style="background-color: #f8f9fa; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
+<div id="tab-4" class="tab-screen" style="background-color: #f8f9fa; overflow-y: auto; padding-bottom: 180px; pointer-events: auto;">
     <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Giao diện Mạng Xã Hội) -->
     <div style="position: sticky; top: 0; background: #f8f9fa; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
          <!-- Thanh tìm kiếm (Ấn Enter để tìm hồ sơ) -->
@@ -934,7 +934,7 @@
 </div>
 
 <!-- LAYER TAB 2: TIẾN TRÌNH  -->
-<div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; padding-bottom: 140px; pointer-events: auto;">
+<div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; padding-bottom: 180px; pointer-events: auto;">
     <div style="padding: 20px; text-align: center;">
        
         <!-- BẢNG CẤP ĐỘ VÀ THÀNH TỰU TÍCH LŨY -->
@@ -983,7 +983,7 @@
     </div>
 </div>
         <!-- LAYER TAB 5: THÀNH TỰU CÁ NHÂN -->
-        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 140px;">
+        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 180px;">
             <div style="padding: 25px 15px; text-align: center; position: relative;">
                 <!-- KHU VỰC HIỂN THỊ XU (TÚI TIẾN) -->
                 <div style="position: absolute; top: 25px; right: 15px; background: #fff9c4; padding: 6px 12px; border-radius: 20px; font-weight: 900; color: #f57f17; border: 2px solid #fbc02d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px; z-index: 10;">
@@ -1291,10 +1291,10 @@
 </div>
 
 <!-- POPUP HỒ SƠ CÔNG KHAI CỦA NGƯỜI KHÁC -->
-<div id="public-profile-modal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
+<div id="public-profile-modal" onclick="window.dongHoSoCongKhai()" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto;">
     <div onclick="event.stopPropagation()" style="background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        <span onclick="document.getElementById('public-profile-modal').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 28px; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-        
+        <span onclick="window.dongHoSoCongKhai()" style="position: absolute; top: 10px; right: 15px; font-size: 28px; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+       
         <img id="public-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #28a745; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
         <h2 id="public-name" style="margin: 0 0 5px 0; color: #333; font-size: 22px;">Tên User</h2>
 
@@ -2958,7 +2958,7 @@ window.veBangThanhTuu = function() {
         let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #dc3545);' : 'filter: grayscale(1); opacity: 0.3;';
 
-        let titleText = "???";
+        let titleText = hh.title;
         let clickEvent = '';
 
         if (isUnlocked) {
@@ -2967,17 +2967,15 @@ window.veBangThanhTuu = function() {
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
                 clickEvent = `onclick="window.moHuyHieuMoi('${hh.id}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
-            } else {
-                titleText = hh.title;
             }
         }
 
         html += `
         <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
-            <div class="badge-icon" style="${glowStyle}">${isUnlocked ? hh.icon : '❓'}</div>
+            <div class="badge-icon" style="${glowStyle}">${hh.icon}</div> <!-- 👈 Luôn hiện icon thật, CSS sẽ tự bôi xám nhờ filter: grayscale -->
             <div style="flex: 1; text-align: left; padding-right: 20px;">
                 <div style="font-weight: 900; font-size: 15px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#888'};">${titleText}</div>
-                <!-- Cố tình KHÔNG in dòng badge-desc ra đây để giấu kỹ mô tả -->
+                <!-- Cố tình KHÔNG in dòng badge-desc ra đây để giấu kỹ mô tả cho đến khi unlock -->
             </div>
             ${lockIcon}
         </div>`;
@@ -5884,7 +5882,15 @@ window.moMessengerHub = function() {
 };
 
 // 2. Click vào Feed bảng tin -> Mở Hồ Sơ Công Khai thay vì Mở Chat
+
+// --- HÀM ĐÓNG MỚI ĐƯỢC CẤY VÀO (Nhát 2) ---
+window.dongHoSoCongKhai = function() {
+    document.getElementById('public-profile-modal').style.display = 'none';
+    if(typeof isTracking !== 'undefined' && !isTracking) document.getElementById('bottom-nav').classList.remove('nav-hidden');
+};
+
 window.moHoSoCongKhai = function(username) {
+    document.getElementById('bottom-nav').classList.add('nav-hidden'); // 👈 Ẩn thanh tác vụ khi mở
     if (!window.db) return;
     const currentUser = localStorage.getItem('currentUser');
     if (username === currentUser) { window.moHoSo(); return; } // Nếu là mình thì mở profile cá nhân

@@ -1219,7 +1219,7 @@
                 <!-- Phần mở rộng -->
                 <div id="vid-wall" style="display: none; padding: 0 15px 15px; border-top: 1px dashed #90caf9; margin-top: 5px; padding-top: 15px;">
                     <div style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
-                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/Z0oD_xU9hGg?si=vP2HwA-WfS8Wq7B8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/1UU4VvklQ44" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <button onclick="window.batDauTapTrongNha('wall_angel', 'Wall Angels')" style="width: 100%; padding: 12px; background: #004BAd; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,75,173,0.3);">▶ BẮT ĐẦU TẬP</button>
                 </div>
@@ -1229,17 +1229,18 @@
     </div>
 </div>
 
-<!-- ========================================== -->
 <!-- 🎥 GIAO DIỆN PHÒNG TẬP CAMERA TRONG NHÀ -->
 <!-- ========================================== -->
-<div id="phong-tap-trong-nha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #e8f5e9; z-index: 10005; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; font-family: Arial, sans-serif;">
+<div id="phong-tap-trong-nha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #e8f5e9; z-index: 10005; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box;">
     
-    <!-- Nút Tắt -->
-    <span onclick="window.ketThucTapTrongNha()" style="position: absolute; top: 15px; right: 20px; font-size: 40px; font-weight: bold; color: #333; cursor: pointer; line-height: 1; z-index: 10;">&times;</span>
-
-    <!-- Pill Thông báo -->
-    <div id="indoor-ai-status" style="background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 25px; font-weight: 900; font-size: 16px; color: #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; z-index: 10;">
-        Đang khởi động Camera...
+    <!-- Header chứa Nút Tắt và Thông báo (Dùng Flexbox để chống đè nhau) -->
+    <div style="width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; z-index: 10; padding-top: 10px;">
+        <!-- Pill Thông báo -->
+        <div id="indoor-ai-status" style="background: rgba(255,255,255,0.9); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; margin-right: 15px; text-align: center;">
+            Đang khởi động Camera...
+        </div>
+        <!-- Nút Tắt -->
+        <span onclick="window.ketThucTapTrongNha()" style="font-size: 35px; font-weight: bold; color: #333; cursor: pointer; line-height: 1; padding: 0 10px;">&times;</span>
     </div>
 
     <!-- Màn hình Camera Xanh Lá (Giống Mockup) -->
@@ -2447,7 +2448,12 @@ window.indoorStream = null;
 // 1. Mở danh sách
 window.moDanhSachBaiTap = function(e) {
     if(e) e.stopPropagation();
-    window.dongModeMenu(); // Cất viên nhộng đi
+    window.dongModeMenu(); 
+    
+    // 👈 GIẤU THANH CÔNG CỤ DƯỚI ĐÁY KHI MỞ
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.add('nav-hidden');
+
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
     if (listModal) listModal.style.display = 'flex';
 };
@@ -2456,6 +2462,12 @@ window.moDanhSachBaiTap = function(e) {
 window.dongDanhSachBaiTap = function() {
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
     if (listModal) listModal.style.display = 'none';
+
+    // 👈 TRẢ LẠI THANH CÔNG CỤ (Nếu không đang ở chế độ chạy bộ)
+    const nav = document.getElementById('bottom-nav');
+    if (nav && typeof isTracking !== 'undefined' && !isTracking) {
+        nav.classList.remove('nav-hidden');
+    }
 };
 
 // 3. Hiệu ứng Accordion (Mở/Đóng video hướng dẫn)
@@ -2471,7 +2483,8 @@ window.toggleChiTietBaiTap = function(idDiv) {
 
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA
 window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
-    window.dongDanhSachBaiTap(); // Tắt bảng danh sách
+    const listModal = document.getElementById('danh-sach-bai-tap-modal');
+    if (listModal) listModal.style.display = 'none'; // Chỉ tắt bảng danh sách, Nav bar vẫn đang giấu!
     
     // Setup UI phòng tập
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
@@ -2494,7 +2507,6 @@ window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
         document.getElementById('indoor-ai-status').innerText = "Sẵn sàng! Đặt đt cách bạn 1.5m nhé.";
         document.getElementById('indoor-ai-status').style.color = "#28a745";
         
-        // Gợi ý gọi AI Voice sau khi camera ổn định
         if (typeof window.phatAmThanh === 'function') window.phatAmThanh('pop');
     } catch (err) {
         console.error("Lỗi Camera trong nhà:", err);
@@ -2510,8 +2522,14 @@ window.ketThucTapTrongNha = function() {
         window.indoorStream.getTracks().forEach(track => track.stop());
         window.indoorStream = null;
     }
+    
+    // Tắt màn hình Camera
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
     if (ptModal) ptModal.style.display = 'none';
+
+    // 👈 TỰ ĐỘNG MỞ LẠI BẢNG DANH SÁCH BÀI TẬP (Luồng quay lui khép kín)
+    const listModal = document.getElementById('danh-sach-bai-tap-modal');
+    if (listModal) listModal.style.display = 'flex';
 };
 // === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
 // === HỆ THỐNG CHỌN CHẾ ĐỘ THỂ THAO ===

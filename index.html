@@ -1203,7 +1203,13 @@
                     <div style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
                         <iframe width="100%" height="100%" src="https://www.youtube.com/embed/gcNh17Ckjgg?si=6n33s6_M2DqSIfpB" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
-                    <button onclick="window.batDauTapTrongNha('squat', 'Squat Phục Hồi')" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(40,167,69,0.3);">▶ BẮT ĐẦU TẬP</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 10px; border-radius: 12px;">
+                        <span style="font-size: 14px; font-weight: bold; color: #555;">Mục tiêu hôm nay:</span>
+                        <input type="number" id="target-squat" value="15" style="width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold; color: #d35400;">
+                        <span style="font-size: 14px; color: #888;">cái</span>
+                    </div>
+                    <button onclick="window.batDauTapTrongNha('squat', 'Squat Phục Hồi', document.getElementById('target-squat').value)" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(40,167,69,0.3);">▶ BẮT ĐẦU TẬP</button>
+
                 </div>
             </div>
 
@@ -1222,13 +1228,30 @@
                     <div style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
                         <iframe width="100%" height="100%" src="https://www.youtube.com/embed/1UU4VvklQ44" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
-                    <button onclick="window.batDauTapTrongNha('wall_angel', 'Wall Angels')" style="width: 100%; padding: 12px; background: #004BAd; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,75,173,0.3);">▶ BẮT ĐẦU TẬP</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 10px; border-radius: 12px;">
+                        <span style="font-size: 14px; font-weight: bold; color: #555;">Mục tiêu hôm nay:</span>
+                        <input type="number" id="target-wall" value="15" style="width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold; color: #004BAd;">
+                        <span style="font-size: 14px; color: #888;">cái</span>
+                    </div>
+                    <button onclick="window.batDauTapTrongNha('wall_angel', 'Wall Angels', document.getElementById('target-wall').value)" style="width: 100%; padding: 12px; background: #004BAd; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,75,173,0.3);">▶ BẮT ĐẦU TẬP</button>
+
+            </div>
+
+            <!-- BÀI TẬP 3: QUY TẮC 20-20-20 (BẢO VỆ MẮT - KHÔNG DÙNG CAMERA) -->
+            <div style="background: #fff3e0; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #ffe082;">
+                <div style="display: flex; padding: 15px; align-items: center; gap: 15px;">
+                    <div style="width: 70px; height: 70px; background: #ffcc80; border-radius: 15px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 35px;">👀</div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-weight: 900; font-size: 16px; color: #e65100; margin-bottom: 5px;">Quy tắc 20-20-20 (Mắt)</div>
+                        <div style="font-size: 12px; color: #555; line-height: 1.4;">Cứ <b>20 phút</b> nhìn màn hình, hãy nhìn ra xa <b>6 mét</b> trong ít nhất <b>20 giây</b> để giảm nhức mỏi mắt.</div>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
 
 <!--  GIAO DIỆN PHÒNG TẬP CAMERA TRONG NHÀ -->
 <!-- ========================================== -->
@@ -1248,21 +1271,34 @@
     <div style="position: relative; width: 100%; max-width: 400px; aspect-ratio: 3/4; background: #20c997; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 20px;">
         <video id="indoor-camera-feed" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
         <!-- Canvas dùng để MediaPipe vẽ khung xương đè lên sau này -->
-        <canvas id="indoor-ai-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none;"></canvas>
+       <!-- ĐÃ FIX LỖI TÀNG HÌNH: Thêm transform: scaleX(-1) để Canvas lật như gương khớp với Video -->
+        <canvas id="indoor-ai-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; transform: scaleX(-1);"></canvas>
     </div>
 
     <!-- Tên bài tập hiện tại -->
-    <div id="indoor-exercise-name" style="font-size: 24px; font-weight: 900; color: #333; margin-bottom: 15px;">Tên bài tập</div>
-
-    <!-- Thanh chấm tròn báo hiệu tiến trình (Sequence Dots) -->
-    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-        <div style="width: 15px; height: 15px; background: #ff9800; border-radius: 50%;"></div>
-        <div style="width: 15px; height: 15px; background: #ffc107; border-radius: 50%; opacity: 0.5;"></div>
-        <div style="width: 15px; height: 15px; background: #ffc107; border-radius: 50%; opacity: 0.5;"></div>
-        <div style="width: 15px; height: 15px; background: #ffc107; border-radius: 50%; opacity: 0.5;"></div>
+    <div id="indoor-exercise-name" style="font-size: 24px; font-weight: 900; color: #333; margin-bottom: 5px;">Tên bài tập</div>
+    
+    <!-- ĐÃ THÊM: Đồng hồ bấm giờ và Đếm Reps -->
+    <div style="display: flex; gap: 30px; font-size: 18px; font-weight: bold; color: #004BAd; margin-bottom: 20px; background: white; padding: 10px 25px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div>⏱ <span id="indoor-timer">00:00</span></div>
+        <div>🎯 <span id="indoor-reps-display">0 / 15</span></div>
     </div>
 </div>
-    
+    <!-- 🏆 POPUP HOÀN THÀNH BÀI TẬP TRONG NHÀ -->
+<!-- ========================================== -->
+<div id="indoor-success-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.85); z-index: 10010; justify-content: center; align-items: center; pointer-events: auto; backdrop-filter: blur(5px);">
+    <div style="background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <span style="font-size: 60px;">🎉</span>
+        <h2 style="color: #28a745; margin: 10px 0;">HOÀN THÀNH!</h2>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; line-height: 1.6;">
+            💪 <b>Bài tập:</b> <span id="is-name" style="color:#004BAd;">Squat</span><br>
+            🎯 <b>Số lượng:</b> <span id="is-reps" style="color:#dc3545;">15</span> cái<br>
+            ⏱ <b>Thời gian:</b> <span id="is-time" style="color:#20c997;">00:00</span><br>
+            🔥 <b>Calo đốt:</b> <span id="is-calo" style="color:#ff9800;">0.0</span> kcal
+        </div>
+        <button onclick="window.luuTienTrinhTrongNha()" style="width: 100%; padding: 12px; border-radius: 12px; background: #004BAd; color: white; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">LƯU VÀO TIẾN TRÌNH</button>
+    </div>
+</div>
     <!-- BẢNG CÀI ĐẶT HỆ THỐNG (SETTINGS) THAY THẾ HỒ SƠ CŨ -->
     <div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
         <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 40px 20px 50px 20px; border-radius: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; overflow-y: auto; text-align: center; position: relative; box-sizing: border-box;">
@@ -2506,8 +2542,8 @@ window.meoNoi = function(text) {
     window.isMeoSpeaking = true;
     let msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'vi-VN';
-    msg.pitch = 2.0; // cao độ
-    msg.rate = 1.2;  // tốc độ nói
+    msg.pitch = 1.5; // cao độ
+    msg.rate = 1.0;  // tốc độ nói
     msg.onend = () => { window.isMeoSpeaking = false; };
     window.speechSynthesis.speak(msg);
 };
@@ -2581,7 +2617,7 @@ window.indoorPoseModel.onResults((results) => {
 
         if (backAngle < 60) {
             ctx.strokeStyle = "#dc3545"; 
-            window.meoNoi("Thẳng cái lưng lên đồ lợn!");
+            window.meoNoi("Thẳng cái lưng lên ");
         } else {
             ctx.strokeStyle = "#20c997"; 
             if (kneeAngle > 160) {
@@ -2627,7 +2663,7 @@ window.indoorPoseModel.onResults((results) => {
                 modalBg.style.backgroundColor = "#81c784"; 
                 setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
 
-                if(window.reps === 20) window.meoNoi("Tuyệt vời! Lưng đã thẳng tắp!");
+                if(window.reps === 20) window.meoNoi("Tốt lắm, Lưng đã thẳng tắp!");
             }
         }
         // Trạng thái 2: Kéo tay xuống vuông góc (Cùi chỏ ~ 90 độ, Nách ~ 90 độ)
@@ -2644,29 +2680,43 @@ window.indoorPoseModel.onResults((results) => {
 });
 
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA
-window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
+window.indoorTimerInt = null;
+window.indoorSeconds = 0;
+window.targetReps = 15;
+
+window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap, target) {
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
     if (listModal) listModal.style.display = 'none'; 
     
-    // Mở khóa âm thanh (Bắt buộc trên Safari/iOS)
-    let unlockMsg = new SpeechSynthesisUtterance('');
-    window.speechSynthesis.speak(unlockMsg);
-
-    // Setup thông số
+    // Setup thông số & Hẹn mục tiêu
     window.currentBaiTap = idBaiTap;
     window.reps = 0;
     window.squatState = "up";
+    window.targetReps = parseInt(target) || 15;
+    window.indoorSeconds = 0;
+
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
-    document.getElementById('indoor-exercise-name').innerText = tenBaiTap + " : 0 cái";
-    document.getElementById('indoor-ai-status').innerText = "Đang khởi động AI ...";
+    document.getElementById('indoor-exercise-name').innerText = tenBaiTap;
+    document.getElementById('indoor-reps-display').innerText = `0 / ${window.targetReps}`;
+    document.getElementById('indoor-timer').innerText = "00:00";
+    document.getElementById('indoor-ai-status').innerText = "Đang khởi động Mắt thần AI...";
     document.getElementById('indoor-ai-status').style.color = "#ffc107";
     ptModal.style.display = 'flex';
+
+    // Bật đồng hồ bấm giờ
+    if(window.indoorTimerInt) clearInterval(window.indoorTimerInt);
+    window.indoorTimerInt = setInterval(() => {
+        window.indoorSeconds++;
+        let m = String(Math.floor(window.indoorSeconds / 60)).padStart(2, '0');
+        let s = String(window.indoorSeconds % 60).padStart(2, '0');
+        document.getElementById('indoor-timer').innerText = `${m}:${s}`;
+    }, 1000);
 
     // Xóa khung canvas cũ
     const canvas = document.getElementById('indoor-ai-canvas');
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-
     const videoE = document.getElementById('indoor-camera-feed');
+
     try {
         window.indoorStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 640 } }, 
@@ -2674,21 +2724,57 @@ window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
         });
         videoE.srcObject = window.indoorStream;
         
-        // Chờ camera lên hình rồi bắt đầu bơm frame cho AI
         videoE.onloadedmetadata = () => {
             window.indoorStreamRunning = true;
             sendFrameToAI(); 
         };
-        
     } catch (err) {
-        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Bạn chưa cấp quyền!";
+        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Cậu chưa cấp quyền!";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
     }
 };
 
+// 4.5. KIỂM TRA MỤC TIÊU VÀ BẬT POPUP HOÀN THÀNH
+// (Hàm này tớ đã móc ngầm vào chữ window.reps++ ở trên não bộ AI rồi)
+window.kiemTraMucTieuTrongNha = function() {
+    document.getElementById('indoor-reps-display').innerText = `${window.reps} / ${window.targetReps}`;
+    if (window.reps >= window.targetReps) {
+        window.phatAmThanh('thanh_tuu');
+        window.meoNoi("Quá đỉnh! Cậu đã hoàn thành mục tiêu rồi!");
+        
+        // Tắt camera, tắt đồng hồ
+        window.ketThucTapTrongNha(true); 
+        
+        // Bơm thông số ra bảng Popup
+        let m = String(Math.floor(window.indoorSeconds / 60)).padStart(2, '0');
+        let s = String(window.indoorSeconds % 60).padStart(2, '0');
+        let caloDot = (window.reps * 0.5).toFixed(1); // Ước tính 0.5 kcal mỗi rep
+        
+        document.getElementById('is-name').innerText = document.getElementById('indoor-exercise-name').innerText;
+        document.getElementById('is-reps').innerText = window.reps;
+        document.getElementById('is-time').innerText = `${m}:${s}`;
+        document.getElementById('is-calo').innerText = caloDot;
+
+        // Bắn pháo hoa và hiện bảng
+        if (typeof bungPhaoHoa === 'function') bungPhaoHoa();
+        document.getElementById('indoor-success-popup').style.display = 'flex';
+    }
+};
+
+// Móc cấy hàm kiểm tra mục tiêu vào thẳng thay vì phải đè lại não AI
+const oldMeoNoi = window.meoNoi;
+window.meoNoi = function(text) {
+    oldMeoNoi(text);
+    if (!isNaN(text)) { // Nếu Mèo đếm số -> Kiểm tra mục tiêu
+        window.kiemTraMucTieuTrongNha();
+    }
+};
+
 // 5. NÚT X (TẮT PHÒNG TẬP)
-window.ketThucTapTrongNha = function() {
-    window.indoorStreamRunning = false; // Ngắt bơm data cho AI
+window.ketThucTapTrongNha = function(hoanThanh = false) {
+    window.indoorStreamRunning = false; 
+    if(window.indoorTimerInt) clearInterval(window.indoorTimerInt);
+
     if (window.indoorStream) {
         window.indoorStream.getTracks().forEach(track => track.stop());
         window.indoorStream = null;
@@ -2697,9 +2783,67 @@ window.ketThucTapTrongNha = function() {
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
     if (ptModal) ptModal.style.display = 'none';
 
-    // Quay lại bảng chọn bài
-    const listModal = document.getElementById('danh-sach-bai-tap-modal');
-    if (listModal) listModal.style.display = 'flex';
+    // Chỉ quay lại bảng chọn bài nếu người dùng bấm X thoát giữa chừng
+    if (!hoanThanh) {
+        const listModal = document.getElementById('danh-sach-bai-tap-modal');
+        if (listModal) listModal.style.display = 'flex';
+    }
+};
+
+// 6. LƯU VÀO TIẾN TRÌNH DATABASE
+window.luuTienTrinhTrongNha = function() {
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return;
+
+    let m = String(Math.floor(window.indoorSeconds / 60)).padStart(2, '0');
+    let s = String(window.indoorSeconds % 60).padStart(2, '0');
+    let timeVal = `${m}:${s}`;
+    let caloVal = (window.reps * 0.5).toFixed(1);
+    
+    const endDateTime = new Date();
+    const startDateTime = new Date(endDateTime.getTime() - (window.indoorSeconds * 1000));
+    
+    const formatAMPM = (date) => {
+        let hours = date.getHours(); let minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return `${hours}:${minutes} ${ampm}`;
+    };
+
+    const recordData = {
+        ngay: endDateTime.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}), 
+        gio_bat_dau: formatAMPM(startDateTime), 
+        gio_ket_thuc: formatAMPM(endDateTime),
+        thoi_gian: timeVal, 
+        van_toc: "0 (Tập tại chỗ)", 
+        quang_duong: "0 km",
+        buoc_chan: window.reps + " reps", 
+        calo: caloVal, 
+        timestamp: Date.now()
+    };
+
+    window.db.ref('tien_trinh_tap_luyen/' + user).push().set(recordData).then(() => {
+        document.getElementById('indoor-success-popup').style.display = 'none';
+        alert(`✅ Tuyệt vời! Bạn đã tập ${window.reps} cái và đốt cháy ${caloVal} kcal. Đã lưu vào Sổ tay Tiến Trình!`);
+        
+        // Mở lại bảng chọn bài tập cho lần sau
+        const listModal = document.getElementById('danh-sach-bai-tap-modal');
+        if (listModal) listModal.style.display = 'flex';
+
+        // Tự động load lại bảng Tab 2
+        if (typeof window.veBangThanhTuu === 'function') {
+            window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then(snapshot => {
+                if (snapshot.val()) {
+                    const listContainer = document.getElementById('progress-list');
+                    if(listContainer) listContainer.innerHTML = '';
+                    const records = Object.keys(snapshot.val()).map(key => ({ key: key, data: snapshot.val()[key] }));
+                    records.sort((a, b) => a.data.timestamp - b.data.timestamp);
+                    records.reverse().forEach(r => window.veTheTienTrinh(r.key, r.data));
+                }
+            });
+        }
+    });
 };
 // === 4. CHIA SẺ VỊ TRÍ & LỚP BỤI MỊN ===
 // === HỆ THỐNG CHỌN CHẾ ĐỘ THỂ THAO ===

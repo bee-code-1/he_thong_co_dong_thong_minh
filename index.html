@@ -786,7 +786,7 @@
     </div>
 
 <!-- LAYER TAB 3: TRANG CHỦ (BẢN FIX CUỘN + BẠN BÈ THẬT + ONE CONNECT) -->
-<div id="tab-3" class="tab-screen" style="pointer-events: auto;">
+<div id="tab-3" class="tab-screen" style="pointer-events: auto; height: calc(100dvh - 70px - env(safe-area-inset-bottom)); box-sizing: border-box;">
    <div style="background-color: #f4f7f6; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
     <!-- Thanh Widget & Story Bạn Bè Thật -->
     <div id="top-widget-area" style="flex-shrink: 0; padding: 25px 15px 5px; display: flex; flex-direction: column; gap: 10px; z-index: 50; background: #f4f7f6;">
@@ -832,7 +832,7 @@
         </div>
 
         <!-- TRỤC CUỘN DỌC CHÍNH  -->
-        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1 1 0; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 180px;">
+        <div id="locket-scroll-container" class="locket-feed-container" style="flex: 1 1 0; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; padding-bottom: 20px;">
             
             <!-- ITEM 1: KHUNG CAMERA & BỘ 4 NÚT CHỨC NĂNG -->
             <div class="snap-item" style="position: relative; margin-top: 10px; scroll-snap-align: start;">
@@ -879,7 +879,7 @@
 </div>
 
 <!-- LAYER TAB 4: CỘNG ĐỒNG -->
-<div id="tab-4" class="tab-screen" style="background-color: #f8f9fa; overflow-y: auto; padding-bottom: 180px; pointer-events: auto;">
+<div id="tab-4" class="tab-screen" style="background-color: #f8f9fa; overflow-y: auto; height: calc(100dvh - 70px - env(safe-area-inset-bottom)); box-sizing: border-box; padding-bottom: 20px; pointer-events: auto;">
     <!-- 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Giao diện Mạng Xã Hội) -->
     <div style="position: sticky; top: 0; background: #f8f9fa; padding: 15px; z-index: 100; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
          <!-- Thanh tìm kiếm (Ấn Enter để tìm hồ sơ) -->
@@ -934,7 +934,7 @@
 </div>
 
 <!-- LAYER TAB 2: TIẾN TRÌNH  -->
-<div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; padding-bottom: 180px; pointer-events: auto;">
+<div id="tab-2" class="tab-screen" style="background-color: #f4f7f6; overflow-y: auto; height: calc(100dvh - 70px - env(safe-area-inset-bottom)); box-sizing: border-box; padding-bottom: 20px; pointer-events: auto;">
     <div style="padding: 20px; text-align: center;">
        
         <!-- BẢNG CẤP ĐỘ VÀ THÀNH TỰU TÍCH LŨY -->
@@ -983,7 +983,7 @@
     </div>
 </div>
         <!-- LAYER TAB 5: THÀNH TỰU CÁ NHÂN -->
-        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; padding-bottom: 180px;">
+        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; height: calc(100dvh - 70px - env(safe-area-inset-bottom)); box-sizing: border-box; padding-bottom: 20px;">
             <div style="padding: 25px 15px; text-align: center; position: relative;">
                 <!-- KHU VỰC HIỂN THỊ XU (TÚI TIẾN) -->
                 <div style="position: absolute; top: 25px; right: 15px; background: #fff9c4; padding: 6px 12px; border-radius: 20px; font-weight: 900; color: #f57f17; border: 2px solid #fbc02d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px; z-index: 10;">
@@ -2542,16 +2542,16 @@ window.moHoSo = function() {
 window.dongHoSo = function(e) {
     const modal = document.getElementById('hoso-modal');
     if (modal) modal.style.display = 'none';
+    const oldPass = document.getElementById('hs-old-pass');
+    if(oldPass) oldPass.value = '';
+    const newPass = document.getElementById('hs-new-pass');
+    if(newPass) newPass.value = '';
+    const confirmPass = document.getElementById('hs-confirm-pass');
+    if(confirmPass) confirmPass.value = '';
 
-    // Xóa trắng mật khẩu cho an toàn mỗi lần đóng
-    document.getElementById('hs-old-pass').value = '';
-    document.getElementById('hs-new-pass').value = '';
-    document.getElementById('hs-confirm-pass').value = '';
-
-    // Khi tắt hồ sơ -> Hiện lại thanh điều hướng (Chỉ hiện nếu không đang chạy bộ)
-    const nav = document.getElementById('bottom-nav');
-    if (nav && typeof isTracking !== 'undefined' && !isTracking) {
-        nav.classList.remove('nav-hidden');
+    if (typeof isTracking !== 'undefined' && !isTracking) {
+        const nav = document.getElementById('bottom-nav');
+        if (nav) nav.classList.remove('nav-hidden');
     }
 };
 

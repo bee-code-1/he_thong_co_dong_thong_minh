@@ -599,7 +599,7 @@
     overflow: hidden; z-index: 1000; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 #mode-island.expanded {
-    height: 230px; 
+    height: 310px;
     background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 }
 #btn-main-mode { 
@@ -2506,8 +2506,8 @@ window.meoNoi = function(text) {
     window.isMeoSpeaking = true;
     let msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'vi-VN';
-    msg.pitch = 1.5; // Chỉnh cao độ cho chói tai giống Mèo
-    msg.rate = 1.1;  // Bắn rap hơi nhanh
+    msg.pitch = 2.0; // cao độ
+    msg.rate = 1.2;  // tốc độ nói
     msg.onend = () => { window.isMeoSpeaking = false; };
     window.speechSynthesis.speak(msg);
 };
@@ -2551,11 +2551,11 @@ window.indoorPoseModel.onResults((results) => {
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    // Lấy chính xác tọa độ Mốc: Vai(12), Hông(24), Đầu Gối(26), Mắt cá(28) bên phải
-    let shoulder = lm[3];
-    let hip = lm[1]; 
-    let knee = lm[4]; 
-    let ankle = lm[5];
+    // 🛑 ĐÃ FIX: Lấy chính xác mốc xương nhờ mảng tọa độ có ngoặc vuông [ ]
+    let shoulder = lm[3]; // Vai phải
+    let hip = lm[4];      // Hông phải
+    let knee = lm[5];     // Đầu Gối phải
+    let ankle = lm[6];    // Mắt cá phải
     
     // Tọa độ vẽ lên màn hình
     let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
@@ -2567,7 +2567,6 @@ window.indoorPoseModel.onResults((results) => {
     ctx.beginPath();
     ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY); ctx.lineTo(aX, aY);
     ctx.lineWidth = 6; ctx.strokeStyle = "#ffeb3b"; // Mặc định Vàng
-
     // LOGIC CHẤM ĐIỂM: SQUAT PHỤC HỒI
     if (window.currentBaiTap === "squat") {
         let kneeAngle = calculateAngle(hip, knee, ankle);
@@ -2575,38 +2574,40 @@ window.indoorPoseModel.onResults((results) => {
 
         // Bắt lỗi: Cúi người võng lưng quá mức
         if (backAngle < 60) {
-            ctx.strokeStyle = "#dc3545"; // Đỏ lòm
+            ctx.strokeStyle = "#dc3545"; // Khung xương chuyển Đỏ
             window.meoNoi("Thẳng cái lưng lên đồ lợn!");
         } else {
-            ctx.strokeStyle = "#20c997"; // Xanh lá mướt mát
-            // Đứng thẳng
+            ctx.strokeStyle = "#20c997"; // Khung xương Xanh lá
+            // Đứng thẳng (Góc gối > 160 độ)
             if (kneeAngle > 160) {
                 if (window.squatState === "down") {
                     window.squatState = "up";
                     window.reps++;
-                    window.meoNoi(window.reps.toString());
+                    window.meoNoi(window.reps.toString()); // Mèo đếm số
                     document.getElementById('indoor-exercise-name').innerText = `Squat: ${window.reps} cái`;
+                    
+                    // 🌟 HIỆU ỨNG CHỚP NỀN MƯỢT MÀ KHI TẬP ĐÚNG 🌟
+                    const modalBg = document.getElementById('phong-tap-trong-nha-modal');
+                    modalBg.style.transition = "background-color 0.3s ease";
+                    modalBg.style.backgroundColor = "#81c784"; // Chớp xanh lá rực lên
+                    setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400); // Trả về màu nền cũ từ từ
+
                     if(window.reps === 20) {
-                        window.meoNoi("Ngon lành! Mèo cộng 10 Calo cho cậu rồi đấy.");
+                        window.meoNoi("Ngon lành! Cậu tập tốt lắm.");
                     }
                 }
             }
-            // Ngồi xổm (Squat sâu)
+            // Ngồi xổm (Squat sâu đúng chuẩn < 90 độ)
             if (kneeAngle < 90) {
                 window.squatState = "down";
             } else if (kneeAngle > 90 && kneeAngle < 140 && window.squatState === "up") {
-                // Nhắc nhở nếu squat nửa vời
+                // Nhắc nhở nếu squat nửa vời chưa đủ sâu
                 window.meoNoi("Xuống sâu nữa đi!");
             }
         }
     }
     ctx.stroke();
-
-    // Vẽ các cục nam châm tại khớp
-    ctx.fillStyle = "#fff";
-    [ [sX, sY], [hX, hY], [kX, kY], [aX, aY] ].forEach(pt => {
-        ctx.beginPath(); ctx.arc(pt, pt[2], 8, 0, 2*Math.PI); ctx.fill();
-    });
+    // Đã tiễn mấy cái chấm tròn vô dụng lên đường theo yêu cầu!
 });
 
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA

@@ -1655,7 +1655,7 @@ window.saveProfile = function(isSkip) {
     // --- TRACKING ACTIONS ---
     //  XỬ LÝ NÚT BẮT ĐẦU
     function startTrackingAction() {
-        if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+    if (!navigator.geolocation && !window.Capacitor) return alert("Trình duyệt không hỗ trợ GPS/Location!");
 
         //  Reset sạch sẽ dữ liệu
         latestLatLng = null; 
@@ -1749,6 +1749,10 @@ function xuLyToaDoGPS(lat, lng, doChinhXac) {
 
     const currentLatLng = L.latLng(lat, lng);
     latestLatLng = currentLatLng;
+
+    // 🎁 GỌI HỆ THỐNG RƯƠNG BÍ ẨN NGAY LẬP TỨC KHI CHỐT ĐƯỢC VỊ TRÍ
+    if (typeof window.kiemTraVaTaoRuong === 'function') window.kiemTraVaTaoRuong(lat, lng);
+    if (typeof window.kiemTraKhoangCachRuong === 'function') window.kiemTraKhoangCachRuong(lat, lng);
 
     // RADAR BẮT MÈO 20M
     if (localStorage.getItem('meo_bo_nha') === 'true') {
@@ -3079,12 +3083,11 @@ window.dongHuyHieuMoi = function() {
 
 // 🎁 HỆ THỐNG RƯƠNG BÍ ẨN (GAMIFICATION)
 // ==========================================
-window.chestLayerGroup = null;
+window.chestLayerGroup = L.layerGroup().addTo(map); // 👈 Ép ghim lớp Rương lên bản đồ ngay lập tức
 
 window.kiemTraVaTaoRuong = function(userLat, userLng) {
     const user = localStorage.getItem('currentUser') || "Khach";
     if (user === "Khach") return;
-
     const now = new Date();
     let lastSpawnStr = localStorage.getItem('last_chest_spawn_' + user);
     let lastSpawn = lastSpawnStr ? new Date(parseInt(lastSpawnStr)) : new Date(0);
@@ -3092,31 +3095,27 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
     // THUẬT TOÁN ĐỊNH NGHĨA 2:00 SÁNG
     let resetTime = new Date(now);
     resetTime.setHours(2, 0, 0, 0);
-    // Nếu bây giờ là 1h sáng, mốc reset phải là 2h sáng của NGÀY HÔM QUA
     if (now.getTime() < resetTime.getTime()) {
         resetTime.setDate(resetTime.getDate() - 1);
     }
 
     // Nếu thời gian tạo rương lần cuối nhỏ hơn mốc 2h sáng gần nhất -> Reset Rương mới!
     if (lastSpawn.getTime() < resetTime.getTime()) {
-        if (window.chestLayerGroup) window.chestLayerGroup.clearLayers();
-        else window.chestLayerGroup = L.layerGroup().addTo(map);
-
+        window.chestLayerGroup.clearLayers();
         let newChests = [];
-        // Spawn 5 điểm random quanh nhà (Bán kính ~4km tương đương tọa độ xê dịch 0.036 độ)
+        
+        // Spawn 5 điểm random quanh nhà (Bán kính ~2.5km để dễ dàng đi bộ săn xu)
         for (let i = 0; i < 5; i++) {
-            let cLat = userLat + (Math.random() - 0.5) * 0.072;
-            let cLng = userLng + (Math.random() - 0.5) * 0.072;
+            let cLat = userLat + (Math.random() - 0.5) * 0.001;
+            let cLng = userLng + (Math.random() - 0.5) * 0.001;
             newChests.push({ id: 'chest_' + Date.now() + '_' + i, lat: cLat, lng: cLng, opened: false });
         }
         localStorage.setItem('daily_chests_' + user, JSON.stringify(newChests));
         localStorage.setItem('last_chest_spawn_' + user, now.getTime().toString());
-        window.veRuongLenBanDo();
-    } else if (!window.chestLayerGroup) {
-        // Đã tạo rương hôm nay rồi nhưng chưa vẽ (do người dùng mới mở lại app)
-        window.chestLayerGroup = L.layerGroup().addTo(map);
-        window.veRuongLenBanDo();
     }
+
+    // DÙ LÀ TẠO MỚI HAY TẢI LẠI TRANG, LUÔN LUÔN VẼ RƯƠNG RA!
+    window.veRuongLenBanDo();
 };
 
 window.veRuongLenBanDo = function() {
@@ -3124,9 +3123,18 @@ window.veRuongLenBanDo = function() {
     window.chestLayerGroup.clearLayers();
     const user = localStorage.getItem('currentUser') || "Khach";
     let chests = JSON.parse(localStorage.getItem('daily_chests_' + user)) || [];
-
+    
     chests.forEach(chest => {
         if (!chest.opened) {
+            // 1. VẼ VÒNG TRÒN BÁN KÍNH 20M BAO QUANH RƯƠNG
+            L.circle([chest.lat, chest.lng], {
+                color: '#ffc107',
+                fillColor: '#ffc107',
+                fillOpacity: 0.2,
+                radius: 20
+            }).addTo(window.chestLayerGroup);
+
+            // 2. VẼ ICON DẤU CHẤM HỎI THẦN THÁNH
             let icon = L.divIcon({
                 className: 'chest-icon',
                 html: `<div style="font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: catPulse 2s infinite;">❓</div>`,
@@ -3134,57 +3142,85 @@ window.veRuongLenBanDo = function() {
             });
             let m = L.marker([chest.lat, chest.lng], {icon: icon}).addTo(window.chestLayerGroup);
 
-            // Tích hợp Popup Chỉ đường thần tốc
-            let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
-            m.bindPopup(`
-                <div style="text-align:center; min-width: 140px;">
-                    <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
-                    <strong style="color:#333;">Lại gần dưới 20m để nhận xu!</strong>
-                    <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-                    <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chest.lat}, ${chest.lng})">📍 Chỉ đường đến đây</button>
-                </div>
-            `);
+            // 3. TƯƠNG TÁC POPUP ĐỘNG (Đo khoảng cách thời gian thực khi Click)
+            m.on('click', function() {
+                let myLat = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lat : null;
+                let myLng = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lng : null;
+                let khoangCach = myLat ? map.distance([myLat, myLng], [chest.lat, chest.lng]) : 9999;
+
+                let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+                let openBtnStyle = "display:block; width:100%; padding:10px; margin-top:8px; background:#28a745; color:white; border:2px solid #fff; border-radius:8px; cursor:pointer; font-weight:900; animation: catPulse 1.5s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.3);";
+                let buttonChiDuong = `<button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chest.lat}, ${chest.lng})">📍 Chỉ đường đến đây</button>`;
+                let popupHTML = '';
+
+                if (khoangCach <= 20) {
+                    popupHTML = `
+                        <div style="text-align:center; min-width: 160px;">
+                            <div style="font-size:30px;">🎁</div>
+                            <strong style="color:#28a745;">Đã trong tầm bắt! Mở ngay!</strong>
+                            <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                            <button style="${openBtnStyle}" onclick="window.xuLyMoRuongThuCong('${chest.id}')">✨ MỞ RƯƠNG NGAY ✨</button>
+                        </div>
+                    `;
+                } else {
+                    popupHTML = `
+                        <div style="text-align:center; min-width: 160px;">
+                            <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
+                            <strong style="color:#dc3545;">Cách cậu ${Math.round(khoangCach)}m</strong><br>
+                            <span style="font-size: 12px; color: #555;">Bước vào vòng tròn (20m) để mở!</span>
+                            <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+                            ${buttonChiDuong}
+                        </div>
+                    `;
+                }
+                m.bindPopup(popupHTML).openPopup();
+            });
         }
     });
 };
 
 window.kiemTraKhoangCachRuong = function(userLat, userLng) {
+    // 🛑 Đã tắt hệ thống Auto-mở rương để chống cướp giật! 
+    // Mọi tương tác giờ nhường hết cho người dùng Click thủ công.
+};
+
+// HÀM MỚI: XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT "✨ MỞ RƯƠNG NGAY ✨"
+window.xuLyMoRuongThuCong = function(chestId) {
+    map.closePopup(); // Tắt bong bóng thoại
     const user = localStorage.getItem('currentUser') || "Khach";
     if (user === "Khach") return;
+
     let chests = JSON.parse(localStorage.getItem('daily_chests_' + user)) || [];
     let changed = false;
 
     chests.forEach(chest => {
-        if (!chest.opened) {
-            let d = map.distance([userLat, userLng], [chest.lat, chest.lng]);
-            if (d <= 20) { // BÁN KÍNH ĂN XU LÀ 20 MÉT
-                chest.opened = true;
-                changed = true;
+        if (chest.id === chestId && !chest.opened) {
+            chest.opened = true;
+            changed = true;
+            
+            // Random 1 đến 3 xu
+            let xuNhanDuoc = Math.floor(Math.random() * 3) + 1;
+            let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+            currentCoin += xuNhanDuoc;
+            localStorage.setItem('user_coins_' + user, currentCoin);
+            
+            if (typeof window.phatAmThanh === 'function') window.phatAmThanh('thanh_tuu');
+            if (typeof bungPhaoHoa === 'function') bungPhaoHoa(); // Nổ tung tóe
 
-                // Thuật toán thưởng chống lạm phát: Random 1 đến 3 xu
-                let xuNhanDuoc = Math.floor(Math.random() * 3) + 1;
-                let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
-                currentCoin += xuNhanDuoc;
-                localStorage.setItem('user_coins_' + user, currentCoin);
-
-                window.phatAmThanh('thanh_tuu'); // Tiếng bùm chíu mở rương
-                alert(`🎉 MỞ RƯƠNG BÍ ẨN!\nCậu vừa tìm thấy một rương ẩn và nhận được ${xuNhanDuoc} 💰 Xu Cơ Động!\nHãy tiếp tục di chuyển để tìm các rương khác nhé!`);
-                window.capNhatGiaoDienXu();
-            }
+            alert(`🎉 MỞ RƯƠNG THÀNH CÔNG!\nBạn vừa nhận được ${xuNhanDuoc} 💰 Xu !\nHãy tiếp tục di chuyển để săn sạch rương nhé!`);
+            if (typeof window.capNhatGiaoDienXu === 'function') window.capNhatGiaoDienXu();
         }
     });
 
     if (changed) {
         localStorage.setItem('daily_chests_' + user, JSON.stringify(chests));
+        
         // MẮT THẦN 4: CÚP THỢ SĂN TIỀN THƯỞNG
-        let ruongHomNay = JSON.parse(localStorage.getItem('daily_chests_' + currentUser)) || [];
-        // Lọc và đếm xem trong mảng rương hôm nay có bao nhiêu cái đã được mở
-        let soRuongDaMo = ruongHomNay.filter(r => r.opened === true).length;
+        let soRuongDaMo = chests.filter(r => r.opened === true).length;
         if (soRuongDaMo >= 5) {
-            window.kiemTraVaNoHuyHieuAn('tho_san_tien');
-            }
-
-        window.veRuongLenBanDo(); // Vẽ lại để Rương đã ăn biến mất khỏi bản đồ
+            if (typeof window.kiemTraVaNoHuyHieuAn === 'function') window.kiemTraVaNoHuyHieuAn('tho_san_tien');
+        }
+        window.veRuongLenBanDo(); // Rương mở xong tự bay màu khỏi map
     }
 };
 
@@ -5941,9 +5977,9 @@ if (isOnline) {
         const isFriend = window.danhSachBanBeThuc.includes(username);
         const actionBtnContainer = document.getElementById('public-action-btn');
         if (isFriend) {
-            actionBtnContainer.innerHTML = `<button onclick="document.getElementById('public-profile-modal').style.display='none'; window.moKhungChatNguoi('${username}')" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #004BAd; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">💬 Nhắn tin</button>`;
+            actionBtnContainer.innerHTML = `<button onclick="window.dongHoSoCongKhai(); window.moKhungChatNguoi('${username}')" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #004BAd; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">💬 Nhắn tin</button>`;
         } else {
-            actionBtnContainer.innerHTML = `<button onclick="window.guiLoiMoiKetBanCho('${username}'); document.getElementById('public-profile-modal').style.display='none';" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #28a745; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">👤+ Kết bạn</button>`;
+            actionBtnContainer.innerHTML = `<button onclick="window.guiLoiMoiKetBanCho('${username}'); window.dongHoSoCongKhai();" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #28a745; color: white; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">👤+ Kết bạn</button>`;
         }
         
         document.getElementById('public-profile-modal').style.display = 'flex';

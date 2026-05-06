@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     
      <style>
         /* 1. QUẢN LÝ HIỂN THỊ CÁC LAYER TAB (LỚP NỀN) */
@@ -598,7 +599,7 @@
     overflow: hidden; z-index: 1000; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 #mode-island.expanded {
-    height: 170px; /* Bóp chiều cao bung nở cho vừa vặn 3 nút nhỏ */
+    height: 230px; 
     background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 }
 #btn-main-mode { 
@@ -1229,9 +1230,9 @@
     </div>
 </div>
 
-<!-- 🎥 GIAO DIỆN PHÒNG TẬP CAMERA TRONG NHÀ -->
+<!--  GIAO DIỆN PHÒNG TẬP CAMERA TRONG NHÀ -->
 <!-- ========================================== -->
-<div id="phong-tap-trong-nha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #e8f5e9; z-index: 10005; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box;">
+<div id="phong-tap-trong-nha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #e8f5e9; z-index: 10005; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; pointer-events: auto;">
     
     <!-- Header chứa Nút Tắt và Thông báo (Dùng Flexbox để chống đè nhau) -->
     <div style="width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; z-index: 10; padding-top: 10px;">
@@ -2481,53 +2482,185 @@ window.toggleChiTietBaiTap = function(idDiv) {
     }
 };
 
+// === LÕI AI TRỊ LIỆU (MEDIAPIPE POSE) & TOÁN HỌC ===
+window.indoorStreamRunning = false;
+window.currentBaiTap = "";
+window.isMeoSpeaking = false;
+window.reps = 0;
+window.squatState = "up"; // Trạng thái đứng hay ngồi
+
+// Cấu hình mạng thần kinh BlazePose siêu nhẹ
+window.indoorPoseModel = new Pose({locateFile: (file) => {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+}});
+window.indoorPoseModel.setOptions({
+    modelComplexity: 0, // Mức 0 chạy mượt trên mọi điện thoại
+    smoothLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
+
+// Giọng nói của Mèo (Web Speech API)
+window.meoNoi = function(text) {
+    if (!window.speechSynthesis || window.isMeoSpeaking) return;
+    window.isMeoSpeaking = true;
+    let msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'vi-VN';
+    msg.pitch = 1.5; // Chỉnh cao độ cho chói tai giống Mèo
+    msg.rate = 1.1;  // Bắn rap hơi nhanh
+    msg.onend = () => { window.isMeoSpeaking = false; };
+    window.speechSynthesis.speak(msg);
+};
+
+// Toán học: Tính góc giữa 3 điểm Vector 3D
+function calculateAngle(A, B, C) {
+    let radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
+    let angle = Math.abs(radians * 180.0 / Math.PI);
+    if (angle > 180.0) angle = 360 - angle;
+    return angle;
+}
+
+// Hàm gửi khung hình liên tục cho AI quét
+async function sendFrameToAI() {
+    if (!window.indoorStreamRunning) return;
+    const videoE = document.getElementById('indoor-camera-feed');
+    if (videoE.readyState >= 2) {
+        await window.indoorPoseModel.send({image: videoE});
+    }
+    requestAnimationFrame(sendFrameToAI);
+}
+
+// BỘ NÃO PHÂN TÍCH LỖI SAI (Chạy 30 lần/giây)
+window.indoorPoseModel.onResults((results) => {
+    const canvas = document.getElementById('indoor-ai-canvas');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('indoor-camera-feed');
+    
+    if (canvas.width !== video.clientWidth) {
+        canvas.width = video.clientWidth; canvas.height = video.clientHeight;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!results.poseLandmarks) {
+        document.getElementById('indoor-ai-status').innerText = "⚠️ Lùi ra xa 1.5m để Mèo nhìn thấy cậu!";
+        document.getElementById('indoor-ai-status').style.color = "#dc3545";
+        return;
+    }
+
+    document.getElementById('indoor-ai-status').innerText = "✅ Tư thế chuẩn! Bắt đầu tập đi!";
+    document.getElementById('indoor-ai-status').style.color = "#28a745";
+
+    const lm = results.poseLandmarks;
+    // Lấy tọa độ Mốc: Vai(12), Hông(24), Đầu Gối(26), Mắt cá(28) bên phải
+    let hip = lm[1]; let knee = lm[2]; let ankle = lm[3]; let shoulder = lm[4];
+    
+    // Tọa độ vẽ lên màn hình
+    let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
+    let kX = knee.x * canvas.width; let kY = knee.y * canvas.height;
+    let aX = ankle.x * canvas.width; let aY = ankle.y * canvas.height;
+    let sX = shoulder.x * canvas.width; let sY = shoulder.y * canvas.height;
+
+    // Vẽ khung xương Cyberpunk lên người
+    ctx.beginPath();
+    ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY); ctx.lineTo(aX, aY);
+    ctx.lineWidth = 6; ctx.strokeStyle = "#ffeb3b"; // Mặc định Vàng
+
+    // LOGIC CHẤM ĐIỂM: SQUAT PHỤC HỒI
+    if (window.currentBaiTap === "squat") {
+        let kneeAngle = calculateAngle(hip, knee, ankle);
+        let backAngle = calculateAngle(shoulder, hip, knee);
+
+        // Bắt lỗi: Cúi người võng lưng quá mức
+        if (backAngle < 60) {
+            ctx.strokeStyle = "#dc3545"; // Đỏ lòm
+            window.meoNoi("Thẳng cái lưng lên đồ lợn!");
+        } else {
+            ctx.strokeStyle = "#20c997"; // Xanh lá mướt mát
+            // Đứng thẳng
+            if (kneeAngle > 160) {
+                if (window.squatState === "down") {
+                    window.squatState = "up";
+                    window.reps++;
+                    window.meoNoi(window.reps.toString());
+                    document.getElementById('indoor-exercise-name').innerText = `Squat: ${window.reps} cái`;
+                    if(window.reps === 20) {
+                        window.meoNoi("Ngon lành! Mèo cộng 10 Calo cho cậu rồi đấy.");
+                    }
+                }
+            }
+            // Ngồi xổm (Squat sâu)
+            if (kneeAngle < 90) {
+                window.squatState = "down";
+            } else if (kneeAngle > 90 && kneeAngle < 140 && window.squatState === "up") {
+                // Nhắc nhở nếu squat nửa vời
+                window.meoNoi("Xuống sâu nữa đi!");
+            }
+        }
+    }
+    ctx.stroke();
+
+    // Vẽ các cục nam châm tại khớp
+    ctx.fillStyle = "#fff";
+    [ [sX, sY], [hX, hY], [kX, kY], [aX, aY] ].forEach(pt => {
+        ctx.beginPath(); ctx.arc(pt, pt[5], 8, 0, 2*Math.PI); ctx.fill();
+    });
+});
+
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA
 window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
-    if (listModal) listModal.style.display = 'none'; // Chỉ tắt bảng danh sách, Nav bar vẫn đang giấu!
+    if (listModal) listModal.style.display = 'none'; 
     
-    // Setup UI phòng tập
+    // Mở khóa âm thanh (Bắt buộc trên Safari/iOS)
+    let unlockMsg = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(unlockMsg);
+
+    // Setup thông số
+    window.currentBaiTap = idBaiTap;
+    window.reps = 0;
+    window.squatState = "up";
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
-    document.getElementById('indoor-exercise-name').innerText = tenBaiTap;
-    document.getElementById('indoor-ai-status').innerText = "Vui lòng cho phép truy cập Camera...";
+    document.getElementById('indoor-exercise-name').innerText = tenBaiTap + " : 0 cái";
+    document.getElementById('indoor-ai-status').innerText = "Đang khởi động Mắt thần AI...";
     document.getElementById('indoor-ai-status').style.color = "#ffc107";
     ptModal.style.display = 'flex';
 
-    // Bật Camera trước (WebRTC)
+    // Xóa khung canvas cũ
+    const canvas = document.getElementById('indoor-ai-canvas');
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
     const videoE = document.getElementById('indoor-camera-feed');
     try {
-        if (window.indoorStream) {
-            window.indoorStream.getTracks().forEach(track => track.stop());
-        }
         window.indoorStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 640 } }, 
             audio: false 
         });
         videoE.srcObject = window.indoorStream;
-        document.getElementById('indoor-ai-status').innerText = "Sẵn sàng! Đặt đt cách bạn 1.5m nhé.";
-        document.getElementById('indoor-ai-status').style.color = "#28a745";
         
-        if (typeof window.phatAmThanh === 'function') window.phatAmThanh('pop');
+        // Chờ camera lên hình rồi bắt đầu bơm frame cho AI
+        videoE.onloadedmetadata = () => {
+            window.indoorStreamRunning = true;
+            sendFrameToAI(); 
+        };
+        
     } catch (err) {
-        console.error("Lỗi Camera trong nhà:", err);
-        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Bị từ chối quyền!";
+        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Cậu chưa cấp quyền!";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
     }
 };
 
 // 5. NÚT X (TẮT PHÒNG TẬP)
 window.ketThucTapTrongNha = function() {
-    // Cắt luồng Camera cho đỡ nóng máy
+    window.indoorStreamRunning = false; // Ngắt bơm data cho AI
     if (window.indoorStream) {
         window.indoorStream.getTracks().forEach(track => track.stop());
         window.indoorStream = null;
     }
     
-    // Tắt màn hình Camera
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
     if (ptModal) ptModal.style.display = 'none';
 
-    // 👈 TỰ ĐỘNG MỞ LẠI BẢNG DANH SÁCH BÀI TẬP (Luồng quay lui khép kín)
+    // Quay lại bảng chọn bài
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
     if (listModal) listModal.style.display = 'flex';
 };

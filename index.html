@@ -2542,7 +2542,7 @@ window.indoorPoseModel.onResults((results) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!results.poseLandmarks) {
-        document.getElementById('indoor-ai-status').innerText = "⚠️ Lùi ra xa 1.5m để Mèo nhìn thấy cậu!";
+        document.getElementById('indoor-ai-status').innerText = "⚠️ Lùi ra xa để Mèo nhìn thấy cậu!";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
         return;
     }
@@ -2551,63 +2551,96 @@ window.indoorPoseModel.onResults((results) => {
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    // 🛑 ĐÃ FIX: Lấy chính xác mốc xương nhờ mảng tọa độ có ngoặc vuông [ ]
-    let shoulder = lm[3]; // Vai phải
-    let hip = lm[4];      // Hông phải
-    let knee = lm[5];     // Đầu Gối phải
-    let ankle = lm[6];    // Mắt cá phải
+    // Bắt tọa độ (Khớp tay và chân phải)
+    let shoulder = lm[1]; // Vai phải
+    let hip = lm[2];      // Hông phải
+    let knee = lm[3];     // Đầu Gối phải
+    let ankle = lm[4];    // Mắt cá phải
+    let elbow = lm[5];    // Khuỷu tay phải
+    let wrist = lm[6];    // Cổ tay phải
     
-    // Tọa độ vẽ lên màn hình
+    // Tọa độ để vẽ lên Canvas
     let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
     let kX = knee.x * canvas.width; let kY = knee.y * canvas.height;
     let aX = ankle.x * canvas.width; let aY = ankle.y * canvas.height;
     let sX = shoulder.x * canvas.width; let sY = shoulder.y * canvas.height;
+    let eX = elbow.x * canvas.width; let eY = elbow.y * canvas.height;
+    let wX = wrist.x * canvas.width; let wY = wrist.y * canvas.height;
 
-    // Vẽ khung xương Cyberpunk lên người
     ctx.beginPath();
-    ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY); ctx.lineTo(aX, aY);
-    ctx.lineWidth = 6; ctx.strokeStyle = "#ffeb3b"; // Mặc định Vàng
-    // LOGIC CHẤM ĐIỂM: SQUAT PHỤC HỒI
+    ctx.lineWidth = 6; 
+    ctx.strokeStyle = "#ffeb3b"; // Mặc định Vàng
+
+    // 🏋️ LOGIC CHẤM ĐIỂM 1: SQUAT PHỤC HỒI
     if (window.currentBaiTap === "squat") {
+        // Mèo chỉ vẽ khung xương phần thân dưới (Vai -> Hông -> Gối -> Mắt cá)
+        ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY); ctx.lineTo(aX, aY);
+        
         let kneeAngle = calculateAngle(hip, knee, ankle);
         let backAngle = calculateAngle(shoulder, hip, knee);
 
-        // Bắt lỗi: Cúi người võng lưng quá mức
         if (backAngle < 60) {
-            ctx.strokeStyle = "#dc3545"; // Khung xương chuyển Đỏ
+            ctx.strokeStyle = "#dc3545"; 
             window.meoNoi("Thẳng cái lưng lên đồ lợn!");
         } else {
-            ctx.strokeStyle = "#20c997"; // Khung xương Xanh lá
-            // Đứng thẳng (Góc gối > 160 độ)
+            ctx.strokeStyle = "#20c997"; 
             if (kneeAngle > 160) {
                 if (window.squatState === "down") {
-                    window.squatState = "up";
-                    window.reps++;
-                    window.meoNoi(window.reps.toString()); // Mèo đếm số
+                    window.squatState = "up"; window.reps++;
+                    window.meoNoi(window.reps.toString()); 
                     document.getElementById('indoor-exercise-name').innerText = `Squat: ${window.reps} cái`;
                     
-                    // 🌟 HIỆU ỨNG CHỚP NỀN MƯỢT MÀ KHI TẬP ĐÚNG 🌟
                     const modalBg = document.getElementById('phong-tap-trong-nha-modal');
                     modalBg.style.transition = "background-color 0.3s ease";
-                    modalBg.style.backgroundColor = "#81c784"; // Chớp xanh lá rực lên
-                    setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400); // Trả về màu nền cũ từ từ
+                    modalBg.style.backgroundColor = "#81c784"; 
+                    setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
 
-                    if(window.reps === 20) {
-                        window.meoNoi("Ngon lành! Cậu tập tốt lắm.");
-                    }
+                    if(window.reps === 20) window.meoNoi("Ngon lành! Cậu tập tốt lắm.");
                 }
             }
-            // Ngồi xổm (Squat sâu đúng chuẩn < 90 độ)
             if (kneeAngle < 90) {
                 window.squatState = "down";
             } else if (kneeAngle > 90 && kneeAngle < 140 && window.squatState === "up") {
-                // Nhắc nhở nếu squat nửa vời chưa đủ sâu
                 window.meoNoi("Xuống sâu nữa đi!");
             }
         }
+    } 
+    // 👼 LOGIC CHẤM ĐIỂM 2: WALL ANGELS (CHỮA GÙ LƯNG CỔ RÙA)
+    else if (window.currentBaiTap === "wall_angel") {
+        // Mèo chuyển sang vẽ khung xương thân trên (Hông -> Vai -> Khuỷu tay -> Cổ tay)
+        ctx.moveTo(hX, hY); ctx.lineTo(sX, sY); ctx.lineTo(eX, eY); ctx.lineTo(wX, wY);
+        
+        let elbowAngle = calculateAngle(shoulder, elbow, wrist);
+        let shoulderAngle = calculateAngle(hip, shoulder, elbow); // Đo góc nách để biết giơ tay cao chưa
+
+        ctx.strokeStyle = "#20c997"; 
+        
+        // Trạng thái 1: Đẩy tay lên cao (Góc nách > 140, góc cùi chỏ > 140)
+        if (shoulderAngle > 140 && elbowAngle > 140) {
+            if (window.squatState === "down") {
+                window.squatState = "up"; window.reps++;
+                window.meoNoi(window.reps.toString()); 
+                document.getElementById('indoor-exercise-name').innerText = `Wall Angels: ${window.reps} cái`;
+                
+                const modalBg = document.getElementById('phong-tap-trong-nha-modal');
+                modalBg.style.transition = "background-color 0.3s ease";
+                modalBg.style.backgroundColor = "#81c784"; 
+                setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
+
+                if(window.reps === 20) window.meoNoi("Tuyệt vời! Lưng đã thẳng tắp!");
+            }
+        }
+        // Trạng thái 2: Kéo tay xuống vuông góc (Cùi chỏ ~ 90 độ, Nách ~ 90 độ)
+        if (shoulderAngle < 110 && elbowAngle < 110) {
+            window.squatState = "down";
+        } else if (shoulderAngle > 120 && elbowAngle < 80 && window.squatState === "up") {
+            // Cảnh báo: Gập cùi chỏ nhưng không hạ nách xuống (lỗi rụt tay)
+            ctx.strokeStyle = "#dc3545"; 
+            window.meoNoi("Mở rộng lồng ngực ra, đừng rụt tay lại!");
+        }
     }
+    
     ctx.stroke();
-    // Đã tiễn mấy cái chấm tròn vô dụng lên đường theo yêu cầu!
 });
 
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA

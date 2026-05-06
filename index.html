@@ -989,7 +989,7 @@
        <div id="tab-5" class="tab-screen" style="background-color: #f8f9fa; pointer-events: auto; overflow-y: auto; height: 100%; box-sizing: border-box; padding-bottom: calc(100px + env(safe-area-inset-bottom));">
             <div style="padding: 25px 15px; text-align: center; position: relative;">
                 <!-- KHU VỰC HIỂN THỊ XU (TÚI TIẾN) -->
-                <div style="position: absolute; top: 25px; right: 15px; background: #fff9c4; padding: 6px 12px; border-radius: 20px; font-weight: 900; color: #f57f17; border: 2px solid #fbc02d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px; z-index: 10;">
+                <div onclick="window.moShopQuyDoi()" style="position: absolute; top: 25px; right: 15px; background: #fff9c4; padding: 6px 12px; border-radius: 20px; font-weight: 900; color: #f57f17; border: 2px solid #fbc02d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px; z-index: 10; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
                     <img src="meow_coin.png" style="width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); animation: catPulse 2s infinite;"> <span id="coin-balance-display" style="font-size: 18px;">0</span>
                 </div>
 
@@ -1145,6 +1145,32 @@
                 </button>
             </div>
         </div>
+
+    <!-- CỬA HÀNG QUY ĐỔI XU (SHOP 1 MÓN) -->
+<div id="shop-modal" onclick="window.dongShopQuyDoi()" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
+    <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 0; border-radius: 20px; width: 90%; max-width: 350px; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;">
+        <!-- Header Cố định -->
+        <div style="position: sticky; top: 0; background: white; padding: 15px; border-bottom: 2px solid #eee; z-index: 10; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="color: #d35400; margin: 0; font-size: 20px;">Shop Quy Đổi</h2>
+            </div>
+            <div style="background: #fff9c4; padding: 4px 10px; border-radius: 15px; font-weight: bold; color: #f57f17; border: 2px solid #fbc02d; display: flex; align-items: center; gap: 5px;">
+                <span id="shop-coin-display">0</span> 💰
+            </div>
+            <span onclick="window.dongShopQuyDoi()" style="font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1;">&times;</span>
+        </div>
+        
+        <!-- Gian hàng Độc quyền -->
+        <div style="padding: 20px;">
+            <div style="background: white; border-radius: 15px; padding: 25px 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 2px solid #ffc107;">
+                <div style="font-size: 50px; margin-bottom: 10px;">💸</div>
+                <div style="font-size: 18px; font-weight: 900; color: #333; margin-bottom: 5px;">10k ticket</div>
+                <div style="font-size: 14px; color: #888; margin-bottom: 20px; line-height: 1.4;">bank luôn 10k vào tài khoản</div>
+                <button onclick="window.muaVatPham('10k ticket', 999)" style="width: 100%; background: #ffc107; border: none; padding: 12px; border-radius: 12px; font-weight: 900; color: #d35400; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); font-size: 18px; animation: catPulse 2s infinite;">ĐỔI NGAY - 999 💰</button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- BẢNG CÀI ĐẶT HỆ THỐNG (SETTINGS) THAY THẾ HỒ SƠ CŨ -->
     <div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
         <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 40px 20px 50px 20px; border-radius: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; overflow-y: auto; text-align: center; position: relative; box-sizing: border-box;">
@@ -3092,6 +3118,9 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
     let lastSpawnStr = localStorage.getItem('last_chest_spawn_' + user);
     let lastSpawn = lastSpawnStr ? new Date(parseInt(lastSpawnStr)) : new Date(0);
 
+    // [TESTING] Ép hệ thống quên lịch sử để test đẻ rương (Test xong cậu nhớ XÓA dòng này đi nhé)
+    lastSpawn = new Date(0); 
+
     // THUẬT TOÁN ĐỊNH NGHĨA 2:00 SÁNG
     let resetTime = new Date(now);
     resetTime.setHours(2, 0, 0, 0);
@@ -3099,23 +3128,31 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
         resetTime.setDate(resetTime.getDate() - 1);
     }
 
+    let canVeLai = false; // 🛑 CỜ KIỂM SOÁT: Chống giật khung hình
+
     // Nếu thời gian tạo rương lần cuối nhỏ hơn mốc 2h sáng gần nhất -> Reset Rương mới!
     if (lastSpawn.getTime() < resetTime.getTime()) {
-        window.chestLayerGroup.clearLayers();
+        if (window.chestLayerGroup) window.chestLayerGroup.clearLayers();
         let newChests = [];
         
-        // Spawn 5 điểm random quanh nhà (Bán kính ~2.5km để dễ dàng đi bộ săn xu)
+        // Spawn 5 điểm random quanh nhà (Đang để 0.001 để test ~50m. Test xong nhớ đổi lại 0.045 nhé!)
         for (let i = 0; i < 5; i++) {
-            let cLat = userLat + (Math.random() - 0.5) * 0.001;
-            let cLng = userLng + (Math.random() - 0.5) * 0.001;
+            let cLat = userLat + (Math.random() - 0.5) * 0.045; 
+            let cLng = userLng + (Math.random() - 0.5) * 0.045; 
             newChests.push({ id: 'chest_' + Date.now() + '_' + i, lat: cLat, lng: cLng, opened: false });
         }
         localStorage.setItem('daily_chests_' + user, JSON.stringify(newChests));
         localStorage.setItem('last_chest_spawn_' + user, now.getTime().toString());
+        canVeLai = true;
+    } else if (window.chestLayerGroup && window.chestLayerGroup.getLayers().length === 0) {
+        // Mới mở app, bản đồ đang trống trơn -> Cho phép vẽ lần đầu
+        canVeLai = true;
     }
 
-    // DÙ LÀ TẠO MỚI HAY TẢI LẠI TRANG, LUÔN LUÔN VẼ RƯƠNG RA!
-    window.veRuongLenBanDo();
+    // CHỈ VẼ KHI CÓ RƯƠNG MỚI HOẶC MỚI MỞ APP (Chống sập Popup khi đang di chuyển)
+    if (canVeLai) {
+        window.veRuongLenBanDo();
+    }
 };
 
 window.veRuongLenBanDo = function() {
@@ -3224,6 +3261,62 @@ window.xuLyMoRuongThuCong = function(chestId) {
     }
 };
 
+// === HỆ THỐNG SHOP QUY ĐỔI XU ===
+window.moShopQuyDoi = function() {
+    // 1. Giấu thanh điều hướng dưới đáy
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.add('nav-hidden');
+    
+    // 2. Kéo số dư ví hiện tại hiển thị lên Header của Shop
+    const user = localStorage.getItem('currentUser') || "Khach";
+    let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+    const shopCoin = document.getElementById('shop-coin-display');
+    if (shopCoin) shopCoin.innerText = currentCoin;
+    
+    // 3. Hiện bảng Shop
+    document.getElementById('shop-modal').style.display = 'flex';
+};
+
+window.dongShopQuyDoi = function() {
+    document.getElementById('shop-modal').style.display = 'none';
+    
+    // Trả lại thanh điều hướng (Chỉ hiện nếu không đang chạy bộ)
+    const nav = document.getElementById('bottom-nav');
+    if (nav && typeof isTracking !== 'undefined' && !isTracking) {
+        nav.classList.remove('nav-hidden');
+    }
+};
+
+window.muaVatPham = function(tenVatPham, gia) {
+    const user = localStorage.getItem('currentUser') || "Khach";
+    if (user === "Khach") return alert("Đăng nhập đi rồi hẵng mua đồ!");
+
+    let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+    
+    // Rách ví -> Báo lỗi lầy lội theo kịch bản
+    if (currentCoin < gia) {
+        alert("Chưa đủ tiền đâu, farm tiếp đi!");
+        return;
+    }
+
+    if (confirm(`Chốt đổi [${tenVatPham}] với giá ${gia} xu nhé?`)) {
+        // Trừ tiền và lưu lại
+        currentCoin -= gia;
+        localStorage.setItem('user_coins_' + user, currentCoin);
+        
+        // Nảy số trên các màn hình UI
+        if(typeof window.capNhatGiaoDienXu === 'function') window.capNhatGiaoDienXu();
+        document.getElementById('shop-coin-display').innerText = currentCoin;
+        
+        // Âm thanh và hiệu ứng
+        if (typeof window.phatAmThanh === 'function') window.phatAmThanh('thanh_tuu');
+        if (typeof bungPhaoHoa === 'function') bungPhaoHoa(); 
+        
+        // Thông báo lầy lội theo ý cộng sự
+        alert("Mua thành công thôi, chưa có gì cả, tại làm đéo có ai đã có ngần ấy mà đổi!");
+    }
+}; 
+    
 window.capNhatGiaoDienXu = function() {
     const user = localStorage.getItem('currentUser') || "Khach";
     let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;

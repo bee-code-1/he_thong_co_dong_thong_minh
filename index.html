@@ -2551,8 +2551,11 @@ window.indoorPoseModel.onResults((results) => {
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    // Lấy tọa độ Mốc: Vai(12), Hông(24), Đầu Gối(26), Mắt cá(28) bên phải
-    let hip = lm[1]; let knee = lm[2]; let ankle = lm[3]; let shoulder = lm[4];
+    // Lấy chính xác tọa độ Mốc: Vai(12), Hông(24), Đầu Gối(26), Mắt cá(28) bên phải
+    let shoulder = lm[3];
+    let hip = lm[1]; 
+    let knee = lm[4]; 
+    let ankle = lm[5];
     
     // Tọa độ vẽ lên màn hình
     let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
@@ -2602,7 +2605,7 @@ window.indoorPoseModel.onResults((results) => {
     // Vẽ các cục nam châm tại khớp
     ctx.fillStyle = "#fff";
     [ [sX, sY], [hX, hY], [kX, kY], [aX, aY] ].forEach(pt => {
-        ctx.beginPath(); ctx.arc(pt, pt[5], 8, 0, 2*Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(pt, pt[2], 8, 0, 2*Math.PI); ctx.fill();
     });
 });
 

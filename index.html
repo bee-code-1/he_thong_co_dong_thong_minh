@@ -2624,7 +2624,7 @@ window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
     window.squatState = "up";
     const ptModal = document.getElementById('phong-tap-trong-nha-modal');
     document.getElementById('indoor-exercise-name').innerText = tenBaiTap + " : 0 cái";
-    document.getElementById('indoor-ai-status').innerText = "Đang khởi động Mắt thần AI...";
+    document.getElementById('indoor-ai-status').innerText = "Đang khởi động AI ...";
     document.getElementById('indoor-ai-status').style.color = "#ffc107";
     ptModal.style.display = 'flex';
 
@@ -2647,7 +2647,7 @@ window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap) {
         };
         
     } catch (err) {
-        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Cậu chưa cấp quyền!";
+        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Bạn chưa cấp quyền!";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
     }
 };

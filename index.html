@@ -2709,8 +2709,8 @@ window.meoNoi = function(text) {
 
     let msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'vi-VN';
-    msg.pitch = 2.0; // Giọng chíp măng (chipmunk) kịch kim
-    msg.rate = 1.2;
+    msg.pitch = 1.5;
+    msg.rate = 0.9;
     msg.onend = () => { window.isMeoSpeaking = false; };
     window.speechSynthesis.speak(msg);
 };

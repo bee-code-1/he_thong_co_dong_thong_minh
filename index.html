@@ -3629,20 +3629,6 @@ window.dangXuat = function() {
         }
     });
 };
-    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-        // 1.  tắt theo dõi GPS nếu đang chạy dở
-        if (typeof window.handleEndClick === 'function') window.handleEndClick();
-        
-        // 2. Cắt đứt kết nối lắng nghe Firebase của Acc cũ 
-        if (typeof window.db !== 'undefined') window.db.ref().off();
-        
-        // 3. Xóa danh tính trong bộ nhớ thiết bị
-        localStorage.removeItem('currentUser');
-        
-        // 4. F5 Tải lại toàn bộ trang web để reset 100% bộ nhớ & Giao diện
-        window.location.reload();
-    }
-};
 
 // === TỰ ĐỘNG ĐĂNG NHẬP HOẶC BẬT GIỚI THIỆU (CÓ VUỐT CHẠM) ===
 let currentSlide = 0;

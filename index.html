@@ -2871,21 +2871,33 @@ window.indoorPoseModel.onResults((results) => {
 }
 }
 
-// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ) [ĐÃ FIX LOGIC & KHUNG GIAO DIỆN]
+// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ) [BẢN UPDATE: ĐƯỜNG CONG BEZIER & CƠ SINH HỌC CHẬU]
 else if (window.currentBaiTap === "cat_cow") {
-    // VẼ KHUNG "CÁI BÀN" SÁNG RỰC: Cổ tay -> Khuỷu -> Vai -> Hông -> Đầu gối
-    // Điều này giúp người dùng nhìn thấy toàn bộ sự chuyển động của trục lưng và tay chống
-    ctx.moveTo(wX, wY); ctx.lineTo(eX, eY); ctx.lineTo(sX, sY); // Trục tay
-    ctx.lineTo(hX, hY); // Trục cột sống
-    ctx.lineTo(kX, kY); // Trục đùi
-    ctx.strokeStyle = "#ff00ff"; // Đổi sang màu Hồng Neon cho khác bọt hẳn
+    let backAngle = calculateAngle(shoulder, hip, knee); // Đo góc khung chậu làm Input
     
-    // Quỳ bình thường góc ~90. Gù lưng (Mèo) góc > 110. Võng lưng (Bò) góc < 85.
-    let backAngle = calculateAngle(shoulder, hip, knee);
+    // THUẬT TOÁN TẠO CỘT SỐNG ẢO (Điểm kiểm soát Bezier)
+    let midX = (sX + hX) / 2;
+    let midY = (sY + hY) / 2;
     
-    if (backAngle > 110) { // CỰC ĐẠI 1: Tư thế Mèo (Cuộn hông, gù lưng lên cao)
+    // Góc < 90 (Mèo) -> offset dương -> đẩy Y lên cao. Góc > 90 (Bò) -> kéo Y xuống sâu
+    let offset = (90 - backAngle) * 2.5; 
+    let controlX = midX;
+    let controlY = midY - offset; // Trục Y canvas lộn ngược nên dùng phép Trừ
+
+    // VẼ KHUNG: Tay chống đất -> Khuỷu -> Vai
+    ctx.moveTo(wX, wY); ctx.lineTo(eX, eY); ctx.lineTo(sX, sY); 
+    
+    // VẼ ĐƯỜNG CONG LƯNG BÉZIER (Cột sống ảo sẽ uốn lượn nhô lên/hạ xuống)
+    ctx.quadraticCurveTo(controlX, controlY, hX, hY);
+    
+    // Vẽ tiếp Hông -> Gối
+    ctx.lineTo(kX, kY);
+    ctx.strokeStyle = "#ff00ff"; // Hồng Neon
+    
+    // LOGIC ĐẾM SỐ DỰA VÀO ĐỘ MỞ CỦA HÔNG
+    if (backAngle < 80) { // CỰC ĐẠI 1: Tư thế Mèo (Cuộn hông vào, góc nhỏ lại)
         if (window.squatState === "up") window.squatState = "down"; 
-    } else if (backAngle < 85) { // CỰC ĐẠI 2: Tư thế Bò (Vểnh mông, võng lưng xuống)
+    } else if (backAngle > 100) { // CỰC ĐẠI 2: Tư thế Bò (Vểnh mông lên, góc mở ra)
         if (window.squatState === "down") {
             window.squatState = "up";
             if (currentTime - window.lastRepTime > 1500) {
@@ -2894,14 +2906,13 @@ else if (window.currentBaiTap === "cat_cow") {
                 document.getElementById('indoor-exercise-name').innerText = `Cat-Cow: ${window.reps} cái`;
                 const modalBg = document.getElementById('phong-tap-trong-nha-modal');
                 modalBg.style.transition = "background-color 0.3s ease";
-                modalBg.style.backgroundColor = "#ff99cc"; // Chớp nền hồng báo hiệu 1 rep
+                modalBg.style.backgroundColor = "#ff99cc"; 
                 setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
                 if(window.reps === window.targetReps) window.meoNoi("Tuyệt vời! Cột sống của cậu đã được giải phóng!");
             }
         }
     }
 }
-
 // 🌉 BÀI TẬP 4: GLUTE BRIDGE (CÂY CẦU)
 else if (window.currentBaiTap === "glute_bridge") {
     ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY);

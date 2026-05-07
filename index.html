@@ -3699,8 +3699,22 @@ window.capNhatHeThongLevel = function(tongCalo) {
     if (!tongCalo) tongCalo = 0;
     const user = localStorage.getItem('currentUser');
     if (!user) return;
-
+    
     let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+
+    // ĐÃ FIX: HỆ THỐNG TỰ ĐỘNG KHÔI PHỤC CẤP ĐỘ (AUTO-RECOVERY)
+    // Tính toán cấp độ đáng lẽ phải đạt được theo công thức: Level = sqrt(EXP/2)
+    let eligibleLevel = Math.floor(Math.sqrt(tongCalo / 2));
+    if (eligibleLevel < 1) eligibleLevel = 1;
+    if (eligibleLevel > 1203) eligibleLevel = 1203;
+
+    // Nếu khoảng cách giữa Cấp thực tế và Cấp đang lưu > 1 (Bị mất LocalStorage) -> Tự động khôi phục!
+    // (Vẫn chừa lại khoảng cách = 1 để người dùng tự bấm nút lên cấp bình thường cho sướng tay)
+    if (eligibleLevel - currentLevel > 1) {
+        currentLevel = eligibleLevel;
+        localStorage.setItem('user_level_' + user, currentLevel);
+    }
+
     if (currentLevel > 1203) currentLevel = 1203;
 
     // CÔNG THỨC MỚI: 1 Calo = 1 EXP. EXP Cần = 2 * (Level^2)
@@ -3734,10 +3748,17 @@ window.nhanThuongLenCap = function() {
     window.phatAmThanh('lv_up');
     const user = localStorage.getItem('currentUser');
     let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+    
     if (currentLevel < 1203) {
         currentLevel += 1;
         localStorage.setItem('user_level_' + user, currentLevel);
-        alert(`🎉 ĐỈNH CAO! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
+        
+        // ĐỒNG BỘ LÊN FIREBASE ĐỂ BẤT TỬ LEVEL (Backup đám mây)
+        if (typeof window.db !== 'undefined') {
+            window.db.ref('nguoi_dung/' + user).update({ cap_do: currentLevel });
+        }
+        
+        alert(`🎉 ĐỈNH! Bạn vừa bứt phá lên Cấp ${currentLevel}!`);
         
         // Quét lại vạch Level bằng Calo
         let textCalo = document.getElementById('tong-calo-tab2').innerText;

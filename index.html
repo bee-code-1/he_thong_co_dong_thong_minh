@@ -2871,30 +2871,17 @@ window.indoorPoseModel.onResults((results) => {
 }
 }
 
-// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ) [BẢN UPDATE: ĐƯỜNG CONG BEZIER & CƠ SINH HỌC CHẬU]
+// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ) 
 else if (window.currentBaiTap === "cat_cow") {
-    let backAngle = calculateAngle(shoulder, hip, knee); // Đo góc khung chậu làm Input
+    // VẼ KHUNG ỔN ĐỊNH: Nối Cổ tay -> Khuỷu -> Vai -> Hông -> Gối bằng đường thẳng
+    ctx.moveTo(wX, wY); ctx.lineTo(eX, eY); ctx.lineTo(sX, sY); // Cánh tay chống
+    ctx.lineTo(hX, hY); // Trục lưng thẳng (Không dùng Bezier nữa cho mượt)
+    ctx.lineTo(kX, kY); // Trục đùi
+    ctx.strokeStyle = "#20c997"; // Trả về màu Xanh ngọc bích đồng bộ với app
     
-    // THUẬT TOÁN TẠO CỘT SỐNG ẢO (Điểm kiểm soát Bezier)
-    let midX = (sX + hX) / 2;
-    let midY = (sY + hY) / 2;
+    // LOGIC ĐẾM SỐ GIỮ NGUYÊN (Dựa vào độ cuộn của xương chậu)
+    let backAngle = calculateAngle(shoulder, hip, knee);
     
-    // Góc < 90 (Mèo) -> offset dương -> đẩy Y lên cao. Góc > 90 (Bò) -> kéo Y xuống sâu
-    let offset = (90 - backAngle) * 2.5; 
-    let controlX = midX;
-    let controlY = midY - offset; // Trục Y canvas lộn ngược nên dùng phép Trừ
-
-    // VẼ KHUNG: Tay chống đất -> Khuỷu -> Vai
-    ctx.moveTo(wX, wY); ctx.lineTo(eX, eY); ctx.lineTo(sX, sY); 
-    
-    // VẼ ĐƯỜNG CONG LƯNG BÉZIER (Cột sống ảo sẽ uốn lượn nhô lên/hạ xuống)
-    ctx.quadraticCurveTo(controlX, controlY, hX, hY);
-    
-    // Vẽ tiếp Hông -> Gối
-    ctx.lineTo(kX, kY);
-    ctx.strokeStyle = "#ff00ff"; // Hồng Neon
-    
-    // LOGIC ĐẾM SỐ DỰA VÀO ĐỘ MỞ CỦA HÔNG
     if (backAngle < 80) { // CỰC ĐẠI 1: Tư thế Mèo (Cuộn hông vào, góc nhỏ lại)
         if (window.squatState === "up") window.squatState = "down"; 
     } else if (backAngle > 100) { // CỰC ĐẠI 2: Tư thế Bò (Vểnh mông lên, góc mở ra)
@@ -2906,7 +2893,7 @@ else if (window.currentBaiTap === "cat_cow") {
                 document.getElementById('indoor-exercise-name').innerText = `Cat-Cow: ${window.reps} cái`;
                 const modalBg = document.getElementById('phong-tap-trong-nha-modal');
                 modalBg.style.transition = "background-color 0.3s ease";
-                modalBg.style.backgroundColor = "#ff99cc"; 
+                modalBg.style.backgroundColor = "#81c784"; // Chớp nền báo 1 rep
                 setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
                 if(window.reps === window.targetReps) window.meoNoi("Tuyệt vời! Cột sống của cậu đã được giải phóng!");
             }

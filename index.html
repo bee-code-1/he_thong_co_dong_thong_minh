@@ -1237,7 +1237,64 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
                 </div>
             </div>
 
-            <!-- BÀI TẬP 3: QUY TẮC 20-20-20 (BẢO VỆ MẮT - KHÔNG DÙNG CAMERA) -->
+<!-- BÀI TẬP 3: CAT-COW (MÈO BÒ) -->
+<div style="background: #ede7f6; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #c5cae9; margin-bottom: 15px;">
+<div onclick="window.toggleChiTietBaiTap('vid-catcow')" style="display: flex; padding: 15px; cursor: pointer; align-items: center; gap: 15px;">
+<div style="width: 70px; height: 70px; background: #7986cb; border-radius: 15px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 35px;">🐈</div>
+<div style="flex: 1; text-align: left;">
+<div style="font-weight: 900; font-size: 16px; color: #283593; margin-bottom: 5px;">Cat-Cow (Mèo - Bò)</div>
+<div style="font-size: 12px; color: #555; line-height: 1.4;">Giải tỏa vùng thắt lưng, bôi trơn đĩa đệm do ngồi quá lâu.</div>
+</div>
+</div>
+<div id="vid-catcow" style="display: none; padding: 0 15px 15px; border-top: 1px dashed #7986cb; padding-top: 15px;">
+<div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 10px; border-radius: 12px;">
+<span style="font-size: 14px; font-weight: bold; color: #555;">Mục tiêu hôm nay:</span>
+<input type="number" id="target-catcow" value="15" style="width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold; color: #3f51b5;">
+<span style="font-size: 14px; color: #888;">cái</span>
+</div>
+<button onclick="window.batDauTapTrongNha('cat_cow', 'Cat-Cow (Mèo - Bò)', document.getElementById('target-catcow').value)" style="width: 100%; padding: 12px; background: #3f51b5; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(63,81,181,0.3);">▶ BẮT ĐẦU TẬP</button>
+</div>
+</div>
+
+<!-- BÀI TẬP 4: GLUTE BRIDGE (CÂY CẦU) -->
+        <div style="background: #fce4ec; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f8bbd0; margin-bottom: 15px;">
+        <div onclick="window.toggleChiTietBaiTap('vid-bridge')" style="display: flex; padding: 15px; cursor: pointer; align-items: center; gap: 15px;">
+        <div style="width: 70px; height: 70px; background: #f48fb1; border-radius: 15px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 35px;">🌉</div>
+        <div style="flex: 1; text-align: left;">
+        <div style="font-weight: 900; font-size: 16px; color: #c2185b; margin-bottom: 5px;">Glute Bridge (Cây cầu)</div>
+        <div style="font-size: 12px; color: #555; line-height: 1.4;">Đánh thức cơ mông, củng cố cơ lõi để bảo vệ cột sống dưới.</div>
+        </div>
+    </div>
+<div id="vid-bridge" style="display: none; padding: 0 15px 15px; border-top: 1px dashed #f48fb1; padding-top: 15px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 10px; border-radius: 12px;">
+            <span style="font-size: 14px; font-weight: bold; color: #555;">Mục tiêu hôm nay:</span>
+            <input type="number" id="target-bridge" value="15" style="width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold; color: #e91e63;">
+            <span style="font-size: 14px; color: #888;">cái</span>
+        </div>
+        <button onclick="window.batDauTapTrongNha('glute_bridge', 'Glute Bridge', document.getElementById('target-bridge').value)" style="width: 100%; padding: 12px; background: #e91e63; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(233,30,99,0.3);">▶ BẮT ĐẦU TẬP</button>
+    </div>
+</div>
+
+<!-- BÀI TẬP 5: KNEE EXTENSION -->
+<div style="background: #e0f7fa; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #b2ebf2; margin-bottom: 15px;">
+<div onclick="window.toggleChiTietBaiTap('vid-knee')" style="display: flex; padding: 15px; cursor: pointer; align-items: center; gap: 15px;">
+<div style="width: 70px; height: 70px; background: #4dd0e1; border-radius: 15px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 35px;">🪑</div>
+<div style="flex: 1; text-align: left;">
+<div style="font-weight: 900; font-size: 16px; color: #00838f; margin-bottom: 5px;">Duỗi gối tại bàn</div>
+<div style="font-size: 12px; color: #555; line-height: 1.4;">Tập cơ đùi trước ngay tại ghế làm việc, ngăn ngừa kêu lạo xạo khớp gối.</div>
+</div>
+</div>
+<div id="vid-knee" style="display: none; padding: 0 15px 15px; border-top: 1px dashed #4dd0e1; padding-top: 15px;">
+<div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: white; padding: 10px; border-radius: 12px;">
+<span style="font-size: 14px; font-weight: bold; color: #555;">Mục tiêu hôm nay:</span>
+<input type="number" id="target-knee" value="15" style="width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold; color: #00acc1;">
+<span style="font-size: 14px; color: #888;">cái</span>
+</div>
+<button onclick="window.batDauTapTrongNha('knee_extension', 'Duỗi gối tại bàn', document.getElementById('target-knee').value)" style="width: 100%; padding: 12px; background: #00acc1; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,172,193,0.3);">▶ BẮT ĐẦU TẬP</button>
+</div>
+</div>
+
+<!-- BÀI TẬP 6: QUY TẮC 20-20-20 (BẢO VỆ MẮT - KHÔNG DÙNG CAMERA) -->
             <div style="background: #fff3e0; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #ffe082;">
                 <div style="display: flex; padding: 15px; align-items: center; gap: 15px;">
                     <div style="width: 70px; height: 70px; background: #ffcc80; border-radius: 15px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 35px;">👀</div>
@@ -2799,9 +2856,84 @@ window.indoorPoseModel.onResults((results) => {
         } else if (shoulderAngle > 120 && elbowAngle < 80 && window.squatState === "up") {
             ctx.strokeStyle = "#dc3545"; 
             window.meoNoi("Mở rộng lồng ngực ra, đừng rụt tay lại!");
+}
+}
+
+// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ)
+else if (window.currentBaiTap === "cat_cow") {
+    // Vẽ nét nối Vai -> Hông -> Gối
+    ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY);
+    let backAngle = calculateAngle(shoulder, hip, knee);
+    ctx.strokeStyle = "#20c997";
+    
+    if (backAngle < 140) { // Tư thế Mèo (Gù lưng lên)
+        if (window.squatState === "up") window.squatState = "down"; 
+    } else if (backAngle > 165) { // Tư thế Bò (Võng lưng xuống)
+        if (window.squatState === "down") {
+            window.squatState = "up";
+            if (currentTime - window.lastRepTime > 1500) {
+                window.lastRepTime = currentTime; window.reps++;
+                window.meoNoi(window.reps.toString());
+                document.getElementById('indoor-exercise-name').innerText = `Cat-Cow: ${window.reps} cái`;
+                const modalBg = document.getElementById('phong-tap-trong-nha-modal');
+                modalBg.style.backgroundColor = "#81c784";
+                setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
+                if(window.reps === window.targetReps) window.meoNoi("Cột sống dẻo dai rồi đấy!");
+            }
         }
     }
-    ctx.stroke();
+}
+
+// 🌉 BÀI TẬP 4: GLUTE BRIDGE (CÂY CẦU)
+else if (window.currentBaiTap === "glute_bridge") {
+    ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY);
+    let hipAngle = calculateAngle(shoulder, hip, knee);
+    ctx.strokeStyle = "#20c997";
+    
+    if (hipAngle < 130) { // Hạ mông chạm sàn
+        if (window.squatState === "up") window.squatState = "down"; 
+    } else if (hipAngle > 165) { // Đẩy hông lên thành đường thẳng
+        if (window.squatState === "down") {
+            window.squatState = "up";
+            if (currentTime - window.lastRepTime > 1500) {
+                window.lastRepTime = currentTime; window.reps++;
+                window.meoNoi(window.reps.toString());
+                document.getElementById('indoor-exercise-name').innerText = `Cây Cầu: ${window.reps} cái`;
+                const modalBg = document.getElementById('phong-tap-trong-nha-modal');
+                modalBg.style.backgroundColor = "#81c784";
+                setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
+                if(window.reps === window.targetReps) window.meoNoi("Cơ mông siết chặt lắm!");
+            }
+        }
+    }
+}
+
+// 🪑 BÀI TẬP 5: KNEE EXTENSION (DUỖI GỐI TẠI BÀN)
+else if (window.currentBaiTap === "knee_extension") {
+    // Vẽ nét nối Hông -> Gối -> Mắt cá
+    ctx.moveTo(hX, hY); ctx.lineTo(kX, kY); ctx.lineTo(aX, aY);
+    let kneeAngle = calculateAngle(hip, knee, ankle);
+    ctx.strokeStyle = "#20c997";
+    
+    if (kneeAngle < 110) { // Chân gập vuông góc chạm đất
+        if (window.squatState === "up") window.squatState = "down"; 
+    } else if (kneeAngle > 160) { // Duỗi thẳng tắp chân
+        if (window.squatState === "down") {
+            window.squatState = "up";
+            if (currentTime - window.lastRepTime > 1500) {
+                window.lastRepTime = currentTime; window.reps++;
+                window.meoNoi(window.reps.toString());
+                document.getElementById('indoor-exercise-name').innerText = `Duỗi Gối: ${window.reps} cái`;
+                const modalBg = document.getElementById('phong-tap-trong-nha-modal');
+                modalBg.style.backgroundColor = "#81c784";
+                setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
+                if(window.reps === window.targetReps) window.meoNoi("Khớp gối trơn tru rồi!");
+            }
+        }
+    }
+}
+
+ctx.stroke();
 });
 
 // 4. BẤM BẮT ĐẦU VÀ GỌI CAMERA

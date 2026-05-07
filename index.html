@@ -4106,6 +4106,39 @@ window.kiemTraVaTaoRuong = function(userLat, userLng) {
     }
 };
 
+// === HÀM VẼ RƯƠNG VÀ POPUP (ĐÃ FIX: LIVE UPDATE KHOẢNG CÁCH) ===
+window.capNhatNoiDungPopupRuong = function(markerObj, chestObj) {
+    let myLat = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lat : null;
+    let myLng = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lng : null;
+    let khoangCach = myLat ? map.distance([myLat, myLng], [chestObj.lat, chestObj.lng]) : 9999;
+    
+    let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
+    let openBtnStyle = "display:block; width:100%; padding:10px; margin-top:8px; background:#28a745; color:white; border:2px solid #fff; border-radius:8px; cursor:pointer; font-weight:900; animation: catPulse 1.5s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.3);";
+    let buttonChiDuong = `<button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chestObj.lat}, ${chestObj.lng})">📍 Chỉ đường đến đây</button>`;
+    
+    let popupHTML = '';
+    if (khoangCach <= 2000) { //khoảng cách mở rương tính bằng m
+        popupHTML = `
+        <div style="text-align:center; min-width: 160px;">
+        <div style="font-size:30px;">🎁</div>
+        <strong style="color:#28a745;">Đã trong tầm bắt! Mở ngay!</strong>
+        <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+        <button style="${openBtnStyle}" onclick="window.xuLyMoRuongThuCong('${chestObj.id}')">✨ MỞ RƯƠNG NGAY ✨</button>
+        </div>`;
+    } else {
+        popupHTML = `
+        <div style="text-align:center; min-width: 160px;">
+        <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
+        <strong style="color:#dc3545;">Cách cậu ${Math.round(khoangCach)}m</strong><br>
+        <span style="font-size: 12px; color: #555;">Bước vào vòng tròn (20m) để mở!</span>
+        <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
+        ${buttonChiDuong}
+        </div>`;
+    }
+    // Dùng setPopupContent thay vì bindPopup để Live Update mượt mà không bị giật
+    markerObj.setPopupContent(popupHTML);
+};
+
 window.veRuongLenBanDo = function() {
     if (!window.chestLayerGroup) return;
     window.chestLayerGroup.clearLayers();
@@ -4116,62 +4149,40 @@ window.veRuongLenBanDo = function() {
         if (!chest.opened) {
             // 1. VẼ VÒNG TRÒN BÁN KÍNH 20M BAO QUANH RƯƠNG
             L.circle([chest.lat, chest.lng], {
-                color: '#ffc107',
-                fillColor: '#ffc107',
-                fillOpacity: 0.2,
-                radius: 20
+                color: '#ffc107', fillColor: '#ffc107', fillOpacity: 0.2, radius: 20
             }).addTo(window.chestLayerGroup);
-
+            
             // 2. VẼ ICON DẤU CHẤM HỎI THẦN THÁNH
             let icon = L.divIcon({
                 className: 'chest-icon',
                 html: `<div style="font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: catPulse 2s infinite;">❓</div>`,
                 iconSize: L.point(30, 30), iconAnchor: L.point(15, 15)
             });
+            
             let m = L.marker([chest.lat, chest.lng], {icon: icon}).addTo(window.chestLayerGroup);
-
+            
+            // Khởi tạo một vỏ Popup rỗng để Leaflet không bị lỗi hiển thị đè
+            m.bindPopup('<div style="text-align:center;">Đang quét GPS...</div>');
+            m.chestData = chest; // Lưu data rương vào marker để dùng sau
+            
             // 3. TƯƠNG TÁC POPUP ĐỘNG (Đo khoảng cách thời gian thực khi Click)
             m.on('click', function() {
-                let myLat = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lat : null;
-                let myLng = typeof latestLatLng !== 'undefined' && latestLatLng ? latestLatLng.lng : null;
-                let khoangCach = myLat ? map.distance([myLat, myLng], [chest.lat, chest.lng]) : 9999;
-
-                let btnStyle = "display:block; width:100%; padding:8px; margin-top:8px; background:#004BAd; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;";
-                let openBtnStyle = "display:block; width:100%; padding:10px; margin-top:8px; background:#28a745; color:white; border:2px solid #fff; border-radius:8px; cursor:pointer; font-weight:900; animation: catPulse 1.5s infinite; box-shadow: 0 4px 6px rgba(0,0,0,0.3);";
-                let buttonChiDuong = `<button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chest.lat}, ${chest.lng})">📍 Chỉ đường đến đây</button>`;
-                let popupHTML = '';
-
-                if (khoangCach <= 20) {
-                    popupHTML = `
-                        <div style="text-align:center; min-width: 160px;">
-                            <div style="font-size:30px;">🎁</div>
-                            <strong style="color:#28a745;">Đã trong tầm bắt! Mở ngay!</strong>
-                            <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-                            <button style="${openBtnStyle}" onclick="window.xuLyMoRuongThuCong('${chest.id}')">✨ MỞ RƯƠNG NGAY ✨</button>
-                        </div>
-                    `;
-                } else {
-                    popupHTML = `
-                        <div style="text-align:center; min-width: 160px;">
-                            <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
-                            <strong style="color:#dc3545;">Cách cậu ${Math.round(khoangCach)}m</strong><br>
-                            <span style="font-size: 12px; color: #555;">Bước vào vòng tròn (20m) để mở!</span>
-                            <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-                            ${buttonChiDuong}
-                        </div>
-                    `;
-                }
-                m.bindPopup(popupHTML).openPopup();
+                window.capNhatNoiDungPopupRuong(m, chest);
             });
         }
     });
 };
 
+// ĐÃ FIX: BẬT LẠI TÍNH NĂNG QUÉT KHOẢNG CÁCH THỜI GIAN THỰC (LIVE UPDATE POPUP)
 window.kiemTraKhoangCachRuong = function(userLat, userLng) {
-    // 🛑 Đã tắt hệ thống Auto-mở rương để chống cướp giật! 
-    // Mọi tương tác giờ nhường hết cho người dùng Click thủ công.
+    if (!window.chestLayerGroup) return;
+    window.chestLayerGroup.eachLayer(layer => {
+        // Nếu người dùng đang mở Popup của rương này -> Cập nhật số mét thời gian thực!
+        if (layer instanceof L.Marker && layer.isPopupOpen() && layer.chestData) {
+            window.capNhatNoiDungPopupRuong(layer, layer.chestData);
+        }
+    });
 };
-
 // HÀM MỚI: XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT "✨ MỞ RƯƠNG NGAY ✨"
 window.xuLyMoRuongThuCong = function(chestId) {
     map.closePopup(); // Tắt bong bóng thoại

@@ -2871,16 +2871,21 @@ window.indoorPoseModel.onResults((results) => {
 }
 }
 
-// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ)
+// 🐈 BÀI TẬP 3: CAT-COW (MÈO BÒ) [ĐÃ FIX LOGIC & KHUNG GIAO DIỆN]
 else if (window.currentBaiTap === "cat_cow") {
-    // Vẽ nét nối Vai -> Hông -> Gối
-    ctx.moveTo(sX, sY); ctx.lineTo(hX, hY); ctx.lineTo(kX, kY);
-    let backAngle = calculateAngle(shoulder, hip, knee);
-    ctx.strokeStyle = "#20c997";
+    // VẼ KHUNG "CÁI BÀN" SÁNG RỰC: Cổ tay -> Khuỷu -> Vai -> Hông -> Đầu gối
+    // Điều này giúp người dùng nhìn thấy toàn bộ sự chuyển động của trục lưng và tay chống
+    ctx.moveTo(wX, wY); ctx.lineTo(eX, eY); ctx.lineTo(sX, sY); // Trục tay
+    ctx.lineTo(hX, hY); // Trục cột sống
+    ctx.lineTo(kX, kY); // Trục đùi
+    ctx.strokeStyle = "#ff00ff"; // Đổi sang màu Hồng Neon cho khác bọt hẳn
     
-    if (backAngle < 140) { // Tư thế Mèo (Gù lưng lên)
+    // Quỳ bình thường góc ~90. Gù lưng (Mèo) góc > 110. Võng lưng (Bò) góc < 85.
+    let backAngle = calculateAngle(shoulder, hip, knee);
+    
+    if (backAngle > 110) { // CỰC ĐẠI 1: Tư thế Mèo (Cuộn hông, gù lưng lên cao)
         if (window.squatState === "up") window.squatState = "down"; 
-    } else if (backAngle > 165) { // Tư thế Bò (Võng lưng xuống)
+    } else if (backAngle < 85) { // CỰC ĐẠI 2: Tư thế Bò (Vểnh mông, võng lưng xuống)
         if (window.squatState === "down") {
             window.squatState = "up";
             if (currentTime - window.lastRepTime > 1500) {
@@ -2888,9 +2893,10 @@ else if (window.currentBaiTap === "cat_cow") {
                 window.meoNoi(window.reps.toString());
                 document.getElementById('indoor-exercise-name').innerText = `Cat-Cow: ${window.reps} cái`;
                 const modalBg = document.getElementById('phong-tap-trong-nha-modal');
-                modalBg.style.backgroundColor = "#81c784";
+                modalBg.style.transition = "background-color 0.3s ease";
+                modalBg.style.backgroundColor = "#ff99cc"; // Chớp nền hồng báo hiệu 1 rep
                 setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
-                if(window.reps === window.targetReps) window.meoNoi("Cột sống dẻo dai rồi đấy!");
+                if(window.reps === window.targetReps) window.meoNoi("Tuyệt vời! Cột sống của cậu đã được giải phóng!");
             }
         }
     }

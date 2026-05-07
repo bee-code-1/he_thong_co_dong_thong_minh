@@ -7358,6 +7358,7 @@ let targetAlpha = 0, targetBeta = 75;
 // 1. MỞ CAMERA VÀ BẬT AR
 // 1. MỞ CAMERA VÀ BẬT AR (CÓ XIN QUYỀN BẢO MẬT CỦA APPLE)
 window.moManHinhBatMeo = async function() {
+    document.getElementById('bottom-nav').classList.add('nav-hidden'); // 👈 GIẤU THANH TÁC VỤ
     document.getElementById('ar-catch-screen').style.display = 'block';
     document.getElementById('ar-success-popup').style.display = 'none';
     const video = document.getElementById('ar-camera-video');
@@ -7385,13 +7386,18 @@ window.moManHinhBatMeo = async function() {
         window.addEventListener('deviceorientation', handleOrientation);
     }
     
-    teleportCat(); // Thả mèo xuống đất lần đầu
+    setTimeout(() => { teleportCat(); }, 500);  // Thả mèo xuống đất lần đầu
 };
 
 window.dongARCat = function() {
     document.getElementById('ar-catch-screen').style.display = 'none';
     if (arStream) { arStream.getTracks().forEach(track => track.stop()); arStream = null; }
     window.removeEventListener('deviceorientation', handleOrientation);
+    
+    // HIỆN LẠI THANH TÁC VỤ (Chỉ hiện nếu không đang trong chuyến chạy bộ)
+    if(typeof isTracking !== 'undefined' && !isTracking) {
+        document.getElementById('bottom-nav').classList.remove('nav-hidden');
+    }
 };
 
 // 2. GYROSCOPE: TỐI ƯU HÓA TOÁN HỌC (GHÌM MÈO TRONG MÀN HÌNH)

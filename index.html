@@ -2533,7 +2533,6 @@ window.dongDanhSachBaiTap = function() {
     const listModal = document.getElementById('danh-sach-bai-tap-modal');
     if (listModal) listModal.style.display = 'none';
 
-    // 👈 TRẢ LẠI THANH CÔNG CỤ (Nếu không đang ở chế độ chạy bộ)
     const nav = document.getElementById('bottom-nav');
     if (nav && typeof isTracking !== 'undefined' && !isTracking) {
         nav.classList.remove('nav-hidden');
@@ -2590,7 +2589,7 @@ window.meoNoi = function(text) {
     if (!window.speechSynthesis || window.isMeoSpeaking) return;
     window.isMeoSpeaking = true;
 
-    // 🛑 NẾU LÀ CÂU CHỬI MẮNG (Không phải số đếm) -> CHỚP NỀN ĐỎ
+    //  NẾU LÀ CÂU CHỬI MẮNG (Không phải số đếm) -> CHỚP NỀN ĐỎ
     if (isNaN(text) && window.indoorStreamRunning) {
         const modalBg = document.getElementById('phong-tap-trong-nha-modal');
         if (modalBg) {
@@ -2645,8 +2644,9 @@ window.indoorPoseModel.onResults((results) => {
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    let shoulder = lm[1]; let hip = lm[2]; let knee = lm[3]; let ankle = lm[4];
-    let elbow = lm[5]; let wrist = lm[6];
+    //mốc 12 đến 28
+    let shoulder = lm[7]; let hip = lm[8]; let knee = lm[9]; let ankle = lm[10];
+    let elbow = lm[11]; let wrist = lm[12]
     
     let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
     let kX = knee.x * canvas.width; let kY = knee.y * canvas.height;

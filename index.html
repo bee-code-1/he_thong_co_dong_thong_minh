@@ -7,8 +7,8 @@
     <!-- Icon hiển thị trên tab trình duyệt -->
     <link rel="icon" type="image/png" href="logo_app_nen_trang.png">
     <!-- Khai báo cho iOS/Android biết đây là Web App xịn -->
-    <meta name="apple-mobile-web-app-title" content="CMD Run">
-    <meta name="application-name" content="CMD Run">
+    <meta name="apple-mobile-web-app-title" content="CMD Health">
+    <meta name="application-name" content="CMD Health">
     <meta name="theme-color" content="#28a745">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> <!-- MỚI ADD VÀO ĐÂY -->
@@ -5632,21 +5632,35 @@ window.toggleLaiNhai = function(e) {
 };
 
 window.duoiMeo = function(e) {
-if(e) e.stopPropagation();
-if(confirm("Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!")) {
-window.phatAmThanh('meow_1'); //  MÈO KÊU LÊN KHI BỊ ĐUỔI
-window.dongMenuMeo();
-        // Hiệu ứng dọn đồ bay đi mất
-        const cat = document.getElementById('cat-assistant');
-        if(cat) {
-            cat.style.transition = "transform 1s ease-in, opacity 1s ease";
-            cat.style.transform = "translateY(-200px) scale(0)";
-            cat.style.opacity = "0";
+    if(e) e.stopPropagation();
+    
+    // Gọi Custom Alert thay cho confirm() phèn
+    window.moCustomAlert({
+        type: 'confirm', 
+        icon: '😿', 
+        title: 'Đuổi Mèo?', 
+        titleColor: '#dc3545',
+        message: 'Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!', 
+        confirmColor: '#dc3545',
+        callback: function(confirmed) {
+            if(confirmed) {
+                window.phatAmThanh('meow_1'); //  MÈO KÊU LÊN KHI BỊ ĐUỔI
+                window.dongMenuMeo();
+                
+                // Hiệu ứng dọn đồ bay đi mất
+                const cat = document.getElementById('cat-assistant');
+                if(cat) {
+                    cat.style.transition = "transform 1s ease-in, opacity 1s ease";
+                    cat.style.transform = "translateY(-200px) scale(0)";
+                    cat.style.opacity = "0";
+                }
+                
+                setTimeout(() => {
+                    window.hieuUngMeoBoNha(); // GỌI LUỒNG LOGIC VÀ ĐẾM NGƯỢC
+                }, 1000);
+            }
         }
-        setTimeout(() => {
-            window.hieuUngMeoBoNha(); // GỌI LUỒNG LOGIC VÀ ĐẾM NGƯỢC
-        }, 1000);
-    }
+    });
 };
 
 // Đóng menu Mèo khi chạm ra ngoài (Bản Siêu Việt - Vượt mặt Leaflet)

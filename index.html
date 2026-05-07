@@ -2635,29 +2635,55 @@ window.indoorPoseModel.onResults((results) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!results.poseLandmarks) {
-        document.getElementById('indoor-ai-status').innerText = "⚠️ Lùi ra xa để Mèo nhìn thấy cậu!";
+        document.getElementById('indoor-ai-status').innerText = "⚠️ Lùi ra xa !";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
         return;
     }
 
-    document.getElementById('indoor-ai-status').innerText = "✅ Tư thế chuẩn! Bắt đầu tập đi!";
+    document.getElementById('indoor-ai-status').innerText = "✅ Tư thế chuẩn! Bắt đầu tập !";
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    //mốc 12 đến 28
-    let shoulder = lm[7]; let hip = lm[8]; let knee = lm[9]; let ankle = lm[10];
-    let elbow = lm[11]; let wrist = lm[12]
-    
-    let hX = hip.x * canvas.width; let hY = hip.y * canvas.height;
-    let kX = knee.x * canvas.width; let kY = knee.y * canvas.height;
-    let aX = ankle.x * canvas.width; let aY = ankle.y * canvas.height;
-    let sX = shoulder.x * canvas.width; let sY = shoulder.y * canvas.height;
-    let eX = elbow.x * canvas.width; let eY = elbow.y * canvas.height;
-    let wX = wrist.x * canvas.width; let wY = wrist.y * canvas.height;
+ // ĐÃ FIX: LẤY TOÀN BỘ KHUNG XƯƠNG 3D CHUẨN Y KHOA (CẢ TRÁI & PHẢI)
+    // Phải: Vai(12), Khuỷu(14), Cổ tay(16), Hông(24), Gối(26), Mắt cá(28)
+    // Trái: Vai(11), Khuỷu(13), Cổ tay(15), Hông(23), Gối(25), Mắt cá(27)
+    let sR = lm[1], eR = lm[5], wR = lm[6], hR = lm[2], kR = lm[3], aR = lm[4];
+    let sL = lm[7], eL = lm[8], wL = lm[9], hL = lm[10], kL = lm[11], aL = lm[12];
 
+    // Hàm phụ: Chuyển đổi nhanh tọa độ 3D ra màn hình 2D
+    const getX = (point) => point.x * canvas.width;
+    const getY = (point) => point.y * canvas.height;
+
+    // VẼ LỚP NỀN: BỘ KHUNG XƯƠNG TOÀN THÂN (MÀU VÀNG NHẠT)
+    ctx.beginPath();
+    ctx.lineWidth = 4; 
+    ctx.strokeStyle = "rgba(255, 235, 59, 0.4)"; // Vàng mờ Cyberpunk
+
+    // Thân mình (Vai nối Hông)
+    ctx.moveTo(getX(sL), getY(sL)); ctx.lineTo(getX(sR), getY(sR));
+    ctx.lineTo(getX(hR), getY(hR)); ctx.lineTo(getX(hL), getY(hL)); ctx.closePath();
+    // Tay Trái & Tay Phải
+    ctx.moveTo(getX(sL), getY(sL)); ctx.lineTo(getX(eL), getY(eL)); ctx.lineTo(getX(wL), getY(wL));
+    ctx.moveTo(getX(sR), getY(sR)); ctx.lineTo(getX(eR), getY(eR)); ctx.lineTo(getX(wR), getY(wR));
+    // Chân Trái & Chân Phải
+    ctx.moveTo(getX(hL), getY(hL)); ctx.lineTo(getX(kL), getY(kL)); ctx.lineTo(getX(aL), getY(aL));
+    ctx.moveTo(getX(hR), getY(hR)); ctx.lineTo(getX(kR), getY(kR)); ctx.lineTo(getX(aR), getY(aR));
+    ctx.stroke();
+
+    // === CHUYỂN GIAO TỌA ĐỘ BÊN PHẢI CHO LÕI CHẤM ĐIỂM BÀI TẬP ===
+    let shoulder = sR; let hip = hR; let knee = kR; let ankle = aR; let elbow = eR; let wrist = wR;
+    
+    let sX = getX(sR); let sY = getY(sR);
+    let hX = getX(hR); let hY = getY(hR);
+    let kX = getX(kR); let kY = getY(kR);
+    let aX = getX(aR); let aY = getY(aR);
+    let eX = getX(eR); let eY = getY(eR);
+    let wX = getX(wR); let wY = getY(wR);
+
+    // Bật bút vẽ nét đậm chuẩn bị cho AI phát hiện lỗi sai
     ctx.beginPath();
     ctx.lineWidth = 6; 
-    ctx.strokeStyle = "#ffeb3b"; 
+    ctx.strokeStyle = "#ffeb3b";
 
     let currentTime = Date.now(); // Thời gian thực để khóa Debounce
 

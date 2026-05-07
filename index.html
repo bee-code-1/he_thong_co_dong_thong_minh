@@ -629,7 +629,36 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
      </style>
 </head>
 <body oncontextmenu="return false;">
-
+<!-- ==========================================
+     MÀN HÌNH CHỜ (SPLASH SCREEN) ĐẲNG CẤP
+========================================== -->
+<div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #ffffff; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.5s ease;">
+    <!-- Tên App -->
+    <h1 style="color: #28a745; font-size: 45px; font-weight: 900; margin: 0; letter-spacing: 1px; filter: drop-shadow(0 4px 6px rgba(40,167,69,0.3));">CMD Health</h1>
+    
+    <!-- Chữ đang tải và dấu chấm nhấp nháy -->
+    <p style="color: #666; font-size: 16px; font-weight: bold; margin-top: 15px; display: flex; align-items: center;">
+        Đang tải <span class="loading-dots"></span>
+    </p>
+    
+    <!-- CSS nhúng gọn cho dấu chấm nhấp nháy -->
+    <style>
+        @keyframes blinkDots { 
+            0% { content: "."; } 
+            33% { content: ".."; } 
+            66% { content: "..."; } 
+            100% { content: ""; } 
+        }
+        .loading-dots::after { 
+            content: ""; 
+            animation: blinkDots 1.5s infinite; 
+            display: inline-block; 
+            width: 15px; 
+            text-align: left; 
+        }
+    </style>
+</div>
+    
     <div id="map"></div>
 <!-- LỚP GIAO DIỆN CHÍNH ) -->
 <div id="ui-layer">
@@ -754,7 +783,7 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 <!-- BẢNG SỔ TAY ĐỊA ĐIỂM (Độc lập hoàn toàn với Popup) -->
 <div id="sotay-panel" style="position: absolute; right: 75px; top: 140px; width: 230px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(23, 162, 184, 0.3); border-radius: 20px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1001; opacity: 0; visibility: hidden; transform: scale(0.8) translateX(20px); transform-origin: right top; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
     <span onclick="window.dongBangSoTay()" style="position: absolute; top: 5px; right: 12px; font-size: 24px; font-weight: bold; color: #888; cursor: pointer;">&times;</span>
-    <h4 style="margin: 0 0 10px 0; color: #17a2b8; border-bottom: 1px dashed #eee; padding-bottom: 5px;">📖 Sổ tay của cậu</h4>
+    <h4 style="margin: 0 0 10px 0; color: #17a2b8; border-bottom: 1px dashed #eee; padding-bottom: 5px;">📖 Sổ tay của bạn</h4>
     <div id="sotay-list-content" style="max-height: 250px; overflow-y: auto; text-align: left; padding-right: 5px;">
         <!-- Dữ liệu sổ tay sẽ được đẩy vào đây -->
     </div>
@@ -947,7 +976,7 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
             
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
-                    <span style="font-size: 3.5vw; opacity: 0.9;">Hành trình của cậu</span>
+                    <span style="font-size: 3.5vw; opacity: 0.9;">Hành trình của bạn</span>
                     <h3 style="margin: 0; font-size: 9vw; font-weight: 900;">Cấp <span id="current-lv">1</span></h3>
                 </div>
                 <div style="text-align: right;">
@@ -1027,14 +1056,14 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
         <div class="intro-slide active" id="slide-0" style="background: #e0f7fa;">
             <div style="width: 180px; height: 180px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 4px solid #b2ebf2;">🌿</div>
             <h2 style="color: #00838f; margin-bottom: 10px; font-size: 24px;">Thở sạch sống khỏe</h2>
-            <p style="padding: 0 30px; color: #00bcd4; font-weight: bold; font-size: 15px; line-height: 1.5;">Dữ liệu vệ tinh xịn xò sẽ dọn đường né khói bụi để cậu tự tin hít thở trọn vẹn từng nhịp chạy</p>
+            <p style="padding: 0 30px; color: #00bcd4; font-weight: bold; font-size: 15px; line-height: 1.5;">Dữ liệu vệ tinh xịn xò sẽ dọn đường né khói bụi để bạn tự tin hít thở trọn vẹn từng nhịp chạy</p>
         </div>
         
         <!-- Slide 2 -->
         <div class="intro-slide" id="slide-1" style="background: #fff9c4;">
             <div style="width: 180px; height: 180px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 4px solid #fff59d;">😎</div>
-            <h2 style="color: #f57f17; margin-bottom: 10px; font-size: 24px;">HLV xéo xắt</h2>
-            <p style="padding: 0 30px; color: #fbc02d; font-weight: bold; font-size: 15px; line-height: 1.5;">Trợ lý Mèo ảo vừa lo tính calo đo thời tiết vừa sẵn sàng buông lời sắc mỏng nếu cậu dám lười biếng</p>
+            <h2 style="color: #f57f17; margin-bottom: 10px; font-size: 24px;">HLV của riêng bạn</h2>
+            <p style="padding: 0 30px; color: #fbc02d; font-weight: bold; font-size: 15px; line-height: 1.5;">Trợ lý Mèo ảo vừa lo tính calo đo thời tiết vừa sẵn sàng buông lời sắc mỏng nếu bạn dám lười biếng</p>
         </div>
         
         <!-- Slide 3 -->
@@ -1056,7 +1085,7 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     </div>
 </div>
     
-    <div id="auth-modal" class="overlay-modal">
+    <div id="auth-modal" class="overlay-modal" style="display: none;">
         <div class="modal-content" id="login-form">
             <h2>Đăng Nhập</h2>
             <input type="text" id="login-user" placeholder="Tên đăng nhập" required>
@@ -1077,7 +1106,7 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     <div class="modal-content">
         <h2>Chỉ số Cơ thể & Sức khỏe</h2>
         <select id="gender"><option value="male">Nam giới</option><option value="female">Nữ giới</option></select>
-        <input type="number" id="age" placeholder="Tuổi của cậu? (VD: 20)">
+        <input type="number" id="age" placeholder="Tuổi của bạn? (VD: 20)">
         <input type="number" id="height" placeholder="Chiều cao (cm) - VD: 170">
         <input type="number" id="weight" placeholder="Cân nặng (kg) - VD: 65">
         <select id="health-condition">
@@ -1497,10 +1526,10 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     </div>
 </div>
     
-    <!-- BẢNG CHỌN CHẾ ĐỘ THỂ THAO KHI BẤM BẮT ĐẦU -->
-<div id="chon-mon-modal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+   <!-- BẢNG CHỌN CHẾ ĐỘ THỂ THAO KHI BẤM BẮT ĐẦU [ĐÃ FIX LỖI BÓNG MA] -->
+<div id="chon-mon-modal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(4px); pointer-events: auto;">
     <div onclick="event.stopPropagation()" style="background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popBubble 0.3s ease-out;">
-        <h3 style="margin-top: 0; color: #333; margin-bottom: 20px;">Cậu muốn tập gì hôm nay?</h3>
+        <h3 style="margin-top: 0; color: #333; margin-bottom: 20px;">Bạn muốn tập gì hôm nay?</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <button onclick="window.batDauVoiCheDo('walk')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #fd7e14; background: #fff5eb; color: #fd7e14; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(253,126,20,0.2);">🚶 Đi bộ</button>
             <button onclick="window.batDauVoiCheDo('run')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #dc3545; background: #fff1f0; color: #dc3545; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🏃 Chạy bộ</button>
@@ -1643,7 +1672,7 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 </div>
 <!-- Ô nhập tin nhắn -->
 <div style="padding: 10px 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center;">
-    <input type="text" id="cat-chat-input" placeholder="Hỏi Mèo gì đi cậu..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 15px; background: #f8f9fa;">
+    <input type="text" id="cat-chat-input" placeholder="Hỏi Mèo bất cứ thứ..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 15px; background: #f8f9fa;">
     <button onclick="guiTinNhanMeo()" style="background: #004BAd; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚀</button>
 </div>
 </div>
@@ -2034,7 +2063,7 @@ function initGPS() {
     if (window.Capacitor && window.Capacitor.Plugins.BackgroundGeolocation) {
         window.Capacitor.Plugins.BackgroundGeolocation.addWatcher(
             {
-                backgroundMessage: "App đang âm thầm vẽ đường cho cậu đấy!",
+                backgroundMessage: "App đang vẽ đường!",
                 backgroundTitle: "Hệ thống Cơ động Thông minh",
                 requestPermissions: true,
                 stale: false,
@@ -2043,7 +2072,7 @@ function initGPS() {
             function callback(location, error) {
                 if (error) {
                     if (error.code === "NOT_AUTHORIZED") {
-                        if (window.confirm("Cậu phải cấp quyền vị trí 'Luôn luôn' (Always) thì mới chạy ngầm được. Mở cài đặt nhé?")) {
+                        if (window.confirm("Phải cấp quyền vị trí 'Luôn luôn' (Always) thì mới chạy ngầm được. Mở cài đặt nhé?")) {
                             window.Capacitor.Plugins.BackgroundGeolocation.openSettings();
                         }
                     }
@@ -2061,7 +2090,7 @@ function initGPS() {
     const batDauTheoDoi = (successCB, errorCB, options) => {
         if (window.Capacitor && window.Capacitor.Plugins.BackgroundGeolocation) {
             window.Capacitor.Plugins.BackgroundGeolocation.addWatcher(
-                { backgroundMessage: "Mèo đang vẽ đường cho cậu đấy!", requestPermissions: true, distanceFilter: 2 },
+                { backgroundMessage: "Mèo đang vẽ đường cho bạn đấy!", requestPermissions: true, distanceFilter: 2 },
                 (loc, err) => { if (loc) successCB({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy } }); }
             ).then(id => { gpsWatcherId = id; });
             return "capacitor_bg_gps";
@@ -3169,7 +3198,7 @@ window.batDauTapTrongNha = async function(idBaiTap, tenBaiTap, target) {
             sendFrameToAI(); 
         };
     } catch (err) {
-        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Cậu chưa cấp quyền!";
+        document.getElementById('indoor-ai-status').innerText = "Lỗi Camera: Bạn chưa cấp quyền!";
         document.getElementById('indoor-ai-status').style.color = "#dc3545";
     }
 };
@@ -3686,7 +3715,7 @@ window.luuHoSo = function() {
 window.dangXuat = function() {
     window.moCustomAlert({
         type: 'confirm', icon: '🚪', title: 'Đăng xuất', titleColor: '#dc3545',
-        message: 'Cậu có chắc chắn muốn đăng xuất khỏi hệ thống không?', confirmColor: '#dc3545',
+        message: 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?', confirmColor: '#dc3545',
         callback: function(confirmed) {
             if(confirmed) {
                 if (typeof window.handleEndClick === 'function') window.handleEndClick();
@@ -3739,16 +3768,19 @@ window.chuyenSlide = function(direction = 1) {
 };
 
 window.addEventListener('load', function() {
-    // 1. Logic Tự động đăng nhập
+    // 1. Logic Tự động đăng nhập & Quản lý Màn hình chờ
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
+        const splash = document.getElementById('splash-screen'); // 👈 Bắt lấy màn hình chờ
+        
         if (savedUser) {
             console.log("Đã phát hiện tài khoản:", savedUser, "-> Đang vào thẳng app!");
             const authModal = document.getElementById('auth-modal');
             const appCont = document.getElementById('app-container');
             if (authModal) authModal.style.display = 'none';
             if (appCont) appCont.style.display = 'block';
-            
+
+            // Tải ảnh đại diện từ mây
             if (typeof window.db !== 'undefined') {
                 window.db.ref('nguoi_dung/' + savedUser + '/avatar').once('value').then((snapshot) => {
                     let cloudAvatar = snapshot.val();
@@ -3759,6 +3791,13 @@ window.addEventListener('load', function() {
                     }
                 });
             }
+            
+            // LÚC NÀY APP ĐÃ LOAD XONG -> VÉN MÀN HÌNH SPLASH LÊN!
+            if(splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.visibility = 'hidden', 500);
+            }
+            
         } else {
             // Khách mới -> Kiểm tra xem đã xem Intro chưa
             if (!localStorage.getItem('da_xem_intro')) {
@@ -3767,8 +3806,14 @@ window.addEventListener('load', function() {
             } else {
                 document.getElementById('auth-modal').style.display = 'flex';
             }
+            
+            // CHƯA CÓ ACC CŨNG VÉN MÀN SPLASH ĐỂ HIỆN LOGIN HOẶC INTRO
+            if(splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.visibility = 'hidden', 500);
+            }
         }
-    }, 1000);
+    }, 1000); // Vẫn giữ 1 giây delay để giả lập thời gian tải
 
     // 2. Logic Vuốt ngón tay (Swipe) cho Slider
     const touchArea = document.getElementById('onboarding-touch-area');
@@ -3930,15 +3975,15 @@ window.nhanThuongLenCap = function() {
 // 12 HUY HIỆU DỰA TRÊN QUÃNG ĐƯỜNG (KM) CHUẨN ĐỊA LÝ VIỆT NAM
 const DANH_SACH_HUY_HIEU = [
     { km: 1.7, icon: '🐢', title: 'Khởi động Hồ Gươm', desc: 'Bước chân đầu tiên! Hoàn thành 1.7km bằng một vòng dạo quanh Hồ Gươm.' },
-    { km: 15, icon: '🚲', title: 'Gió mát Hồ Tây', desc: 'Không đùa đâu, cậu đã đi được 15km, đủ đạp xe trọn vẹn một vòng Hồ Tây lộng gió!' },
+    { km: 15, icon: '🚲', title: 'Gió mát Hồ Tây', desc: 'Không đùa đâu, bạn đã đi được 15km, đủ đạp xe trọn vẹn một vòng Hồ Tây lộng gió!' },
     { km: 42, icon: '🏅', title: 'Huy chương Marathon', desc: 'Thể lực tuyệt vời! 42km ngang với việc chạy xong một giải Full-Marathon.' },
     { km: 100, icon: '🎒', title: 'Đôi chân Phượt thủ', desc: 'Chúc mừng! 100km tương đương từ thủ đô Hà Nội về thăm Cố đô Hoa Lư.' },
     { km: 300, icon: '☁️', title: 'Săn mây Đà Lạt', desc: 'Đỉnh chóp! 300km bằng một chuyến Trekking thẳng từ Sài Gòn lên Đà Lạt.' },
-    { km: 400, icon: '🌊', title: 'Hương vị Biển cả', desc: 'Chân cậu chắc khỏe lắm rồi đấy. 400km dài bằng chuyến đi từ Sài Gòn ra Nha Trang.' },
+    { km: 400, icon: '🌊', title: 'Hương vị Biển cả', desc: 'Chân chắc khỏe lắm rồi đấy. 400km dài bằng chuyến đi từ Sài Gòn ra Nha Trang.' },
     { km: 1000, icon: '⛰️', title: 'Dấu chân Trường Sơn', desc: 'Lịch sử gọi tên! Từng bước chân cộng dồn 1000km bằng đúng chiều dài Dãy Trường Sơn.' },
     { km: 1700, icon: '🇻🇳', title: 'Xuyên Việt Ca', desc: 'Ngạo nghễ! 1700km, điền tên vào danh sách những người đi bộ xuyên Việt.' },
     { km: 2300, icon: '🛣️', title: 'Dọc đường Thiên Lý', desc: 'Không gì cản nổi! 2300km chinh phục toàn bộ Quốc lộ 1A từ Lạng Sơn đến Cà Mau.' },
-    { km: 3260, icon: '🏖️', title: 'Ôm trọn Biển Đông', desc: 'Cậu là chiến binh! 3260km đi dọc toàn bộ đường bờ biển tuyệt đẹp của tổ quốc.' },
+    { km: 3260, icon: '🏖️', title: 'Ôm trọn Biển Đông', desc: 'Bạn đúng là một chiến binh! 3260km đi dọc toàn bộ đường bờ biển tuyệt đẹp của tổ quốc.' },
     { km: 7000, icon: '🦅', title: 'Cánh chim Xuyên Lục Địa', desc: 'Vượt ra biên giới! 7000km dài bằng chuyến bay thẳng từ Việt Nam sang nước Úc.' },
     { km: 10000, icon: '🌍', title: 'Kẻ chinh phục Địa Cầu', desc: 'Cột mốc tối thượng! 10,000km khoảng cách vĩ đại từ Xích Đạo lên thẳng Bắc Cực.' }
 ];
@@ -4072,7 +4117,7 @@ window.kiemTraVaNoHuyHieuAn = function(badgeId) {
     if(chamDo) chamDo.style.display = 'block';
 
     // Bắn thông báo ngoài màn hình để dụ bấm vào Tab 5
-    alert("🏆 Cậu vừa vô tình phá vỡ một KỶ LỤC BÍ ẨN!\nVào Phòng Trưng Bày (Tab 5) đập hộp ngay!");
+    alert("🏆 Bạn vừa hoàn thành một thành tựu !\nVào Phòng Trưng Bày xem ngay!");
     if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
 };
 
@@ -4214,7 +4259,7 @@ window.capNhatNoiDungPopupRuong = function(markerObj, chestObj) {
         popupHTML = `
         <div style="text-align:center; min-width: 160px;">
         <div style="font-size:24px;">🎁 Rương Bí Ẩn</div>
-        <strong style="color:#dc3545;">Cách cậu ${Math.round(khoangCach)}m</strong><br>
+        <strong style="color:#dc3545;">Cách bạn ${Math.round(khoangCach)}m</strong><br>
         <span style="font-size: 12px; color: #555;">Bước vào vòng tròn (20m) để mở!</span>
         <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
         ${buttonChiDuong}
@@ -4768,7 +4813,7 @@ window.fetchRealFriends = function() {
     let htmlDiaDiem = '<h3 style="color: #d35400; border-bottom: 2px solid #ddd; padding-bottom: 8px; margin-top: 5px; margin-bottom: 15px; font-size: 18px; font-weight: 900;">⭐ Sổ tay địa điểm</h3>';
 
     if (dsDiaDiem.length === 0) {
-        htmlDiaDiem += '<div style="text-align: center; color: #888; font-style: italic; font-size: 13px; margin-bottom: 25px;">Cậu chưa lưu địa điểm nào. Mở bản đồ và ghim lại những nơi hay tới nhé!</div>';
+        htmlDiaDiem += '<div style="text-align: center; color: #888; font-style: italic; font-size: 13px; margin-bottom: 25px;">Bạn vẫn chưa lưu địa điểm nào. Mở bản đồ và ghim lại những nơi hay tới nhé!</div>';
     } else {
         dsDiaDiem.forEach((diem, index) => {
             let icn = diem.icon || "📍"; // Hiển thị Icon cá nhân hóa
@@ -5004,7 +5049,7 @@ window.xacNhanDangBai = function() {
     // -- Trạng thái 1: Đăng Ghi chú (Text) --
     if (cheDoDangBai === 'text') {
         const noteText = document.getElementById('note-input').value.trim();
-        if (!noteText) { alert("Cậu chưa viết gì kìa!"); return; }
+        if (!noteText) { alert("Bạn chưa viết gì kìa!"); return; }
         
         document.getElementById('draft-overlay').style.display = 'none';
         cheDoDangBai = null;
@@ -5736,7 +5781,7 @@ window.duoiMeo = function(e) {
         icon: '😿', 
         title: 'Đuổi Mèo?', 
         titleColor: '#dc3545',
-        message: 'Cậu chắc chắn muốn đuổi Mèo đi không? Nó sẽ dọn hành lý đi mất hút đấy!', 
+        message: 'Bạn chắc chắn muốn đuổi Mèo đi chứ? Nó sẽ dọn hành lý đi mất hút đấy!', 
         confirmColor: '#dc3545',
         callback: function(confirmed) {
             if(confirmed) {
@@ -6435,7 +6480,7 @@ window.xuLyGoiYTuDong = function(cauHoi) {
         }
         else if (cauHoi === '🐷 Cân đo mỡ thừa') {
             let bmi = (uWeight / Math.pow(uHeight / 100, 2)).toFixed(1);
-            aiMessage = `Cao ${uHeight}cm, nặng ${uWeight}kg. BMI của cậu là ${bmi}. `;
+            aiMessage = `Cao ${uHeight}cm, nặng ${uWeight}kg. BMI của là ${bmi}. `;
             if (bmi < 18.5) aiMessage += `Ốm lòi xương! Ăn nhiều vào cho Mèo nhờ! 💀`;
             else if (bmi <= 24.9) aiMessage += `Ngon lành! Body tiêu chuẩn đấy! 🐟✨`;
             else if (bmi <= 29.9) { showKhinhBi(); aiMessage += `Hơi mũm mĩm rồi đấy! Xách giày ra chạy ngay! 🐷🏃‍♂️`; }
@@ -7022,9 +7067,9 @@ window.veSoTayLenBanDo = function() {
 window.addEventListener('load', () => { setTimeout(() => { if(typeof window.veSoTayLenBanDo === 'function') window.veSoTayLenBanDo(); }, 2000); });
 
 window.luuDiaDiemCaNhan = function(lat, lng) {
-    let tenDiaDiem = prompt("Cậu muốn đặt tên điểm này là gì? (VD: Nhà, Quán Cafe, Công ty...)");
+    let tenDiaDiem = prompt("Bạn muốn đặt tên điểm này là gì? (VD: Nhà, Quán Cafe, Công ty...)");
     if (!tenDiaDiem) return;
-    let iconDiaDiem = prompt("Cậu muốn dùng Icon gì cho chỗ này? (Gõ 1 emoji như 🏠, ☕, 🍔, 🏫)", "📍") || "📍";
+    let iconDiaDiem = prompt("Bạn muốn dùng Icon gì cho chỗ này? (Gõ 1 emoji như 🏠, ☕, 🍔, 🏫)", "📍") || "📍";
 
     const user = localStorage.getItem('currentUser') || "Khach";
     let dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
@@ -7033,7 +7078,7 @@ window.luuDiaDiemCaNhan = function(lat, lng) {
     dsDiaDiem.push({ ten: tenDiaDiem, icon: iconDiaDiem, lat: lat, lng: lng, hienThi: true });
     localStorage.setItem('diadiem_canhan_' + user, JSON.stringify(dsDiaDiem));
 
-    alert("✅ Đã lưu '" + tenDiaDiem + "' (" + iconDiaDiem + ") vào Sổ tay của cậu! 😎");
+    alert("✅ Đã lưu '" + tenDiaDiem + "' (" + iconDiaDiem + ") vào Sổ tay! 😎");
     map.closePopup();
     window.veSoTayLenBanDo(); // Cập nhật rải icon lên bản đồ ngay lập tức
 };
@@ -7080,7 +7125,7 @@ window.moMessengerHub = function() {
     const container = document.getElementById('messenger-hub-list');
     
     if (window.danhSachBanBeThuc.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Cậu chưa có bạn bè nào. Tìm kiếm và kết bạn đi!</div>';
+        container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">Chưa có bạn bè nào. Tìm kiếm và kết bạn đi!</div>';
         return;
     }
     
@@ -7329,7 +7374,7 @@ window.moManHinhBatMeo = async function() {
             if (permissionState === 'granted') {
                 window.addEventListener('deviceorientation', handleOrientation);
             } else {
-                alert("⚠️ Cậu phải cho phép dùng Cảm biến chuyển động thì mới thấy Mèo!");
+                alert("⚠️ Bạn phải cho phép dùng Cảm biến chuyển động thì mới thấy Mèo!");
             }
         } catch (error) {
             console.warn("Bỏ qua xin quyền (có thể do đang ở http hoặc ko click trực tiếp):", error);
@@ -7505,7 +7550,7 @@ function bungPhaoHoa() {
 
 // === HÀM QUẢN LÝ ĐỊA ĐIỂM ƯA THÍCH TRONG ONE CONNECT ===
 window.xoaDiaDiemCaNhan = function(index) {
-    if(!confirm("Cậu có chắc muốn xóa địa điểm này khỏi cẩm nang không?")) return;
+    if(!confirm("Bạn có chắc muốn xóa địa điểm này khỏi cẩm nang không?")) return;
     const user = localStorage.getItem('currentUser') || "Khach";
     let ds = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
     ds.splice(index, 1); // Xóa phần tử tại vị trí index
@@ -7521,7 +7566,7 @@ let catCountdownInterval = null;
 window.hieuUngMeoBoNha = function(isAuto = false) {
     // 🛑 BỘ LỌC CHỐNG LỖI: Bắt buộc phải có GPS mới cho đuổi Mèo
     if (typeof latestLatLng === 'undefined' || !latestLatLng) {
-        alert("📡 Khoan đã! GPS chưa chốt được vị trí của cậu. Đợi xíu cho cái mũi tên đỏ bản đồ hiện lên rồi hẵng đuổi Mèo đi, không là tịt đường tìm nó luôn đấy!");
+        alert("📡 Khoan đã! GPS chưa chốt được vị trí của banj. Đợi xíu cho cái mũi tên đỏ bản đồ hiện lên rồi hẵng đuổi Mèo đi, không là tịt đường tìm nó luôn đấy!");
         return;
     }
 
@@ -7605,7 +7650,7 @@ window.batDauDiTimMeo = function() {
     
     // Bộ lọc 1: Máy chưa chốt GPS
     if (typeof latestLatLng === 'undefined' || !latestLatLng) {
-        alert("📡 Tịt ngòi! Bản đồ chưa bắt được sóng GPS của CẬU. Hãy đợi mũi tên đỏ hiện lên trước đã!");
+        alert("📡 Tịt ngòi! Bản đồ chưa bắt được sóng GPS của Bạn. Hãy đợi mũi tên đỏ hiện lên trước đã!");
         return;
     }
 

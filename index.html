@@ -1806,47 +1806,55 @@ window.saveProfile = function(isSkip) {
     }
 
     // --- TRACKING ACTIONS ---
-    //  XỬ LÝ NÚT BẮT ĐẦU
-    function startTrackingAction() {
+//  XỬ LÝ NÚT BẮT ĐẦU (ĐÃ FIX: Chống Crash APK toàn diện)
+function startTrackingAction() {
     if (!navigator.geolocation && !window.Capacitor) return alert("Thiết bị không hỗ trợ GPS!");
 
-        //  Reset sạch sẽ dữ liệu
-        latestLatLng = null; 
-        totalDistanceMeter = 0;
-        elapsedSeconds = 0;
-        if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]); 
-        
-        isTracking = true; 
-        isPaused = false;
+    // 1. Reset sạch sẽ dữ liệu
+    latestLatLng = null;
+    totalDistanceMeter = 0;
+    elapsedSeconds = 0;
+    if (typeof polyline !== 'undefined' && polyline) polyline.setLatLngs([]);
+    isTracking = true;
+    isPaused = false;
 
-        //  Kích hoạt bộ thu sóng GPS chạy ngầm
+    // 2. Bật đồng hồ đếm thời gian TRƯỚC TIÊN để chống đứt gãy code
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    window.lastTimerTick = Date.now();
+    
+    timerInterval = setInterval(() => {
+        let now = Date.now();
+        if (isTracking && !isPaused) {
+            let delta = Math.floor((now - window.lastTimerTick) / 1000);
+            if (delta >= 1) {
+                elapsedSeconds += delta; // Cộng dồn bù giờ
+                window.lastTimerTick += delta * 1000;
+
+                // FIX LỖI JAVASCRIPT ĐỜI CŨ: Không dùng padStart để chống crash trên APK cũ
+                let m = Math.floor(elapsedSeconds / 60);
+                let s = elapsedSeconds % 60;
+                let mStr = m < 10 ? "0" + m : String(m);
+                let sStr = s < 10 ? "0" + s : String(s);
+                
+                const display = document.getElementById('time-display');
+                if(display) display.innerText = `${mStr}:${sStr}`;
+            }
+        } else {
+            // Tạm dừng thì neo thời gian lại
+            window.lastTimerTick = now; 
+        }
+    }, 1000);
+
+    // 3. Khởi động GPS (Bọc trong Try-Catch để bảo vệ đồng hồ không bị kéo sập theo)
+    try {
         if (typeof gpsWatcherId === 'undefined' || !gpsWatcherId) {
             if (typeof initGPS === 'function') initGPS();
         }
-
-//  Bật đồng hồ đếm thời gian (ĐÃ FIX: Dùng Thời gian thực Date.now() chống ngủ đông APK)
-if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-window.lastTimerTick = Date.now(); // Lưu mốc thời gian bắt đầu chạy
-timerInterval = setInterval(() => {
-    let now = Date.now();
-    if (isTracking && !isPaused) {
-        // Tính ra độ trễ thực sự giữa 2 lần đếm (Bình thường là 1s, ngủ đông có thể là hàng trăm s)
-        let delta = Math.floor((now - window.lastTimerTick) / 1000);
-        if (delta >= 1) {
-            elapsedSeconds += delta; // Cộng dồn số giây đã bị khuyết
-            window.lastTimerTick += delta * 1000; // Dịch mốc thời gian lên
-            
-            const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
-            const s = String(elapsedSeconds % 60).padStart(2, '0');
-            const display = document.getElementById('time-display');
-            if(display) display.innerText = `${m}:${s}`;
-        }
-    } else {
-        // Nếu đang Tạm dừng, trượt mốc thời gian liên tục để không bị tính thành đang chạy
-        window.lastTimerTick = now; 
+    } catch (err) {
+        console.error("Lỗi khởi động GPS trên APK:", err);
+        // Đồng hồ vẫn sẽ chạy mượt mà ngay cả khi GPS ném ra lỗi!
     }
-}, 1000);
-    }
+}
 
     // nút tạm dừng
     function pauseTrackingAction() {
@@ -2394,41 +2402,28 @@ window.luuTienTrinh = function() {
 // === BIẾN TOÀN CỤC CHO TÍNH NĂNG NHẤN GIỮ ===
 let pressTimer = null;
 
-// === HÀM XÓA TIẾN TRÌNH ===
+// === HÀM XÓA TIẾN TRÌNH (ĐÃ FIX: XÓA THẺ KHÔNG LÀM TỤT LEVEL) ===
 window.xoaTienTrinh = function(recordKey, btnElement) {
     if (!confirm("Bạn có chắc chắn muốn xóa tiến trình này không?")) return;
-
     let username = localStorage.getItem('currentUser');
     if (username && typeof window.db !== 'undefined') {
         window.db.ref('tien_trinh_tap_luyen/' + username + '/' + recordKey).remove()
         .then(() => {
-            // FIX LỖI UI: Dọn sạch và kéo lại từ mây để chia lại mốc tháng/level
             const listContainer = document.getElementById('progress-list');
             if(listContainer) listContainer.innerHTML = '';
-            
             window.db.ref('tien_trinh_tap_luyen/' + username).once('value').then((snapshot) => {
                 if(snapshot.val()) {
-                    if (typeof window.xuLyDuLieuTienTrinh === 'function') {
-                        window.xuLyDuLieuTienTrinh(snapshot.val());
-                    } else {
-                        window.capNhatBangTichLuy(snapshot.val());
-                        const records = Object.keys(snapshot.val()).map(key => ({ key: key, data: snapshot.val()[key] }));
-                        records.sort((a, b) => a.data.timestamp - b.data.timestamp);
-                        records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
-                    }
+                    const records = Object.keys(snapshot.val()).map(key => ({ key: key, data: snapshot.val()[key] }));
+                    records.sort((a, b) => a.data.timestamp - b.data.timestamp);
+                    records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
                 } else {
                     const emptyMsg = document.getElementById('empty-progress');
                     if (emptyMsg) emptyMsg.style.display = 'block';
-                    // Xóa sạch thì reset số tổng
-                    if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy({});
-                    if (typeof window.capNhatHeThongLevel === 'function') window.capNhatHeThongLevel(0);
                 }
+                // ĐÃ XÓA KHỐI LỆNH RESET LEVEL 0 Ở ĐÂY! TIẾN TRÌNH LÀ BẤT TỬ!
             });
         })
-            .catch(err => {
-                console.error("Lỗi xóa tiến trình:", err);
-                alert("Không thể xóa lúc này, vui lòng thử lại sau!");
-            });
+        .catch(err => alert("Không thể xóa lúc này, vui lòng thử lại sau!"));
     }
 };
 
@@ -2496,21 +2491,25 @@ window.veTheTienTrinh = function(recordKey, data) {
 
     listContainer.insertAdjacentHTML('afterbegin', cardHTML);
 };
-// === TỰ ĐỘNG TẢI LỊCH SỬ KHI MỞ TRANG ===
+// === TỰ ĐỘNG TẢI LỊCH SỬ VÀ LEVEL KHI MỞ TRANG (F5) ===
 window.addEventListener('load', function() {
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
         if (savedUser && typeof window.db !== 'undefined') {
+            // 1. Tải Bảng Thống kê vĩnh viễn (Level, Km, Calo)
+            if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy();
+            
+            // 2. Tải các Thẻ lịch sử hiển thị
             window.db.ref('tien_trinh_tap_luyen/' + savedUser).once('value').then((snapshot) => {
                 const dataObj = snapshot.val();
                 if (dataObj) {
                     const records = Object.keys(dataObj).map(key => ({ key: key, data: dataObj[key] }));
                     records.sort((a, b) => a.data.timestamp - b.data.timestamp);
-                    records.forEach(record => window.veTheTienTrinh(record.key, record.data));
+                    records.reverse().forEach(record => window.veTheTienTrinh(record.key, record.data));
                 }
             });
         }
-    }, 1500); 
+    }, 1500);
 });
 
 // === HỆ THỐNG TẬP TRONG NHÀ (INDOOR WORKOUT) ===
@@ -6114,42 +6113,32 @@ window.congDonThongKe = function(kmMoi, buocMoi, caloMoi, phutMoi) {
     });
 };
 
-// 1. TÍNH TOÁN BẢNG TÍCH LŨY Ở TAB 2 & SẮP XẾP LỊCH SỬ
-window.capNhatBangTichLuy = function(dataObj) {
+// HÀM MỚI: CỘNG DỒN DỮ LIỆU LÊN DATABASE VĨNH VIỄN
+window.congDonThongKe = function(kmMoi, buocMoi, caloMoi, phutMoi) {
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return;
+    const ref = window.db.ref('nguoi_dung/' + user + '/thong_ke');
+    ref.transaction((currentData) => {
+        if (currentData === null) {
+            return { tong_km: kmMoi, tong_buoc: buocMoi, tong_calo: caloMoi, tong_phut: phutMoi };
+        } else {
+            currentData.tong_km = (currentData.tong_km || 0) + kmMoi;
+            currentData.tong_buoc = (currentData.tong_buoc || 0) + buocMoi;
+            currentData.tong_calo = (currentData.tong_calo || 0) + caloMoi;
+            currentData.tong_phut = (currentData.tong_phut || 0) + phutMoi;
+            return currentData;
+        }
+    });
+};
+
+// 1. ĐỌC THỐNG KÊ BẤT TỬ Ở TAB 2 (KHÔNG PHỤ THUỘC LỊCH SỬ)
+window.capNhatBangTichLuy = function() {
     const user = localStorage.getItem('currentUser');
     if (!user || typeof window.db === 'undefined') return;
 
-    // Tính ngày bắt đầu tập (từ data lịch sử nếu có)
-    if (dataObj) {
-        let ngaySomNhat = Date.now();
-        Object.values(dataObj).forEach(tienTrinh => {
-            if (tienTrinh.timestamp < ngaySomNhat) ngaySomNhat = tienTrinh.timestamp;
-        });
-        const dateStr = new Date(ngaySomNhat).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
-        if(document.getElementById('ngay-bat-dau-tap')) document.getElementById('ngay-bat-dau-tap').innerText = dateStr;
-    }
-
-    // ĐỒNG BỘ DỮ LIỆU CỘNG DỒN TỪ FIREBASE (CHỐNG MẤT KHI XÓA LỊCH SỬ)
     window.db.ref('nguoi_dung/' + user + '/thong_ke').once('value').then(snap => {
-        let thongKe = snap.val();
-        
-        // Cứu cánh cho dữ liệu tân binh chưa có file thong_ke
-        if (!thongKe) {
-            let tKm = 0, tBuoc = 0, tCalo = 0, tPhut = 0;
-            if (dataObj) {
-                Object.values(dataObj).forEach(tienTrinh => {
-                    tKm += parseFloat(tienTrinh.quang_duong) || 0;
-                    tBuoc += parseInt(tienTrinh.buoc_chan) || 0;
-                    tCalo += parseFloat(tienTrinh.calo) || 0;
-                    let parts = (tienTrinh.thoi_gian || "00:00").split(':');
-                    if (parts.length === 2) tPhut += parseInt(parts.at(0)) * 60 + parseInt(parts.at(1));
-                });
-            }
-            thongKe = { tong_km: tKm, tong_buoc: tBuoc, tong_calo: tCalo, tong_phut: tPhut };
-            window.db.ref('nguoi_dung/' + user + '/thong_ke').set(thongKe);
-        }
+        let thongKe = snap.val() || { tong_km: 0, tong_buoc: 0, tong_calo: 0, tong_phut: 0 };
 
-        // In số liệu bất tử ra màn hình Tab 2
         if(document.getElementById('tong-km-tab2')) document.getElementById('tong-km-tab2').innerText = (thongKe.tong_km || 0).toFixed(1);
         if(document.getElementById('tong-buoc-tab2')) document.getElementById('tong-buoc-tab2').innerText = Math.round(thongKe.tong_buoc || 0);
         if(document.getElementById('tong-calo-tab2')) document.getElementById('tong-calo-tab2').innerText = (thongKe.tong_calo || 0).toFixed(1);
@@ -6158,7 +6147,7 @@ window.capNhatBangTichLuy = function(dataObj) {
         let phut = (thongKe.tong_phut || 0) % 60;
         if(document.getElementById('tong-thoigian-tab2')) document.getElementById('tong-thoigian-tab2').innerText = `${gio}h ${phut}m`;
 
-        // Bơm TỔNG CALO vào hệ thống Level (Để quy đổi 1 Calo = 1 EXP)
+        // Bơm TỔNG CALO vào hệ thống Level
         if(typeof window.capNhatHeThongLevel === 'function') {
             window.capNhatHeThongLevel(thongKe.tong_calo || 0);
         }

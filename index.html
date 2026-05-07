@@ -1496,6 +1496,19 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
         </div>
     </div>
 </div>
+    
+    <!-- BẢNG CHỌN CHẾ ĐỘ THỂ THAO KHI BẤM BẮT ĐẦU -->
+<div id="chon-mon-modal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+    <div onclick="event.stopPropagation()" style="background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popBubble 0.3s ease-out;">
+        <h3 style="margin-top: 0; color: #333; margin-bottom: 20px;">Cậu muốn tập gì hôm nay?</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button onclick="window.batDauVoiCheDo('walk')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #fd7e14; background: #fff5eb; color: #fd7e14; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(253,126,20,0.2);">🚶 Đi bộ</button>
+            <button onclick="window.batDauVoiCheDo('run')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #dc3545; background: #fff1f0; color: #dc3545; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🏃 Chạy bộ</button>
+            <button onclick="window.batDauVoiCheDo('cycle')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #004BAd; background: #e8f0fe; color: #004BAd; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,75,173,0.2);">🚴 Đạp xe</button>
+            <button onclick="window.batDauVoiCheDo('indoor')" style="padding: 20px 10px; border-radius: 15px; border: 2px solid #28a745; background: #e8f5e9; color: #28a745; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 6px rgba(40,167,69,0.2);">🧘‍♂️ Trong nhà</button>
+        </div>
+    </div>
+</div>
 
 <!-- MÀN HÌNH CHAT 1-1 VỚI BẠN BÈ -->
 <div id="human-chat-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f2f5; z-index: 6000; flex-direction: column;">
@@ -2448,8 +2461,11 @@ window.luuTienTrinh = function() {
     const recordData = {
     ngay: dateStr, gio_bat_dau: startTimeStr, gio_ket_thuc: endTimeStr,
     thoi_gian: timeVal, van_toc: speedVal, quang_duong: distVal,
-    buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
-    };
+    buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now(),
+    loai_hinh: window.currentSportMode || 'run',
+    // Nén mảng tọa độ Leaflet thành mảng tọa độ thô để Firebase chịu lưu
+    toado_path: (typeof pathLatLngs !== 'undefined' && pathLatLngs.length > 0) ? pathLatLngs.map(p => ({lat: p.lat, lng: p.lng})) : []
+};
     //  cộng dồn database vĩnh viễn
     let parsedDist = parseFloat(distVal) || 0;
     let parsedSteps = parseInt(stepsVal) || 0;
@@ -2591,54 +2607,100 @@ window.huyBamGiu = function() {
 };
 
 // === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
-// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
 window.veTheTienTrinh = function(recordKey, data) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
     if (emptyMsg) emptyMsg.style.display = 'none';
 
-    // KIỂM TRA PHÂN LOẠI THẺ
-    const isIndoor = data.loai_hinh === 'trong_nha';
+    // RẼ NHÁNH VIỀN VÀ ICON THEO MÔN THỂ THAO
+    let isIndoor = false;
+    let borderColor = "#aaa", bgCard = "#f8f9fa", iconTheThao = "🏃";
+    
+    if (data.loai_hinh === 'trong_nha') {
+        isIndoor = true; borderColor = "#28a745"; bgCard = "#e8f5e9"; iconTheThao = "🧘‍♂️";
+    } else if (data.loai_hinh === 'walk') {
+        borderColor = "#fd7e14"; bgCard = "#fff5eb"; iconTheThao = "🚶";
+    } else if (data.loai_hinh === 'cycle') {
+        borderColor = "#004BAd"; bgCard = "#e8f0fe"; iconTheThao = "🚴";
+    } else { // run
+        borderColor = "#dc3545"; bgCard = "#fff1f0"; iconTheThao = "🏃";
+    }
 
-    // RẼ NHÁNH: CSS Giao diện (Trong nhà: Xanh lá nhạt viền đậm | Chạy bộ: Xám như cũ)
-    const cardStyle = isIndoor 
-        ? "background: #e8f5e9; border: 2px solid #28a745; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(40,167,69,0.2); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;"
-        : "background: #e0e0e0; border: none; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;";
+    const cardStyle = `background: ${bgCard}; border: 2px solid ${borderColor}; border-radius: 15px; margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;`;
 
-    // RẼ NHÁNH: Cấu trúc Nội dung bên Trái
+    // NẾU TẬP NGOÀI TRỜI CÓ ĐƯỜNG ĐI -> VẼ CANVAS. NẾU TRONG NHÀ -> HIỆN ICON TO
+    const canvasId = `minimap_${recordKey}`;
+    const uiTrai = isIndoor 
+        ? `<div style="width:70px; height:70px; background:white; border-radius:12px; display:flex; justify-content:center; align-items:center; font-size:35px; border:2px dashed ${borderColor}; flex-shrink:0;">${iconTheThao}</div>`
+        : `<canvas id="${canvasId}" width="70" height="70" style="background:#e9ecef; border-radius:12px; border:2px solid ${borderColor}; flex-shrink:0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"></canvas>`;
+
     const contentLeft = isIndoor
-        ? `🧘‍♂️ <b>Bài tập:</b> <span style="color:#004BAd;">${data.ten_bai_tap}</span><br>
+        ? `<b>Bài tập:</b> <span style="color:#004BAd;">${data.ten_bai_tap}</span><br>
            ⏱ <b>Vận động:</b> <span style="color:#28a745;">${data.thoi_gian}</span><br>
            🎯 <b>Đã tập:</b> <span style="color:#dc3545; font-size:16px;">${data.so_reps}</span> cái<br>
            🔥 <b>Calo đốt:</b> ${data.calo} kcal`
-        : `⏱ Thời gian: ${data.thoi_gian || "00:00"}<br>
-           ⚡ Vận tốc TB: ${data.van_toc || "0"} km/h<br>
+        : `⚡ TB: ${data.van_toc || "0"} km/h<br>
            📏 Quãng đường: ${data.quang_duong || "0"}<br>
-           👟 Bước chân: ${data.buoc_chan || "0"} bước<br>
-           🔥 Calo tiêu thụ: ${data.calo || "0"} kcal`;
+           👟 Bước chân: ${data.buoc_chan || "0"}<br>
+           🔥 Calo: ${data.calo || "0"} kcal`;
 
     const cardHTML = `
-    <div class="progress-card"
-        onmousedown="window.batDauXoa('${recordKey}', this)"
-        onmouseup="window.huyBamGiu()"
-        onmouseleave="window.huyBamGiu()"
-        ontouchstart="window.batDauXoa('${recordKey}', this)"
-        ontouchend="window.huyBamGiu()"
-        style="${cardStyle}">
-
-        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333; pointer-events: none;">
-            ${contentLeft}
+    <div class="progress-card" onmousedown="window.batDauXoa('${recordKey}', this)" onmouseup="window.huyBamGiu()" onmouseleave="window.huyBamGiu()" ontouchstart="window.batDauXoa('${recordKey}', this)" ontouchend="window.huyBamGiu()" style="${cardStyle}">
+        <div style="display:flex; align-items:center; gap: 15px; pointer-events:none;">
+            ${uiTrai}
+            <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
+                <div style="font-weight:900; font-size:15px; color:${borderColor}; margin-bottom:3px;">${iconTheThao} ${isIndoor ? "Góc Phục Hồi" : (data.loai_hinh === 'walk' ? 'Đi dạo' : (data.loai_hinh === 'cycle' ? 'Đạp xe' : 'Chạy bộ'))}</div>
+                ${contentLeft}
+            </div>
         </div>
-
-        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${isIndoor ? '#28a745' : '#aaa'}; padding-left: 15px; min-width: 80px; pointer-events: none;">
+        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 70px; pointer-events: none;">
             <div style="margin-bottom: 5px;">${data.ngay}</div>
             <div>${data.gio_bat_dau}</div>
-            <div style="font-size: 10px; color: #888; margin: 2px 0;">-----</div>
+            <div style="font-size: 10px; color: #888; margin: 2px 0;">↓</div>
             <div>${data.gio_ket_thuc}</div>
         </div>
     </div>`;
 
     listContainer.insertAdjacentHTML('afterbegin', cardHTML);
+
+    // THUẬT TOÁN TOÁN HỌC VẼ LỘ TRÌNH VỪA KHÍT CANVAS 70x70
+    if (!isIndoor && data.toado_path && data.toado_path.length > 1) {
+        setTimeout(() => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let minLat = 999, maxLat = -999, minLng = 999, maxLng = -999;
+            
+            data.toado_path.forEach(p => {
+                if(p.lat < minLat) minLat = p.lat; if(p.lat > maxLat) maxLat = p.lat;
+                if(p.lng < minLng) minLng = p.lng; if(p.lng > maxLng) maxLng = p.lng;
+            });
+            
+            let latDiff = maxLat - minLat; let lngDiff = maxLng - minLng;
+            let maxDiff = Math.max(latDiff, lngDiff) || 0.0001; // chống lỗi chia 0 nếu chỉ có 1 điểm
+            let pad = 8; // padding né viền
+            let w = canvas.width - pad*2; let h = canvas.height - pad*2;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#004BAd';
+            ctx.lineWidth = 3.5;
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+            data.toado_path.forEach((p, i) => {
+                let x = pad + ((p.lng - minLng) / maxDiff) * w;
+                let y = pad + (h - ((p.lat - minLat) / maxDiff) * h); // Đảo trục Y
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            // Chấm đỏ vị trí điểm đến
+            let lastP = data.toado_path[data.toado_path.length - 1];
+            let lastX = pad + ((lastP.lng - minLng) / maxDiff) * w;
+            let lastY = pad + (h - ((lastP.lat - minLat) / maxDiff) * h);
+            ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, 2*Math.PI); ctx.fillStyle = '#dc3545'; ctx.fill();
+        }, 50); // Chờ HTML gắn vào DOM xong mới vẽ
+    }
 };
 // === TỰ ĐỘNG TẢI LỊCH SỬ VÀ LEVEL KHI MỞ TRANG (F5) ===
 window.addEventListener('load', function() {
@@ -3747,36 +3809,53 @@ window.switchTab = function(tabIndex) {
 };
 
 // HÀM TRUNG GIAN NỐI NÚT BẮT ĐẦU VỚI LOGIC CŨ
+// HÀM GỌI BẢNG CHỌN MÔN THỂ THAO
 window.startRunningProxy = function() {
-    // 1. Giấu thanh điều hướng dưới đáy
+    document.getElementById('chon-mon-modal').style.display = 'flex';
+};
+
+// HÀM XỬ LÝ KHI NGƯỜI DÙNG CHỌN MÔN
+window.batDauVoiCheDo = function(mode) {
+    document.getElementById('chon-mon-modal').style.display = 'none';
+    
+    // NẾU CHỌN TẬP TRONG NHÀ -> MỞ DANH SÁCH BÀI TẬP (Mượt mà như cậu yêu cầu)
+    if (mode === 'indoor') {
+        window.moDanhSachBaiTap();
+        return;
+    }
+
+    // NẾU LÀ 3 MÔN NGOÀI TRỜI -> BẮT ĐẦU CHẠY GPS
+    window.currentSportMode = mode; // Ghi nhớ môn để tính Calo & Viền
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.add('nav-hidden');
     
-    // 2. Đổi giao diện nút 
-    //  KÍCH HOẠT ANIMATION TÁCH NÚT
     document.getElementById('action-btns-container').classList.add('running');
-    // Tẩy sạch màu và chữ cũ của nút Tạm Dừng do chặng trước để lại
     const pBtn = document.getElementById('pause-btn');
-    if (pBtn) {
-        pBtn.innerText = '⏸ TẠM DỪNG';
-        pBtn.style.backgroundColor = '';
-        pBtn.style.color = '';
-    }
+    if (pBtn) { pBtn.innerText = '⏸ TẠM DỪNG'; pBtn.style.backgroundColor = ''; pBtn.style.color = ''; }
     
-    // 3. Hiện đồng hồ 
     document.getElementById('time-display').style.display = 'block';
-
-        //  CHO TÀNG HÌNH VIÊN NHỘNG LỚP BẢN ĐỒ
     if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'none';
-
-    // 4. Kích hoạt Hàm theo dõi GPS lõi cũ
-    if (typeof startTrackingAction === 'function') {
-        startTrackingAction();
-    }
-        // MẮT THẦN: CÚP PHỔI TỐT
+    
+    if (typeof startTrackingAction === 'function') startTrackingAction();
     if (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1" || window.currentAQIColor === "#7e0023") {
         window.kiemTraVaNoHuyHieuAn('phoi_tot');
     }
+};
+
+// CÔNG THỨC CHIA NHÁNH CALO THEO MET (Đi bộ, Chạy, Xe đạp)
+window.tinhCaloThucTe = function(quangDuongMet, giayTroiQua) {
+    let speedKmH = (quangDuongMet / 1000) / (giayTroiQua / 3600);
+    let met = 4.0; 
+    if (window.currentSportMode === 'walk') {
+        met = speedKmH < 4 ? 3.0 : 4.5;
+    } else if (window.currentSportMode === 'cycle') {
+        met = speedKmH < 15 ? 6.0 : 10.0;
+    } else { // Mặc định là Chạy bộ
+        met = speedKmH < 8 ? 8.0 : 11.5;
+    }
+    // Công thức: Calo/phút = (MET * Cân nặng * 3.5) / 200
+    let caloPhut = (met * window.userWeight * 3.5) / 200;
+    return caloPhut * (giayTroiQua / 60);
 };
 
 // TÍNH TOÁN CẤP ĐỘ BẰNG EXP CALO (1 CALO = 1 EXP, EXP = 2 * LV^2)

@@ -2147,7 +2147,7 @@ function xuLyToaDoGPS(lat, lng, doChinhXac) {
             let khoangCachMeo = map.distance(currentLatLng, L.latLng(catLat, catLng));
             let btnRadar = document.getElementById('btn-radar-meo');
             if (btnRadar) {
-                if (khoangCachMeo <= 6000) { // khoảng cách để bắt mèo m)
+                if (khoangCachMeo <= 20) { // khoảng cách để bắt mèo m)
                     btnRadar.innerHTML = "📸 MỞ CAM BẮT MÈO";
                     btnRadar.style.background = "#28a745";
                     btnRadar.onclick = window.moManHinhBatMeo;

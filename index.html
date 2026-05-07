@@ -3222,9 +3222,15 @@ window.luuTienTrinhTrongNha = function() {
     //  Cộng dồn Database vĩnh viễn 
     let parsedCalo = parseFloat(caloVal) || 0;
     let parsedMin = Math.floor((typeof window.indoorSeconds !== 'undefined' ? window.indoorSeconds : 0) / 60);
-    if (typeof window.congDonThongKe === 'function') window.congDonThongKe(0, window.reps, parsedCalo, parsedMin);
+if (typeof window.congDonThongKe === 'function') window.congDonThongKe(0, window.reps, parsedCalo, parsedMin);
 
-    window.db.ref('tien_trinh_tap_luyen/' + user).push().set(recordData).then(() => {
+// QUÉT THÀNH TỰU TẬP TRONG NHÀ
+if (typeof window.kiemTraVaNoHuyHieuAn === 'function') {
+    window.kiemTraVaNoHuyHieuAn('chua_te_trong_nha'); // Cứ tập xong lưu là được cúp
+    if (window.reps >= 30) window.kiemTraVaNoHuyHieuAn('co_may_mo_hoi'); // Vượt 30 cái thì nổ cúp thứ 2
+}
+
+window.db.ref('tien_trinh_tap_luyen/' + user).push().set(recordData).then(() => {
         document.getElementById('indoor-success-popup').style.display = 'none';
         alert(`✅ Tuyệt vời! Bạn đã tập ${window.reps} cái và đốt cháy ${caloVal} kcal. Đã lưu vào Sổ tay Tiến Trình!`);
         
@@ -3781,24 +3787,21 @@ window.capNhatHeThongLevel = function(tongCalo) {
     
     let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
 
-    // ĐÃ FIX: HỆ THỐNG TỰ ĐỘNG KHÔI PHỤC CẤP ĐỘ (AUTO-RECOVERY)
     // Tính toán cấp độ đáng lẽ phải đạt được theo công thức: Level = sqrt(EXP/2)
-    let eligibleLevel = Math.floor(Math.sqrt(tongCalo / 2));
-    if (eligibleLevel < 1) eligibleLevel = 1;
-    if (eligibleLevel > 1203) eligibleLevel = 1203;
+// Công thức : Level = sqrt(EXP / 0.2)
+let eligibleLevel = Math.floor(Math.sqrt(tongCalo / 0.2));
+if (eligibleLevel < 1) eligibleLevel = 1;
+if (eligibleLevel > 1203) eligibleLevel = 1203;
 
-    // Nếu khoảng cách giữa Cấp thực tế và Cấp đang lưu > 1 (Bị mất LocalStorage) -> Tự động khôi phục!
-    // (Vẫn chừa lại khoảng cách = 1 để người dùng tự bấm nút lên cấp bình thường cho sướng tay)
-    if (eligibleLevel - currentLevel > 1) {
-        currentLevel = eligibleLevel;
-        localStorage.setItem('user_level_' + user, currentLevel);
-    }
+if (eligibleLevel - currentLevel > 1) {
+    currentLevel = eligibleLevel;
+    localStorage.setItem('user_level_' + user, currentLevel);
+}
+if (currentLevel > 1203) currentLevel = 1203;
 
-    if (currentLevel > 1203) currentLevel = 1203;
-
-    // CÔNG THỨC MỚI: 1 Calo = 1 EXP. EXP Cần = 2 * (Level^2)
-    let expCapHienTai = currentLevel === 1 ? 0 : 2 * Math.pow(currentLevel, 2);
-    let expCapTiepTheo = 2 * Math.pow(currentLevel + 1, 2);
+// CÔNG THỨC MỚI: EXP Cần = 0.2 * (Level^2) -> Lên cấp 100 chỉ tốn 2,000 Calo
+let expCapHienTai = currentLevel === 1 ? 0 : 0.2 * Math.pow(currentLevel, 2);
+let expCapTiepTheo = 0.2 * Math.pow(currentLevel + 1, 2);
 
     let phanTram = ((tongCalo - expCapHienTai) / (expCapTiepTheo - expCapHienTai)) * 100;
     if (phanTram > 100) phanTram = 100;
@@ -3862,10 +3865,13 @@ const DANH_SACH_HUY_HIEU = [
 ];
 
 const DANH_SACH_HUY_HIEU_AN = [
-    { id: 'ma_ca_rong', icon: '🧛‍♂️', title: 'Ma cà rồng', desc: 'Đêm hôm rồi còn thể dục thể thao, bộ đi săn ma hay gì 👻' },
-    { id: 'tho_san_tien', icon: '💰', title: 'Thợ săn tiền thưởng', desc: 'Không sót một xu ! Hôm nay chăm chỉ quá rồi đấy 🤑' },
-    { id: 'phoi_tot', icon: '😷', title: 'Phổi bạn thì tốt rồi', desc: 'Thời tiết khói bụi như kia vẫn ra ngoài chạy được, đúng âm bù dương ! 🚬' },
-    { id: 'simp_chua', icon: '💔', title: 'Simp chúa', desc: 'Mở profile nhà người ta xem gì mà lắm thế? Yêu thì nói một tiếng đi lại còn 😏' }
+{ id: 'ma_ca_rong', icon: '🧛‍♂️', title: 'Ma cà rồng', desc: 'Đêm hôm rồi còn thể dục thể thao, bộ đi săn ma hay gì 👻' },
+{ id: 'tho_san_tien', icon: '💰', title: 'Thợ săn tiền thưởng', desc: 'Không sót một xu ! Hôm nay chăm chỉ quá rồi đấy 🤑' },
+{ id: 'phoi_tot', icon: '😷', title: 'Phổi bạn thì tốt rồi', desc: 'Thời tiết khói bụi như kia vẫn ra ngoài chạy được, đúng âm bù dương ! 🚬' },
+{ id: 'simp_chua', icon: '💔', title: 'Simp chúa', desc: 'Mở profile nhà người ta xem gì mà lắm thế? Yêu thì nói một tiếng đi lại còn 😏' },
+    
+{ id: 'chua_te_trong_nha', icon: '🧘‍♂️', title: 'Chúa tể trong nhà', desc: 'Ai bảo ở nhà là lười? Hoàn thành bài tập phục hồi xuất sắc! Cột sống gửi lời cảm ơn. ' },
+{ id: 'co_may_mo_hoi', icon: '🥵', title: 'Mệt phết !', desc: 'Tập trong nhà mà quất một phát hơn 30 reps! Giỏi! 🔥' }
 ];
 
 window.veBangThanhTuu = function() {
@@ -4117,7 +4123,7 @@ window.capNhatNoiDungPopupRuong = function(markerObj, chestObj) {
     let buttonChiDuong = `<button style="${btnStyle}" onclick="window.routeFromCurrentTo(${chestObj.lat}, ${chestObj.lng})">📍 Chỉ đường đến đây</button>`;
     
     let popupHTML = '';
-    if (khoangCach <= 2000) { //khoảng cách mở rương tính bằng m
+    if (khoangCach <= 21) { //khoảng cách mở rương tính bằng m
         popupHTML = `
         <div style="text-align:center; min-width: 160px;">
         <div style="font-size:30px;">🎁</div>
@@ -7040,9 +7046,9 @@ window.moHoSoCongKhai = function(username) {
         
         document.getElementById('public-avatar').src = data.avatar || `https://ui-avatars.com/api/?name=${username}&background=random`;
         document.getElementById('public-name').innerText = username;
-        // Bơm Cấp độ ra màn hình bằng thuật toán đảo ngược (0.00691)
-        let totalKm = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000) : 0;
-        let pLevel = Math.floor(Math.sqrt(totalKm / 0.00691));
+        // Bơm Cấp độ ra màn hình bằng thuật toán BUFF EXP mới (Calo / 0.2)
+    let totalCaloPublic = data.calo_tieu_thu || 0;
+    let pLevel = Math.floor(Math.sqrt(totalCaloPublic / 0.2));
         if (pLevel < 1) pLevel = 1; if (pLevel > 1203) pLevel = 1203;
         document.getElementById('public-level').innerText = pLevel;
         document.getElementById('public-km').innerText = data.tong_quang_duong_m ? (data.tong_quang_duong_m / 1000).toFixed(1) : "0.0";

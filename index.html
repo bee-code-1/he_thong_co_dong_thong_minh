@@ -2644,11 +2644,13 @@ window.indoorPoseModel.onResults((results) => {
     document.getElementById('indoor-ai-status').style.color = "#28a745";
 
     const lm = results.poseLandmarks;
-    // ĐÃ FIX THEO TÀI LIỆU MEDIAPIPE: LẤY TOÀN BỘ KHUNG XƯƠNG 3D (33 Landmarks)
-    // Phải: Vai(12), Khuỷu(14), Cổ tay(16), Hông(24), Gối(26), Mắt cá(28)
-    // Trái: Vai(11), Khuỷu(13), Cổ tay(15), Hông(23), Gối(25), Mắt cá(27)
-    let sR = lm[14], eR = lm[15], wR = lm[16], hR = lm[17], kR = lm[18], aR = lm[19];
-    let sL = lm[13], eL = lm[20], wL = lm[21], hL = lm[22], kL = lm[23], aL = lm[24];
+// ĐÃ FIX THEO TÀI LIỆU MEDIAPIPE: LẤY TOÀN BỘ KHUNG XƯƠNG (BỎ PHẦN ĐẦU)
+    // Phải (Số chẵn): Vai(12), Khuỷu(14), Cổ tay(16), Hông(24), Gối(26), Mắt cá(28)
+    // Trái (Số lẻ): Vai(11), Khuỷu(13), Cổ tay(15), Hông(23), Gối(25), Mắt cá(27)
+    
+    // === ĐÃ SỬA LẠI CHỈ MỤC (INDEX) CHUẨN XÁC BÊN DƯỚI ===
+    let sR = lm[12], eR = lm[14], wR = lm[16], hR = lm[24], kR = lm[26], aR = lm[28];
+    let sL = lm[11], eL = lm[13], wL = lm[15], hL = lm[23], kL = lm[25], aL = lm[27];
 
     // Hàm phụ: Chuyển đổi nhanh tọa độ 3D ra màn hình 2D
     const getX = (point) => point.x * canvas.width;
@@ -2659,13 +2661,15 @@ window.indoorPoseModel.onResults((results) => {
     ctx.lineWidth = 4; 
     ctx.strokeStyle = "rgba(255, 235, 59, 0.4)"; // Vàng mờ Cyberpunk
 
-    // Thân mình (Vai nối Hông)
+    // Thân mình (Vai nối Hông) tạo thành hình tứ giác
     ctx.moveTo(getX(sL), getY(sL)); ctx.lineTo(getX(sR), getY(sR));
     ctx.lineTo(getX(hR), getY(hR)); ctx.lineTo(getX(hL), getY(hL)); ctx.closePath();
-    // Tay Trái & Tay Phải
+    
+    // Tay Trái & Tay Phải (Vai -> Khuỷu -> Cổ tay)
     ctx.moveTo(getX(sL), getY(sL)); ctx.lineTo(getX(eL), getY(eL)); ctx.lineTo(getX(wL), getY(wL));
     ctx.moveTo(getX(sR), getY(sR)); ctx.lineTo(getX(eR), getY(eR)); ctx.lineTo(getX(wR), getY(wR));
-    // Chân Trái & Chân Phải
+    
+    // Chân Trái & Chân Phải (Hông -> Gối -> Mắt cá)
     ctx.moveTo(getX(hL), getY(hL)); ctx.lineTo(getX(kL), getY(kL)); ctx.lineTo(getX(aL), getY(aL));
     ctx.moveTo(getX(hR), getY(hR)); ctx.lineTo(getX(kR), getY(kR)); ctx.lineTo(getX(aR), getY(aR));
     ctx.stroke();

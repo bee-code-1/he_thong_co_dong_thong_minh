@@ -7417,11 +7417,11 @@ function handleOrientation(event) {
         catX = 50 - (deltaAlpha * 2.5); 
         catY = 50 - (deltaBeta * 3.0);
 
-        // GHÌM CƯƠNG: Không cho Mèo văng ra khỏi màn hình (Khóa từ -10% đến 110%)
-        if (catX < -10) catX = -10;
-        if (catX > 110) catX = 110;
-        if (catY < -10) catY = -10;
-        if (catY > 110) catY = 110;
+       //  nhốt Mèo luôn CÓ MẶT ở rìa màn hình (5% - 95%) để ng dùng biết hướng mà quay lại
+    if (catX < 5) catX = 5;
+    if (catX > 95) catX = 95;
+    if (catY < 5) catY = 5;
+    if (catY > 95) catY = 95;
 
         catTarget.style.left = catX + '%';
         catTarget.style.top = catY + '%';

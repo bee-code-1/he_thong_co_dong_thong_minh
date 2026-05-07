@@ -1824,16 +1824,28 @@ window.saveProfile = function(isSkip) {
             if (typeof initGPS === 'function') initGPS();
         }
 
-        //  Bật đồng hồ đếm thời gian
-        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval); 
-        timerInterval = setInterval(() => {
-            if (isTracking && !isPaused) { 
-                elapsedSeconds++;
-                const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
-                const s = String(elapsedSeconds % 60).padStart(2, '0');
-                document.getElementById('time-display').innerText = `${m}:${s}`;
-            }
-        }, 1000);
+//  Bật đồng hồ đếm thời gian (ĐÃ FIX: Dùng Thời gian thực Date.now() chống ngủ đông APK)
+if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+window.lastTimerTick = Date.now(); // Lưu mốc thời gian bắt đầu chạy
+timerInterval = setInterval(() => {
+    let now = Date.now();
+    if (isTracking && !isPaused) {
+        // Tính ra độ trễ thực sự giữa 2 lần đếm (Bình thường là 1s, ngủ đông có thể là hàng trăm s)
+        let delta = Math.floor((now - window.lastTimerTick) / 1000);
+        if (delta >= 1) {
+            elapsedSeconds += delta; // Cộng dồn số giây đã bị khuyết
+            window.lastTimerTick += delta * 1000; // Dịch mốc thời gian lên
+            
+            const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+            const s = String(elapsedSeconds % 60).padStart(2, '0');
+            const display = document.getElementById('time-display');
+            if(display) display.innerText = `${m}:${s}`;
+        }
+    } else {
+        // Nếu đang Tạm dừng, trượt mốc thời gian liên tục để không bị tính thành đang chạy
+        window.lastTimerTick = now; 
+    }
+}, 1000);
     }
 
     // nút tạm dừng
@@ -2282,10 +2294,17 @@ window.luuTienTrinh = function() {
     const caloVal = document.getElementById('recap-calo') ? document.getElementById('recap-calo').innerText : "0.0";
 
     const recordData = {
-        ngay: dateStr, gio_bat_dau: startTimeStr, gio_ket_thuc: endTimeStr,
-        thoi_gian: timeVal, van_toc: speedVal, quang_duong: distVal,
-        buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
+    ngay: dateStr, gio_bat_dau: startTimeStr, gio_ket_thuc: endTimeStr,
+    thoi_gian: timeVal, van_toc: speedVal, quang_duong: distVal,
+    buoc_chan: stepsVal, calo: caloVal, timestamp: Date.now()
     };
+    //  cộng dồn database vĩnh viễn
+    let parsedDist = parseFloat(distVal) || 0;
+    let parsedSteps = parseInt(stepsVal) || 0;
+    let parsedCalo = parseFloat(caloVal) || 0;
+    let parsedMin = Math.floor((typeof elapsedSeconds !== 'undefined' ? elapsedSeconds : 0) / 60);
+    if (typeof window.congDonThongKe === 'function') window.congDonThongKe(parsedDist, parsedSteps, parsedCalo, parsedMin);
+
         if (username && typeof window.db !== 'undefined' && totalDistanceMeter > 0) {
                 // MẮT THẦN: CÚP MA CÀ RỒNG
         const hour = new Date().getHours();
@@ -2857,10 +2876,16 @@ window.luuTienTrinhTrongNha = function() {
         calo: caloVal,
         timestamp: Date.now(),
         // ĐÃ THÊM: Các cờ đánh dấu cho thẻ Tập Trong Nhà
+        // ĐÃ THÊM: Các cờ đánh dấu cho thẻ Tập Trong Nhà
         loai_hinh: 'trong_nha',
         ten_bai_tap: document.getElementById('indoor-exercise-name').innerText,
         so_reps: window.reps
     };
+
+    //  Cộng dồn Database vĩnh viễn 
+    let parsedCalo = parseFloat(caloVal) || 0;
+    let parsedMin = Math.floor((typeof window.indoorSeconds !== 'undefined' ? window.indoorSeconds : 0) / 60);
+    if (typeof window.congDonThongKe === 'function') window.congDonThongKe(0, window.reps, parsedCalo, parsedMin);
 
     window.db.ref('tien_trinh_tap_luyen/' + user).push().set(recordData).then(() => {
         document.getElementById('indoor-success-popup').style.display = 'none';
@@ -3412,104 +3437,73 @@ window.startRunningProxy = function() {
     }
 };
 
-// TÍNH TOÁN CẤP ĐỘ & KINH NGHIỆM (HÀM 0.00691)
-window.capNhatHeThongLevel = function(tongKm) {
-    if (!tongKm) tongKm = 0;
+// TÍNH TOÁN CẤP ĐỘ BẰNG EXP CALO (1 CALO = 1 EXP, EXP = 2 * LV^2)
+window.capNhatHeThongLevel = function(tongCalo) {
+    if (!tongCalo) tongCalo = 0;
     const user = localStorage.getItem('currentUser');
     if (!user) return;
 
-    // 1. Lấy cấp độ hiện tại người dùng ĐÃ BẤM NHẬN (Mặc định là 1)
     let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
     if (currentLevel > 1203) currentLevel = 1203;
 
-    // 2. Tính mốc KM của cấp hiện tại và cấp tiếp theo
-    let kmCapHienTai = currentLevel === 1 ? 0 : 0.00691 * Math.pow(currentLevel, 2);
-    let kmCapTiepTheo = 0.00691 * Math.pow(currentLevel + 1, 2);
+    // CÔNG THỨC MỚI: 1 Calo = 1 EXP. EXP Cần = 2 * (Level^2)
+    let expCapHienTai = currentLevel === 1 ? 0 : 2 * Math.pow(currentLevel, 2);
+    let expCapTiepTheo = 2 * Math.pow(currentLevel + 1, 2);
 
-    // 3. Tính % tiến trình (Giới hạn tối đa 100%)
-    let phanTram = ((tongKm - kmCapHienTai) / (kmCapTiepTheo - kmCapHienTai)) * 100;
+    let phanTram = ((tongCalo - expCapHienTai) / (expCapTiepTheo - expCapHienTai)) * 100;
     if (phanTram > 100) phanTram = 100;
     if (phanTram < 0) phanTram = 0;
 
-    // 4. Đổ dữ liệu ra màn hình
     const elCurLv = document.getElementById('current-lv');
-    if (elCurLv) {
-        elCurLv.innerText = currentLevel;
-        document.getElementById('next-lv').innerText = currentLevel >= 1203 ? "MAX" : currentLevel + 1;
-        document.getElementById('level-bar-fill').style.width = phanTram + '%';
-        
-        // Hiển thị dạng tiến trình: Ví dụ 1.5 / 2.8 km
-        let soKmHienTai = (tongKm > kmCapTiepTheo) ? kmCapTiepTheo : tongKm;
-        document.getElementById('xp-current').innerText = soKmHienTai.toFixed(2) + ' km';
-        document.getElementById('xp-need').innerText = kmCapTiepTheo.toFixed(2) + ' km';
-    }
+    if (elCurLv) elCurLv.innerText = currentLevel;
+    document.getElementById('next-lv').innerText = currentLevel >= 1203 ? "MAX" : currentLevel + 1;
+    document.getElementById('level-bar-fill').style.width = phanTram + '%';
 
-    // 5. Nổ nút LÊN CẤP nếu đủ KM
+    let soExpHienTai = (tongCalo > expCapTiepTheo) ? expCapTiepTheo : tongCalo;
+    document.getElementById('xp-current').innerText = soExpHienTai.toFixed(1) + ' EXP';
+    document.getElementById('xp-need').innerText = expCapTiepTheo.toFixed(1) + ' EXP';
+
     const btn = document.getElementById('btn-claim-level');
     if (btn) {
-        if (tongKm >= kmCapTiepTheo && currentLevel < 1203) {
-            btn.style.display = 'inline-block';
-        } else {
-            btn.style.display = 'none';
-        }
+        if (tongCalo >= expCapTiepTheo && currentLevel < 1203) btn.style.display = 'inline-block';
+        else btn.style.display = 'none';
     }
 
-    // Quét mở khóa Huy hiệu ở Tab 5
     if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
 };
 
 // HÀM XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT LÊN CẤP
 window.nhanThuongLenCap = function() {
-window.phatAmThanh('lv_up'); //  KÍCH HOẠT NHẠC LÊN CẤP
-const user = localStorage.getItem('currentUser');
-let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
-if (currentLevel < 1203) {
+    window.phatAmThanh('lv_up');
+    const user = localStorage.getItem('currentUser');
+    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+    if (currentLevel < 1203) {
         currentLevel += 1;
         localStorage.setItem('user_level_' + user, currentLevel);
+        alert(`🎉 ĐỈNH CAO! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
         
-        // 👁️ MẮT THẦN QUÉT HUY HIỆU MỚI
-        let coHuyHieuMoi = false;
-        if (typeof DANH_SACH_HUY_HIEU !== 'undefined') {
-            let hhMoi = DANH_SACH_HUY_HIEU.find(hh => hh.cap === currentLevel);
-            if (hhMoi) {
-                // Đánh dấu huy hiệu này là "Hàng mới về chưa bóc tem"
-                localStorage.setItem(`badge_new_${user}_${currentLevel}`, 'true');
-                coHuyHieuMoi = true;
-            }
-        }
-
-        if (coHuyHieuMoi) {
-            // Bật chấm đỏ ở Tab 5
-            const chamDo = document.getElementById('cham-do-thanh-tuu');
-            if(chamDo) chamDo.style.display = 'block';
-            alert(`🎉 Lên Cấp ${currentLevel}!\nCậu vừa nhận được một Hộp Quà Thành Tựu.\nSang Tab 5 (Phòng trưng bày) để đập hộp ngay nhé!`);
-        } else {
-            alert(`🎉 ĐỈNH ! Cậu vừa bứt phá lên Cấp ${currentLevel}!`);
-        }
-        
-        // Quét lại vạch Level
-        let textKm = document.getElementById('tong-km-tab2').innerText;
-        window.capNhatHeThongLevel(parseFloat(textKm) || 0);
+        // Quét lại vạch Level bằng Calo
+        let textCalo = document.getElementById('tong-calo-tab2').innerText;
+        window.capNhatHeThongLevel(parseFloat(textCalo) || 0);
     }
 };
-    
-// HỆ THỐNG THÀNH TỰU (PHÒNG TRƯNG BÀY TAB 5)
+
+// 12 HUY HIỆU DỰA TRÊN QUÃNG ĐƯỜNG (KM) CHUẨN ĐỊA LÝ VIỆT NAM
 const DANH_SACH_HUY_HIEU = [
-    { cap: 16, icon: '🐢', title: 'Khởi động Hồ Gươm', desc: 'Bước chân đầu tiên! Cậu đã hoàn thành quãng đường bằng một vòng dạo quanh Hồ Gươm (Hà Nội).' },
-    { cap: 47, icon: '🚲', title: 'Gió mát Hồ Tây', desc: 'Không đùa đâu, cậu đã tích lũy đủ để đạp xe trọn vẹn một vòng Hồ Tây lộng gió rồi đấy!' },
-    { cap: 78, icon: '🏅', title: 'Huy chương Marathon', desc: 'Thể lực tuyệt vời! Sức bền của cậu hiện đã ngang với việc chạy xong một giải Full-Marathon tiêu chuẩn.' },
-    { cap: 120, icon: '🎒', title: 'Đôi chân Phượt thủ', desc: 'Chúc mừng! Cậu đã đi bộ một quãng đường tương đương từ thủ đô Hà Nội về thăm Cố đô Hoa Lư.' },
-    { cap: 208, icon: '☁️', title: 'Săn mây Đà Lạt', desc: 'Đỉnh chóp! Quãng đường cậu đi đã bằng một chuyến Trekking thẳng từ Sài Gòn lên xứ mù sương Đà Lạt.' },
-    { cap: 269, icon: '🌊', title: 'Hương vị Biển cả', desc: 'Chân cậu chắc khỏe lắm rồi đấy. Hành trình của cậu đã dài bằng chuyến đi từ Sài Gòn ra ngắm biển Nha Trang.' },
-    { cap: 399, icon: '⛰️', title: 'Dấu chân Trường Sơn', desc: 'Lịch sử gọi tên cậu! Từng bước chân đã cộng dồn bằng đúng chiều dài của Dãy Trường Sơn hùng vĩ.' },
-    { cap: 496, icon: '🇻🇳', title: 'Xuyên Việt Ca', desc: 'Ngạo nghễ! Cậu vừa điền tên mình vào danh sách những người đi bộ xuyên Việt từ Hà Nội vào TP.Hồ Chí Minh.' },
-    { cap: 584, icon: '🛣️', title: 'Dọc đường Thiên Lý', desc: 'Không gì cản nổi! Cậu đã chinh phục toàn bộ chiều dài Quốc lộ 1A từ Lạng Sơn đến tận Mũi Cà Mau.' },
-    { cap: 687, icon: '🏖️', title: 'Ôm trọn Biển Đông', desc: 'Cậu là một chiến binh! Cậu đã đi dọc toàn bộ đường bờ biển tuyệt đẹp của tổ quốc.' },
-    { cap: 1000, icon: '🦅', title: 'Cánh chim Xuyên Lục Địa', desc: 'Vượt ra khỏi biên giới! Quãng đường cậu đi đã dài bằng một chuyến bay thẳng từ Việt Nam sang tận nước Úc.' },
-    { cap: 1203, icon: '🌍', title: 'Kẻ chinh phục Địa Cầu', desc: 'Cột mốc tối thượng! Cậu đã hoàn thành khoảng cách vĩ đại từ Xích Đạo lên thẳng Bắc Cực. Không còn giới hạn nào cho cậu nữa!' }
+    { km: 1.7, icon: '🐢', title: 'Khởi động Hồ Gươm', desc: 'Bước chân đầu tiên! Hoàn thành 1.7km bằng một vòng dạo quanh Hồ Gươm.' },
+    { km: 15, icon: '🚲', title: 'Gió mát Hồ Tây', desc: 'Không đùa đâu, cậu đã đi được 15km, đủ đạp xe trọn vẹn một vòng Hồ Tây lộng gió!' },
+    { km: 42, icon: '🏅', title: 'Huy chương Marathon', desc: 'Thể lực tuyệt vời! 42km ngang với việc chạy xong một giải Full-Marathon.' },
+    { km: 100, icon: '🎒', title: 'Đôi chân Phượt thủ', desc: 'Chúc mừng! 100km tương đương từ thủ đô Hà Nội về thăm Cố đô Hoa Lư.' },
+    { km: 300, icon: '☁️', title: 'Săn mây Đà Lạt', desc: 'Đỉnh chóp! 300km bằng một chuyến Trekking thẳng từ Sài Gòn lên Đà Lạt.' },
+    { km: 400, icon: '🌊', title: 'Hương vị Biển cả', desc: 'Chân cậu chắc khỏe lắm rồi đấy. 400km dài bằng chuyến đi từ Sài Gòn ra Nha Trang.' },
+    { km: 1000, icon: '⛰️', title: 'Dấu chân Trường Sơn', desc: 'Lịch sử gọi tên! Từng bước chân cộng dồn 1000km bằng đúng chiều dài Dãy Trường Sơn.' },
+    { km: 1700, icon: '🇻🇳', title: 'Xuyên Việt Ca', desc: 'Ngạo nghễ! 1700km, điền tên vào danh sách những người đi bộ xuyên Việt.' },
+    { km: 2300, icon: '🛣️', title: 'Dọc đường Thiên Lý', desc: 'Không gì cản nổi! 2300km chinh phục toàn bộ Quốc lộ 1A từ Lạng Sơn đến Cà Mau.' },
+    { km: 3260, icon: '🏖️', title: 'Ôm trọn Biển Đông', desc: 'Cậu là chiến binh! 3260km đi dọc toàn bộ đường bờ biển tuyệt đẹp của tổ quốc.' },
+    { km: 7000, icon: '🦅', title: 'Cánh chim Xuyên Lục Địa', desc: 'Vượt ra biên giới! 7000km dài bằng chuyến bay thẳng từ Việt Nam sang nước Úc.' },
+    { km: 10000, icon: '🌍', title: 'Kẻ chinh phục Địa Cầu', desc: 'Cột mốc tối thượng! 10,000km khoảng cách vĩ đại từ Xích Đạo lên thẳng Bắc Cực.' }
 ];
 
-// NHÓM THÀNH TỰU ẨN (LẦY LỘI & CÀ KHỊA)
 const DANH_SACH_HUY_HIEU_AN = [
     { id: 'ma_ca_rong', icon: '🧛‍♂️', title: 'Ma cà rồng', desc: 'Đêm hôm rồi còn thể dục thể thao, bộ đi săn ma hay gì 👻' },
     { id: 'tho_san_tien', icon: '💰', title: 'Thợ săn tiền thưởng', desc: 'Không sót một xu ! Hôm nay chăm chỉ quá rồi đấy 🤑' },
@@ -3521,20 +3515,31 @@ window.veBangThanhTuu = function() {
     const container = document.getElementById('danh-sach-thanh-tuu');
     if (!container) return;
     const user = localStorage.getItem('currentUser');
-    let currentLevel = parseInt(localStorage.getItem('user_level_' + user)) || 1;
+    
+    // Rút KM thật từ giao diện đã được bơm từ Database
+    let txtKm = document.getElementById('tong-km-tab2') ? document.getElementById('tong-km-tab2').innerText : "0";
+    let currentKm = parseFloat(txtKm) || 0;
 
-    let html = `<h4 style="text-align:left; color:#004BAd; margin-top:0;"> Hành trình Cấp độ</h4>`;
+    let html = `<h4 style="text-align:left; color:#004BAd; margin-top:0;"> Hành trình Khám phá</h4>`;
 
-    // 1. VẼ CÚP CẤP ĐỘ
     DANH_SACH_HUY_HIEU.forEach(hh => {
-        const isUnlocked = currentLevel >= hh.cap;
-        const isNew = localStorage.getItem(`badge_new_${user}_${hh.cap}`) === 'true';
+        const isUnlocked = currentKm >= hh.km;
+        const keyNew = `badge_new_${user}_km_${hh.km}`;
+        
+        // Quét Huy hiệu mới chưa từng bóc tem
+        if (isUnlocked && localStorage.getItem(`badge_unlocked_${user}_km_${hh.km}`) !== 'true') {
+            localStorage.setItem(`badge_unlocked_${user}_km_${hh.km}`, 'true');
+            localStorage.setItem(keyNew, 'true');
+            const chamDo = document.getElementById('cham-do-thanh-tuu');
+            if(chamDo) chamDo.style.display = 'block';
+        }
+
+        const isNew = localStorage.getItem(keyNew) === 'true';
         let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
         let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
-
-        let descText = `<i>Đạt Cấp ${hh.cap} để khám phá bí mật này...</i>`;
-        let titleText = `Thử thách Cấp ${hh.cap}`;
+        let descText = `<i>Tích lũy đủ ${hh.km.toLocaleString()} km để khám phá bí mật này...</i>`;
+        let titleText = `Thử thách ${hh.km} km`;
         let clickEvent = '';
 
         if (isUnlocked) {
@@ -3543,11 +3548,12 @@ window.veBangThanhTuu = function() {
                 descText = "<b>👉 CHẠM VÀO ĐÂY ĐỂ ĐẬP HỘP!</b>";
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
-                clickEvent = `onclick="window.moHuyHieuMoi('${hh.cap}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+                clickEvent = `onclick="window.moHuyHieuMoiKm('${hh.km}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
             } else {
                 titleText = hh.title; descText = hh.desc;
             }
         }
+
         html += `
         <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
             <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
@@ -3559,7 +3565,6 @@ window.veBangThanhTuu = function() {
         </div>`;
     });
 
-    // 2. VẼ CÚP ẨN (CHỈ HIỆN TÊN, ẨN HOÀN TOÀN MÔ TẢ)
     html += `<h4 style="text-align:left; color:#dc3545; margin-top:20px;">🔮 Kỷ lục Bí ẩn</h4>`;
     DANH_SACH_HUY_HIEU_AN.forEach(hh => {
         const isUnlocked = localStorage.getItem(`badge_${user}_${hh.id}`) === 'true';
@@ -3567,7 +3572,6 @@ window.veBangThanhTuu = function() {
         let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
         let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #dc3545);' : 'filter: grayscale(1); opacity: 0.3;';
-
         let titleText = hh.title;
         let clickEvent = '';
 
@@ -3579,19 +3583,35 @@ window.veBangThanhTuu = function() {
                 clickEvent = `onclick="window.moHuyHieuMoi('${hh.id}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
             }
         }
-
         html += `
         <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
-            <div class="badge-icon" style="${glowStyle}">${hh.icon}</div> <!-- 👈 Luôn hiện icon thật, CSS sẽ tự bôi xám nhờ filter: grayscale -->
+            <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
             <div style="flex: 1; text-align: left; padding-right: 20px;">
                 <div style="font-weight: 900; font-size: 15px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#888'};">${titleText}</div>
-                <!-- Cố tình KHÔNG in dòng badge-desc ra đây để giấu kỹ mô tả cho đến khi unlock -->
             </div>
             ${lockIcon}
         </div>`;
     });
-
     container.innerHTML = html;
+};
+
+// Hàm đập hộp riêng cho Huy hiệu KM (Đổi mác nhận quà)
+window.moHuyHieuMoiKm = function(km, icon, title, desc) {
+    window.phatAmThanh('thanh_tuu');
+    const user = localStorage.getItem('currentUser');
+    document.getElementById('achieve-icon').innerText = icon;
+    document.getElementById('achieve-title').innerText = title;
+    document.getElementById('achieve-desc').innerHTML = desc;
+    
+    const modal = document.getElementById('achievement-modal');
+    const box = document.getElementById('achieve-box');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        box.style.transform = 'scale(1)';
+        box.style.opacity = '1';
+        if(typeof bungPhaoHoa === 'function') bungPhaoHoa();
+    }, 50);
+    localStorage.removeItem(`badge_new_${user}_km_${km}`);
 };
 
 // HÀM MẮT THẦN: CHUYÊN QUÉT VÀ NỔ CÚP ẨN
@@ -6076,35 +6096,73 @@ async function guiTinNhanMeo() {
         taiLichSuChat();
     }
 }
+// HÀM MỚI: CỘNG DỒN DỮ LIỆU LÊN DATABASE VĨNH VIỄN
+window.congDonThongKe = function(kmMoi, buocMoi, caloMoi, phutMoi) {
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return;
+    const ref = window.db.ref('nguoi_dung/' + user + '/thong_ke');
+    ref.transaction((currentData) => {
+        if (currentData === null) {
+            return { tong_km: kmMoi, tong_buoc: buocMoi, tong_calo: caloMoi, tong_phut: phutMoi };
+        } else {
+            currentData.tong_km = (currentData.tong_km || 0) + kmMoi;
+            currentData.tong_buoc = (currentData.tong_buoc || 0) + buocMoi;
+            currentData.tong_calo = (currentData.tong_calo || 0) + caloMoi;
+            currentData.tong_phut = (currentData.tong_phut || 0) + phutMoi;
+            return currentData;
+        }
+    });
+};
+
 // 1. TÍNH TOÁN BẢNG TÍCH LŨY Ở TAB 2 & SẮP XẾP LỊCH SỬ
 window.capNhatBangTichLuy = function(dataObj) {
-    if (!dataObj) return;
-    let tongKm = 0, tongBuoc = 0, tongCalo = 0, tongPhut = 0;
-    let ngaySomNhat = Date.now();
-    
-    Object.values(dataObj).forEach(tienTrinh => {
-        tongKm += parseFloat(tienTrinh.quang_duong) || 0;
-        tongBuoc += parseInt(tienTrinh.buoc_chan) || 0;
-        tongCalo += parseFloat(tienTrinh.calo) || 0;
-        
-        let thoiGianStr = tienTrinh.thoi_gian || "00:00";
-        let parts = thoiGianStr.split(':');
-        if (parts.length === 2) tongPhut += parseInt(parts.at(0)) * 60 + parseInt(parts.at(1));
-        if (tienTrinh.timestamp < ngaySomNhat) ngaySomNhat = tienTrinh.timestamp;
-    });
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return;
 
-    const dateStr = new Date(ngaySomNhat).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
-    if(document.getElementById('ngay-bat-dau-tap')) document.getElementById('ngay-bat-dau-tap').innerText = dateStr;
-    if(document.getElementById('tong-km-tab2')) document.getElementById('tong-km-tab2').innerText = tongKm.toFixed(1);
-    if(document.getElementById('tong-buoc-tab2')) document.getElementById('tong-buoc-tab2').innerText = tongBuoc;
-    if(document.getElementById('tong-calo-tab2')) document.getElementById('tong-calo-tab2').innerText = tongCalo.toFixed(1);
-    let gio = Math.floor(tongPhut / 60); let phut = tongPhut % 60;
-    if(document.getElementById('tong-thoigian-tab2')) document.getElementById('tong-thoigian-tab2').innerText = `${gio}h ${phut}m`;
-
-    //  TRUYỀN THẲNG TỔNG KM CHO VẠCH LEVEL 
-    if(typeof window.capNhatHeThongLevel === 'function') {
-        window.capNhatHeThongLevel(tongKm);
+    // Tính ngày bắt đầu tập (từ data lịch sử nếu có)
+    if (dataObj) {
+        let ngaySomNhat = Date.now();
+        Object.values(dataObj).forEach(tienTrinh => {
+            if (tienTrinh.timestamp < ngaySomNhat) ngaySomNhat = tienTrinh.timestamp;
+        });
+        const dateStr = new Date(ngaySomNhat).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
+        if(document.getElementById('ngay-bat-dau-tap')) document.getElementById('ngay-bat-dau-tap').innerText = dateStr;
     }
+
+    // ĐỒNG BỘ DỮ LIỆU CỘNG DỒN TỪ FIREBASE (CHỐNG MẤT KHI XÓA LỊCH SỬ)
+    window.db.ref('nguoi_dung/' + user + '/thong_ke').once('value').then(snap => {
+        let thongKe = snap.val();
+        
+        // Cứu cánh cho dữ liệu tân binh chưa có file thong_ke
+        if (!thongKe) {
+            let tKm = 0, tBuoc = 0, tCalo = 0, tPhut = 0;
+            if (dataObj) {
+                Object.values(dataObj).forEach(tienTrinh => {
+                    tKm += parseFloat(tienTrinh.quang_duong) || 0;
+                    tBuoc += parseInt(tienTrinh.buoc_chan) || 0;
+                    tCalo += parseFloat(tienTrinh.calo) || 0;
+                    let parts = (tienTrinh.thoi_gian || "00:00").split(':');
+                    if (parts.length === 2) tPhut += parseInt(parts.at(0)) * 60 + parseInt(parts.at(1));
+                });
+            }
+            thongKe = { tong_km: tKm, tong_buoc: tBuoc, tong_calo: tCalo, tong_phut: tPhut };
+            window.db.ref('nguoi_dung/' + user + '/thong_ke').set(thongKe);
+        }
+
+        // In số liệu bất tử ra màn hình Tab 2
+        if(document.getElementById('tong-km-tab2')) document.getElementById('tong-km-tab2').innerText = (thongKe.tong_km || 0).toFixed(1);
+        if(document.getElementById('tong-buoc-tab2')) document.getElementById('tong-buoc-tab2').innerText = Math.round(thongKe.tong_buoc || 0);
+        if(document.getElementById('tong-calo-tab2')) document.getElementById('tong-calo-tab2').innerText = (thongKe.tong_calo || 0).toFixed(1);
+        
+        let gio = Math.floor((thongKe.tong_phut || 0) / 60); 
+        let phut = (thongKe.tong_phut || 0) % 60;
+        if(document.getElementById('tong-thoigian-tab2')) document.getElementById('tong-thoigian-tab2').innerText = `${gio}h ${phut}m`;
+
+        // Bơm TỔNG CALO vào hệ thống Level (Để quy đổi 1 Calo = 1 EXP)
+        if(typeof window.capNhatHeThongLevel === 'function') {
+            window.capNhatHeThongLevel(thongKe.tong_calo || 0);
+        }
+    });
 };
 
 // Ghi đè hàm Load để Sắp xếp MỚI NHẤT lên đầu và tải Bảng tích lũy

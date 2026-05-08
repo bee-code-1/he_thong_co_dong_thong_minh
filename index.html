@@ -622,9 +622,28 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     font-size: 18px; cursor: pointer; background: #f0f0f0; border-radius: 50%; 
     transition: background 0.2s, transform 0.2s, color 0.2s, border 0.3s, box-shadow 0.3s; color: #555;
 }
-.mode-btn.active-mode { 
-    background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,75,173,0.4); 
+.mode-btn.active-mode {
+background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,75,173,0.4);
 }
+
+/* === CSS CHUẨN CHO CÔNG TẮC BÁO THỨC KIỂU iOS === */
+.ios-switch {
+    position: relative; width: 46px; height: 26px; appearance: none; -webkit-appearance: none;
+    background: #e0e0e0; outline: none; border-radius: 15px; cursor: pointer;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1); transition: background 0.3s ease-in-out; flex-shrink: 0;
+}
+.ios-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px;
+    background: white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ios-switch:checked { background: #28a745; }
+.ios-switch:checked::after { transform: translateX(20px); }
+
+/* Hiệu ứng nảy màn hình Báo thức */
+#alarm-modal { opacity: 0; transform: scale(0.9); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+#alarm-modal.show { opacity: 1; transform: scale(1); pointer-events: auto; }
+</style>
          
      </style>
 </head>
@@ -1006,7 +1025,12 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
                 <div>🔥 <span id="tong-calo-tab2">0</span> kcal</div>
                 <div>⏱️ <span id="tong-thoigian-tab2">0h 0m</span></div>
             </div>
+
+            <!-- NÚT MỞ QUẢN LÝ BÁO THỨC (VIÊN THUỐC) -->
+            <div onclick="window.moBangBaoThuc()" style="background: rgba(255,255,255,0.9); padding: 12px 15px; border-radius: 20px; font-weight: 900; font-size: 14px; color: #d35400; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+            <span style="font-size: 20px; animation: catPulse 2s infinite;">⏰</span> Quản lý Lịch trình & Báo thức
         </div>
+            </div>
 
         
         <!-- Danh sách các chuyến chạy bộ sẽ được Javascript nhồi vào đây -->
@@ -1599,7 +1623,28 @@ background: rgba(255, 255, 255, 0.95); box-shadow: 0 12px 30px rgba(0,0,0,0.2);
         <div id="public-action-btn"></div>
     </div>
 </div>
+<!-- MÀN HÌNH FULL SCREEN: QUẢN LÝ BÁO THỨC -->
+<div id="alarm-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f4f7f6; z-index: 9000; display: flex; flex-direction: column;">
+    <!-- Header -->
+    <div style="background: #004BAd; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; padding-top: calc(15px + env(safe-area-inset-top)); box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">⏰</span>
+            <h2 style="margin: 0; font-size: 18px; font-weight: 900;">Lịch Trình Sinh Học</h2>
+        </div>
+        <button onclick="window.dongBangBaoThuc()" style="background: none; border: none; color: white; font-size: 32px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+    </div>
+    
+    <!-- Danh sách báo thức -->
+    <div id="alarm-list-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px;">
+        <!-- Javascript sẽ nhồi danh sách báo thức vào đây -->
+    </div>
 
+    <!-- Nút thêm báo thức vô hạn bám đáy -->
+    <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 20;">
+        <button onclick="window.themBaoThucMoi()" style="width: 60px; height: 60px; border-radius: 50%; background: #28a745; color: white; font-size: 30px; border: 4px solid white; box-shadow: 0 6px 15px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer;">+</button>
+    </div>
+</div>
+    
 <!-- MÀN HÌNH MINIGAME AR BẮT MÈO -->
 <div id="ar-catch-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #000; z-index: 8000; overflow: hidden;">
     <!-- Nền Camera -->
@@ -5241,35 +5286,149 @@ window.xinQuyenThongBao = async function() {
             // Bắn test thử 1 cái
             window.banThongBaoNative(1, "Hệ thống Cơ động Thông minh", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
 
-            // Cài luôn nhắc nhở thói quen 17:30 mỗi ngày
-            window.caiDatNhacNhoHangNgay();
-        } else {
-            alert("❌ Đã từ chối quyền. Hãy vào Cài đặt ứng dụng để mở lại nhé.");
+// HỆ THỐNG QUẢN LÝ BÁO THỨC & LỊCH TRÌNH 
+// ==========================================
+
+// Khởi tạo 3 mốc mặc định nếu người dùng chưa có data
+window.khoiTaoBaoThucMacDinh = function() {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user));
+    if (!alarms || alarms.length === 0) {
+        alarms = [
+            { id: 'al_1', time: '05:00', title: '🌅 Mèo đòi ra ngoài', isON: false },
+            { id: 'al_2', time: '17:30', title: '🏃 Đi chạy bộ', isON: false },
+            { id: 'al_3', time: '22:30', title: '💤 Đi ngủ', isON: false }
+        ];
+        localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+    }
+    return alarms;
+};
+
+// Render giao diện danh sách báo thức
+window.veDanhSachBaoThuc = function() {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = window.khoiTaoBaoThucMacDinh();
+    const container = document.getElementById('alarm-list-container');
+    if (!container) return;
+
+    // Sắp xếp báo thức theo giờ
+    alarms.sort((a, b) => a.time.localeCompare(b.time));
+
+    let html = '';
+    alarms.forEach((al) => {
+        let opacity = al.isON ? '1' : '0.5';
+        html += `
+        <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 6px solid ${al.isON ? '#004BAd' : '#ccc'}; transition: all 0.3s ease; opacity: ${opacity};">
+            <div style="flex: 1; text-align: left;">
+                <input type="time" onchange="window.capNhatGioBaoThuc('${al.id}', this.value)" value="${al.time}" style="font-size: 32px; font-weight: 900; color: ${al.isON ? '#333' : '#888'}; border: none; outline: none; background: transparent; padding: 0; margin-bottom: 5px;">
+                <input type="text" onchange="window.capNhatTenBaoThuc('${al.id}', this.value)" value="${al.title}" style="display: block; width: 90%; font-size: 14px; font-weight: bold; color: #666; border: none; outline: none; background: transparent;">
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 15px;">
+                <input type="checkbox" class="ios-switch" ${al.isON ? 'checked' : ''} onchange="window.toggleBaoThuc('${al.id}', this.checked)">
+                <span onclick="window.xoaBaoThuc('${al.id}')" style="font-size: 18px; color: #dc3545; cursor: pointer;">🗑️</span>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+};
+
+// Đóng / Mở Màn hình Báo thức (Tự ẩn hiện Bottom Nav)
+window.moBangBaoThuc = function() {
+    const nav = document.getElementById('bottom-nav');
+    if(nav) nav.classList.add('nav-hidden');
+    document.getElementById('alarm-modal').classList.add('show');
+    window.veDanhSachBaoThuc();
+};
+
+window.dongBangBaoThuc = function() {
+    document.getElementById('alarm-modal').classList.remove('show');
+    if(typeof isTracking !== 'undefined' && !isTracking) {
+        const nav = document.getElementById('bottom-nav');
+        if(nav) nav.classList.remove('nav-hidden');
+    }
+};
+
+// Cập nhật Trạng thái ON/OFF và gọi Native Push Notification
+window.toggleBaoThuc = function(id, isChecked) {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user));
+    let theAlarm = alarms.find(a => a.id === id);
+    if (theAlarm) {
+        theAlarm.isON = isChecked;
+        localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+        window.veDanhSachBaoThuc(); // Vẽ lại để cập nhật độ mờ
+
+        // Tích hợp Đẩy thông báo hệ thống (Nếu đang chạy trên App)
+        if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+            let numId = parseInt(id.replace('al_', '')) + 8000; 
+            if (isChecked) {
+                let timeParts = theAlarm.time.split(':');
+                window.Capacitor.Plugins.LocalNotifications.schedule({
+                    notifications: [{
+                        title: "⏰ " + theAlarm.title,
+                        body: "Đến giờ rồi cậu ơi! Dậy vận động thôi!",
+                        id: numId,
+                        smallIcon: "logo_nho",
+                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[1]) }, repeats: true }
+                    }]
+                });
+            } else {
+                window.Capacitor.Plugins.LocalNotifications.cancel({ notifications: [{ id: numId }] });
+            }
         }
-    } else {
-        alert("⚠️ Tính năng này cần chạy trên App để hoạt động tốt nhất.");
     }
 };
 
-// HÀM GỌI THÔNG BÁO XUYÊN MÀN HÌNH KHÓA
-window.banThongBaoNative = function(idGoc, tieuDe, noiDung, delayGiay = 0) {
+// Cập nhật giờ và tên
+window.capNhatGioBaoThuc = function(id, newTime) {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user));
+    let theAlarm = alarms.find(a => a.id === id);
+    if (theAlarm) {
+        theAlarm.time = newTime;
+        localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+        if(theAlarm.isON) window.toggleBaoThuc(id, true); // Reset lại chuông
+    }
+};
+
+window.capNhatTenBaoThuc = function(id, newTitle) {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user));
+    let theAlarm = alarms.find(a => a.id === id);
+    if (theAlarm) {
+        theAlarm.title = newTitle;
+        localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+    }
+};
+
+// Nút (+) Thêm báo thức mới vô hạn
+window.themBaoThucMoi = function() {
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user)) || [];
+    let newId = 'al_' + Date.now();
+    alarms.push({ id: newId, time: '12:00', title: 'Nhắc nhở mới', isON: false });
+    localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+    window.veDanhSachBaoThuc();
+};
+
+window.xoaBaoThuc = function(id) {
+    if(!confirm("Xóa lịch trình này?")) return;
+    const user = localStorage.getItem('currentUser') || 'Khach';
+    let alarms = JSON.parse(localStorage.getItem('user_alarms_' + user));
+    alarms = alarms.filter(a => a.id !== id);
+    localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
+    
+    // Tắt luôn chuông Native Push
     if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
-        const timeToFire = new Date(Date.now() + (delayGiay * 1000));
-        window.Capacitor.Plugins.LocalNotifications.schedule({
-            notifications: [{
-                title: tieuDe,
-                body: noiDung,
-                id: idGoc,
-                schedule: { at: timeToFire },
-                smallIcon: "logo_nho", // 👈 Ép dùng logo trắng trong suốt của cậu
-                sound: null,
-                actionTypeId: "",
-                extra: null
-            }]
-        });
+        window.Capacitor.Plugins.LocalNotifications.cancel({ notifications: [{ id: parseInt(id.replace('al_', '')) + 8000 }] });
     }
+    window.veDanhSachBaoThuc();
 };
 
+// Cài đặt thói quen mặc định lúc mới vào App
+window.caiDatNhacNhoHangNgay = function() {
+    window.khoiTaoBaoThucMacDinh(); // Chỉ khởi tạo dữ liệu chứ không tự bật chuông gây phiền
+};
 // HÀM CÀI ĐẶT THÓI QUEN: NHẮC ĐI CHẠY LÚC 17:30 MỖI NGÀY
 window.caiDatNhacNhoHangNgay = function() {
     if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {

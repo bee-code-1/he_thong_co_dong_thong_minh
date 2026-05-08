@@ -5362,6 +5362,7 @@ window.toggleBaoThuc = function(id, isChecked) {
         if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
             let numId = parseInt(id.replace('al_', '')) + 8000; 
             if (isChecked) {
+                // ĐÃ FIX LỖI PARSE THỜI GIAN
                 let timeParts = theAlarm.time.split(':');
                 window.Capacitor.Plugins.LocalNotifications.schedule({
                     notifications: [{

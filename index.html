@@ -2641,18 +2641,28 @@ window.huyBamGiu = function() {
     }
 };
 
-// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (BẢN NHẤN GIỮ) ===
+// === HÀM TẠO HTML GIAO DIỆN THẺ TIẾN TRÌNH (CÓ MINI-MAP VÀ VIÊN THEO MÔN) ===
 window.veTheTienTrinh = function(recordKey, data) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
     if (emptyMsg) emptyMsg.style.display = 'none';
 
-    // RẼ NHÁNH VIỀN VÀ ICON THEO MÔN THỂ THAO
+    // RẼ NHÁNH VIỀN VÀ BỘ NÃO NHẬN DIỆN ICON THEO TÊN BÀI TẬP
     let isIndoor = false;
     let borderColor = "#aaa", bgCard = "#f8f9fa", iconTheThao = "🏃";
     
     if (data.loai_hinh === 'trong_nha') {
-        isIndoor = true; borderColor = "#28a745"; bgCard = "#e8f5e9"; iconTheThao = "🧘‍♂️";
+        isIndoor = true; borderColor = "#28a745"; bgCard = "#e8f5e9"; 
+        let indoorIcon = "🧘‍♂️"; // Mặc định
+        if (data.ten_bai_tap) {
+            let tenBT = data.ten_bai_tap.toLowerCase();
+            if (tenBT.includes("squat")) indoorIcon = "🦵";
+            else if (tenBT.includes("wall") || tenBT.includes("thiên thần")) indoorIcon = "👼";
+            else if (tenBT.includes("mèo") || tenBT.includes("cat") || tenBT.includes("cow")) indoorIcon = "🐈";
+            else if (tenBT.includes("cầu") || tenBT.includes("bridge")) indoorIcon = "🌉";
+            else if (tenBT.includes("gối") || tenBT.includes("knee")) indoorIcon = "🪑";
+        }
+        iconTheThao = indoorIcon; // Gán ngược icon bài tập vào box to
     } else if (data.loai_hinh === 'walk') {
         borderColor = "#fd7e14"; bgCard = "#fff5eb"; iconTheThao = "🚶";
     } else if (data.loai_hinh === 'cycle') {
@@ -2669,22 +2679,31 @@ window.veTheTienTrinh = function(recordKey, data) {
         ? `<div style="width:70px; height:70px; background:white; border-radius:12px; display:flex; justify-content:center; align-items:center; font-size:35px; border:2px dashed ${borderColor}; flex-shrink:0;">${iconTheThao}</div>`
         : `<canvas id="${canvasId}" width="70" height="70" style="background:#e9ecef; border-radius:12px; border:2px solid ${borderColor}; flex-shrink:0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"></canvas>`;
 
+    // RẼ NHÁNH CẤU TRÚC: Cạo sạch chữ rác, chỉ giữ [Icon + Dữ liệu] cho cực ngắn gọn
     const contentLeft = isIndoor
-        ? `<b>Bài tập:</b> <span style="color:#004BAd;">${data.ten_bai_tap}</span><br>
-           ⏱ <b>Vận động:</b> <span style="color:#28a745;">${data.thoi_gian}</span><br>
-           🎯 <b>Đã tập:</b> <span style="color:#dc3545; font-size:16px;">${data.so_reps}</span> cái<br>
-           🔥 <b>Calo đốt:</b> ${data.calo} kcal`
-        : `⚡ TB: ${data.van_toc || "0"} km/h<br>
-           📏 Quãng đường: ${data.quang_duong || "0"}<br>
-           👟 Bước chân: ${data.buoc_chan || "0"}<br>
-           🔥 Calo: ${data.calo || "0"} kcal`;
+        ? `<div style="font-weight: 900; font-size: 16px; color: #004BAd; margin-bottom: 5px;">${data.ten_bai_tap}</div>
+           <div style="font-size: 14px; font-weight: bold; line-height: 1.6; color: #444;">
+               ⏱ <span style="color:#28a745;">${data.thoi_gian}</span><br>
+               🎯 <span style="color:#dc3545; font-size:16px;">${data.so_reps}</span> cái<br>
+               🔥 <span style="color:#ff9800;">${data.calo}</span> kcal
+           </div>`
+        : `<div style="font-size: 14px; font-weight: bold; line-height: 1.6; color: #444;">
+               ⏱ <span style="color:#004BAd;">${data.thoi_gian || "00:00"}</span><br>
+               ⚡ <span style="color:#28a745;">${data.van_toc || "0"} km/h</span><br>
+               📏 <span style="color:#dc3545;">${data.quang_duong || "0"}</span><br>
+               👟 <span style="color:#6f42c1;">${data.buoc_chan || "0"} bước</span><br>
+               🔥 <span style="color:#ff9800;">${data.calo || "0"} kcal</span>
+           </div>`;
+
+    // XÓA SẠCH TIÊU ĐỀ "GÓC PHỤC HỒI" VÀ CÁC CHỮ RÁC, CHỈ ĐỂ LẠI MÔN NGOÀI TRỜI
+    const tieuDeNgoaiTroi = isIndoor ? "" : `<div style="font-weight:900; font-size:15px; color:${borderColor}; margin-bottom:3px;">${iconTheThao} ${data.loai_hinh === 'walk' ? 'Đi dạo' : (data.loai_hinh === 'cycle' ? 'Đạp xe' : 'Chạy bộ')}</div>`;
 
     const cardHTML = `
     <div class="progress-card" onmousedown="window.batDauXoa('${recordKey}', this)" onmouseup="window.huyBamGiu()" onmouseleave="window.huyBamGiu()" ontouchstart="window.batDauXoa('${recordKey}', this)" ontouchend="window.huyBamGiu()" style="${cardStyle}">
         <div style="display:flex; align-items:center; gap: 15px; pointer-events:none;">
             ${uiTrai}
             <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
-                <div style="font-weight:900; font-size:15px; color:${borderColor}; margin-bottom:3px;">${iconTheThao} ${isIndoor ? "Góc Phục Hồi" : (data.loai_hinh === 'walk' ? 'Đi dạo' : (data.loai_hinh === 'cycle' ? 'Đạp xe' : 'Chạy bộ'))}</div>
+                ${tieuDeNgoaiTroi}
                 ${contentLeft}
             </div>
         </div>
@@ -7269,6 +7288,10 @@ window.renderTinNhanDon = function(msg) {
 
 // Hàm mở khung chat và kết nối bưu điện
 window.moKhungChatNguoi = function(friendName) {
+    //  GIẤU THANH CÔNG CỤ XUỐNG DƯỚI
+    const nav = document.getElementById('bottom-nav');
+    if (nav) nav.classList.add('nav-hidden');
+
     currentChatFriend = friendName;
     document.getElementById('human-chat-screen').style.display = 'flex';
     document.getElementById('chat-human-name').innerText = friendName;
@@ -7323,8 +7346,13 @@ window.dongKhungChatNguoi = function() {
     document.getElementById('human-chat-screen').style.display = 'none';
     if (chatListenerRef) { chatListenerRef.off(); chatListenerRef = null; }
     currentChatFriend = null;
+    
+    // HIỆN LẠI THANH CÔNG CỤ (CHỈ HIỆN NẾU ĐANG CHƯA CHẠY BỘ)
+    if(typeof isTracking !== 'undefined' && !isTracking) {
+        const nav = document.getElementById('bottom-nav');
+        if (nav) nav.classList.remove('nav-hidden');
+    }
 };
-
 window.guiTinNhanNguoi = function() {
     const input = document.getElementById('human-chat-input');
     const text = input.value.trim();

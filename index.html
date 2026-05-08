@@ -2591,8 +2591,6 @@ window.luuTienTrinh = function() {
                     if(snapshot.val()) {
                     if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy();
                     window.veToanBoTienTrinh(snapshot.val());
-                }
-                        }
                     }
                 });
             }).catch(err => console.error("Lỗi lưu tiến trình:", err));

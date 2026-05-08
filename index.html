@@ -5402,7 +5402,7 @@ window.toggleBaoThuc = function(id, isChecked) {
                         body: "Đến giờ rồi cậu ơi! Dậy vận động thôi!",
                         id: numId,
                         smallIcon: "logo_nho",
-                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[1]) }, repeats: true }
+                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[4]) }, repeats: true }
                     }]
                 });
             } else {
@@ -5411,29 +5411,6 @@ window.toggleBaoThuc = function(id, isChecked) {
         }
     }
 };
-
-        // Tích hợp Đẩy thông báo hệ thống (Nếu đang chạy trên App)
-        if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
-            let numId = parseInt(id.replace('al_', '')) + 8000; 
-            if (isChecked) {
-                // ĐÃ FIX LỖI PARSE THỜI GIAN
-                let timeParts = theAlarm.time.split(':');
-                window.Capacitor.Plugins.LocalNotifications.schedule({
-                    notifications: [{
-                        title: "⏰ " + theAlarm.title,
-                        body: "Đến giờ rồi cậu ơi! Dậy vận động thôi!",
-                        id: numId,
-                        smallIcon: "logo_nho",
-                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[1]) }, repeats: true }
-                    }]
-                });
-            } else {
-                window.Capacitor.Plugins.LocalNotifications.cancel({ notifications: [{ id: numId }] });
-            }
-        }
-    }
-};
-
 // Cập nhật giờ và tên
 window.capNhatGioBaoThuc = function(id, newTime) {
     const user = localStorage.getItem('currentUser') || 'Khach';

@@ -35,9 +35,15 @@
     animation: tabFadeIn 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
 }
 
-/* KẾ THỪA HIỆU ỨNG BAY LÊN (SLIDE UP) CHO TAB 2 VÀ TAB 4 */
-.progress-card, .community-card {
+/* KẾ THỪA HIỆU ỨNG BAY LÊN (SLIDE UP) CHO TAB 4 (CỘNG ĐỒNG) */
+.community-card {
     animation: slideUpFade 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* HIỆU ỨNG TRƯỢT XUỐNG DÀNH RIÊNG CHO ACCORDION TIẾN TRÌNH */
+@keyframes dropDownAccordion {
+    from { opacity: 0; transform: translateY(-30px) scaleY(0.9); transform-origin: top; }
+    to { opacity: 1; transform: translateY(0) scaleY(1); transform-origin: top; }
 }
         .tab-screen.active-tab * { pointer-events: auto; }
         .solid-bg { background-color: #f5f5f5; pointer-events: auto; }
@@ -2682,9 +2688,15 @@ window.huyBamGiu = function() {
 // === HÀM BẬT/TẮT DANH SÁCH THEO NGÀY (ACCORDION) ===
 window.moRongNgay = function(ngayId) {
     const div = document.getElementById('group-' + ngayId);
-    if (div.style.display === 'none') div.style.display = 'flex';
-    else div.style.display = 'none';
-};
+    if (div.style.display === 'none') {
+        div.style.display = 'flex';
+        // Bơm animation trượt xuống mượt mà từ mặt dưới của thẻ xanh
+        div.style.animation = 'dropDownAccordion 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+    } else {
+        div.style.display = 'none';
+        div.style.animation = ''; // Reset animation cho lần mở sau
+    }
+};;
 
 // === LÕI MỚI: RENDER TOÀN BỘ TIẾN TRÌNH (GOM NHÓM THEO NGÀY) ===
 window.veToanBoTienTrinh = function(dataObj) {
@@ -2744,10 +2756,9 @@ window.veToanBoTienTrinh = function(dataObj) {
                     <span>⏱ ${timeStr}</span>
                 </div>
             </div>
-            <!-- Vùng chứa các thẻ con (Mặc định giấu đi) -->
-            <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; animation: slideUpFade 0.3s ease;">
+            <!-- Vùng chứa các thẻ con (Mặc định giấu đi, animation sẽ do JS bơm vào khi click) -->
+        <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
         `;
-
         // B. VẼ CÁC THẺ BÊN TRONG CỦA NGÀY ĐÓ (Giao diện tối giản mới nhất)
         g.items.forEach(r => {
             let data = r.data;
@@ -5310,7 +5321,6 @@ window.khoiTaoBaoThucMacDinh = function() {
 };
 
 // Render giao diện danh sách báo thức
-// Render giao diện danh sách báo thức (ĐÃ FIX: Lệch UI và thêm Animation Xếp tầng)
 window.veDanhSachBaoThuc = function() {
     const user = localStorage.getItem('currentUser') || 'Khach';
     let alarms = window.khoiTaoBaoThucMacDinh();
@@ -5323,21 +5333,21 @@ window.veDanhSachBaoThuc = function() {
     let html = '';
     alarms.forEach((al, index) => {
         let opacity = al.isON ? '1' : '0.4';
-        let delay = index * 0.1; // Tính toán thời gian trễ cho Animation xếp tầng
+        let delay = index * 0.1; 
         
         html += `
-        <div style="background: white; border-radius: 20px; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; border-left: 6px solid ${al.isON ? '#004BAd' : '#ccc'}; opacity: 0; animation: slideUpFade 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${delay}s; transition: border 0.3s;">
+        <div id="card-${al.id}" style="background: white; border-radius: 20px; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; border-left: 6px solid ${al.isON ? '#004BAd' : '#ccc'}; opacity: 0; animation: slideUpFade 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${delay}s; transition: border-left 0.4s ease;">
             
             <!-- Cột Trái: Giờ và Tên (Ép Flexbox chống lệch) -->
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; opacity: ${opacity}; transition: opacity 0.3s;">
-                <input type="time" onchange="window.capNhatGioBaoThuc('${al.id}', this.value)" value="${al.time}" style="font-size: 38px; font-weight: 900; color: ${al.isON ? '#333' : '#888'}; border: none; outline: none; background: transparent; padding: 0; margin: 0; letter-spacing: 1px; font-family: 'Courier New', monospace; appearance: none; -webkit-appearance: none; width: 100%;">
+            <div id="wrap-${al.id}" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; opacity: ${opacity}; transition: opacity 0.4s ease;">
+                <input type="time" id="time-${al.id}" onchange="window.capNhatGioBaoThuc('${al.id}', this.value)" value="${al.time}" style="font-size: 38px; font-weight: 900; color: ${al.isON ? '#333' : '#888'}; border: none; outline: none; background: transparent; padding: 0; margin: 0; letter-spacing: 1px; font-family: 'Courier New', monospace; appearance: none; -webkit-appearance: none; width: 100%; transition: color 0.4s ease;">
                 <input type="text" onchange="window.capNhatTenBaoThuc('${al.id}', this.value)" value="${al.title}" style="width: 100%; font-size: 14px; font-weight: bold; color: #666; border: none; outline: none; background: transparent; padding: 0; margin: 0;">
             </div>
             
             <!-- Cột Phải: Công tắc và Thùng rác (Căn lề chuẩn) -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 15px; flex-shrink: 0;">
-                <input type="checkbox" class="ios-switch" ${al.isON ? 'checked' : ''} onchange="window.toggleBaoThuc('${al.id}', this.checked)" style="margin: 0; opacity: ${opacity}; transition: opacity 0.3s;">
-                <div onclick="window.xoaBaoThuc('${al.id}')" style="font-size: 16px; color: #dc3545; cursor: pointer; background: #ffebee; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 50%; opacity: ${opacity}; transition: transform 0.2s, opacity 0.3s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'" title="Xóa báo thức này">🗑️</div>
+                <input type="checkbox" class="ios-switch" ${al.isON ? 'checked' : ''} onchange="window.toggleBaoThuc('${al.id}', this.checked)" style="margin: 0;">
+                <div onclick="window.xoaBaoThuc('${al.id}')" style="font-size: 16px; color: #dc3545; cursor: pointer; background: #ffebee; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'" title="Xóa báo thức này">🗑️</div>
             </div>
 
         </div>`;
@@ -5369,7 +5379,38 @@ window.toggleBaoThuc = function(id, isChecked) {
     if (theAlarm) {
         theAlarm.isON = isChecked;
         localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
-        window.veDanhSachBaoThuc(); // Vẽ lại để cập nhật độ mờ
+        
+        // ĐÃ FIX: Chỉ thay đổi CSS trực tiếp của thẻ được bấm, KHÔNG RENDER LẠI TOÀN BỘ DANH SÁCH
+        const card = document.getElementById('card-' + id);
+        const wrap = document.getElementById('wrap-' + id);
+        const timeInput = document.getElementById('time-' + id);
+        
+        if (card && wrap && timeInput) {
+            card.style.borderLeft = isChecked ? '6px solid #004BAd' : '6px solid #ccc';
+            wrap.style.opacity = isChecked ? '1' : '0.4';
+            timeInput.style.color = isChecked ? '#333' : '#888';
+        }
+
+        // Tích hợp Đẩy thông báo hệ thống (Nếu đang chạy trên App)
+        if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+            let numId = parseInt(id.replace('al_', '')) + 8000; 
+            if (isChecked) {
+                let timeParts = theAlarm.time.split(':');
+                window.Capacitor.Plugins.LocalNotifications.schedule({
+                    notifications: [{
+                        title: "⏰ " + theAlarm.title,
+                        body: "Đến giờ rồi cậu ơi! Dậy vận động thôi!",
+                        id: numId,
+                        smallIcon: "logo_nho",
+                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[1]) }, repeats: true }
+                    }]
+                });
+            } else {
+                window.Capacitor.Plugins.LocalNotifications.cancel({ notifications: [{ id: numId }] });
+            }
+        }
+    }
+};
 
         // Tích hợp Đẩy thông báo hệ thống (Nếu đang chạy trên App)
         if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {

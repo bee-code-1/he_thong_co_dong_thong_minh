@@ -5471,10 +5471,14 @@ window.themThongBaoHeThong = function(id, title, descShort, descFull, signature)
     const container = document.getElementById('list-thong-bao-content');
     if(document.getElementById(id)) return;
     
+    // ĐÃ FIX BỆNH "MISSING )": Mã hóa dấu ngoặc kép để không làm vỡ cấu trúc HTML onclick
+    let safeDescFull = descFull.replace(/"/g, '&quot;').replace(/`/g, '\\`');
+
     // Tạo khối HTML tĩnh, KHÔNG dùng class swipe-container để miễn nhiễm với hàm vuốt
     const html = `
     <div id="${id}" class="unread-msg" style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 12px; border: 2px solid #28a745; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div onclick="window.moGiayNote('${title}', \`${descFull}\`, '${signature}', '${id}')" style="cursor: pointer; background: #eaffea; padding: 12px; display: flex; align-items: center; transition: background 0.4s ease;">
+        <div onclick="window.moGiayNote('${title}', \`${safeDescFull}\`, '${signature}', '${id}')" style="cursor: pointer; background: #eaffea; padding: 12px; display: flex; align-items: center; transition: background 0.4s ease;">
+
             <div style="font-size: 35px; margin-right: 15px;">${id === 'sys_msg_1' ? '💌' : '😼'}</div>
             <div style="flex: 1; text-align: left; line-height: 1.4;">
                 <div style="font-weight: bold; font-size: 15px; color: #004BAd; margin-bottom: 5px;">${title}</div>

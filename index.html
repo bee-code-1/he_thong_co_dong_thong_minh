@@ -5276,13 +5276,19 @@ window.taiThongBaoLocal = function() {
 };
 
 // === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
+// === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
 window.xinQuyenThongBao = async function() {
     if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
         let permStatus = await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
         if (permStatus.display === 'granted') {
             alert("✅ Đã cấp quyền thành công! ");
             // Bắn test thử 1 cái
-            window.banThongBaoNative(1, "Hệ thống Cơ động Thông minh", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
+            if (typeof window.banThongBaoNative === 'function') {
+                window.banThongBaoNative(1, "Hệ thống Cơ động Thông minh", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
+            }
+        }
+    }
+};
 
 // HỆ THỐNG QUẢN LÝ BÁO THỨC & LỊCH TRÌNH 
 // ==========================================

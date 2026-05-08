@@ -2122,7 +2122,7 @@ function initGPS() {
         window.Capacitor.Plugins.BackgroundGeolocation.addWatcher(
             {
                 backgroundMessage: "App đang vẽ đường!",
-                backgroundTitle: "Hệ thống Cơ động Thông minh",
+                backgroundTitle: "CMD Health",
                 requestPermissions: true,
                 stale: false,
                 distanceFilter: 2 // Nhích 2m mới thèm gọi, tiết kiệm pin tối đa
@@ -5296,7 +5296,7 @@ window.xinQuyenThongBao = async function() {
             alert("✅ Đã cấp quyền thành công! ");
             // Bắn test thử 1 cái
             if (typeof window.banThongBaoNative === 'function') {
-                window.banThongBaoNative(1, "Hệ thống Cơ động Thông minh", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
+                window.banThongBaoNative(1, "CMD Health", "Radar thông báo Native đã kết nối chuẩn xác!", 1);
             }
         }
     }

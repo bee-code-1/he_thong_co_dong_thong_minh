@@ -3009,7 +3009,7 @@ window.meoNoi = function(text) {
 
     let msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'vi-VN';
-    msg.pitch = 1.5;
+    msg.pitch = 1.0;
     msg.rate = 0.9;
     msg.onend = () => { window.isMeoSpeaking = false; };
     window.speechSynthesis.speak(msg);

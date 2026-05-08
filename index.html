@@ -640,9 +640,10 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
 .ios-switch:checked { background: #28a745; }
 .ios-switch:checked::after { transform: translateX(20px); }
 
-/* Hiệu ứng nảy màn hình Báo thức */
-#alarm-modal { opacity: 0; transform: scale(0.9); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
-#alarm-modal.show { opacity: 1; transform: scale(1); pointer-events: auto; }
+/* Hiệu ứng trượt màn hình Báo thức chuẩn iOS */
+#alarm-modal { visibility: hidden; opacity: 0; transform: translateY(100%); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+#alarm-modal.show { visibility: visible; opacity: 1; transform: translateY(0); pointer-events: auto; }
+
 </style>
          
      </style>
@@ -5309,6 +5310,7 @@ window.khoiTaoBaoThucMacDinh = function() {
 };
 
 // Render giao diện danh sách báo thức
+// Render giao diện danh sách báo thức (ĐÃ FIX: Lệch UI và thêm Animation Xếp tầng)
 window.veDanhSachBaoThuc = function() {
     const user = localStorage.getItem('currentUser') || 'Khach';
     let alarms = window.khoiTaoBaoThucMacDinh();
@@ -5319,18 +5321,25 @@ window.veDanhSachBaoThuc = function() {
     alarms.sort((a, b) => a.time.localeCompare(b.time));
 
     let html = '';
-    alarms.forEach((al) => {
-        let opacity = al.isON ? '1' : '0.5';
+    alarms.forEach((al, index) => {
+        let opacity = al.isON ? '1' : '0.4';
+        let delay = index * 0.1; // Tính toán thời gian trễ cho Animation xếp tầng
+        
         html += `
-        <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 6px solid ${al.isON ? '#004BAd' : '#ccc'}; transition: all 0.3s ease; opacity: ${opacity};">
-            <div style="flex: 1; text-align: left;">
-                <input type="time" onchange="window.capNhatGioBaoThuc('${al.id}', this.value)" value="${al.time}" style="font-size: 32px; font-weight: 900; color: ${al.isON ? '#333' : '#888'}; border: none; outline: none; background: transparent; padding: 0; margin-bottom: 5px;">
-                <input type="text" onchange="window.capNhatTenBaoThuc('${al.id}', this.value)" value="${al.title}" style="display: block; width: 90%; font-size: 14px; font-weight: bold; color: #666; border: none; outline: none; background: transparent;">
+        <div style="background: white; border-radius: 20px; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; border-left: 6px solid ${al.isON ? '#004BAd' : '#ccc'}; opacity: 0; animation: slideUpFade 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${delay}s; transition: border 0.3s;">
+            
+            <!-- Cột Trái: Giờ và Tên (Ép Flexbox chống lệch) -->
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; opacity: ${opacity}; transition: opacity 0.3s;">
+                <input type="time" onchange="window.capNhatGioBaoThuc('${al.id}', this.value)" value="${al.time}" style="font-size: 38px; font-weight: 900; color: ${al.isON ? '#333' : '#888'}; border: none; outline: none; background: transparent; padding: 0; margin: 0; letter-spacing: 1px; font-family: 'Courier New', monospace; appearance: none; -webkit-appearance: none; width: 100%;">
+                <input type="text" onchange="window.capNhatTenBaoThuc('${al.id}', this.value)" value="${al.title}" style="width: 100%; font-size: 14px; font-weight: bold; color: #666; border: none; outline: none; background: transparent; padding: 0; margin: 0;">
             </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 15px;">
-                <input type="checkbox" class="ios-switch" ${al.isON ? 'checked' : ''} onchange="window.toggleBaoThuc('${al.id}', this.checked)">
-                <span onclick="window.xoaBaoThuc('${al.id}')" style="font-size: 18px; color: #dc3545; cursor: pointer;">🗑️</span>
+            
+            <!-- Cột Phải: Công tắc và Thùng rác (Căn lề chuẩn) -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 15px; flex-shrink: 0;">
+                <input type="checkbox" class="ios-switch" ${al.isON ? 'checked' : ''} onchange="window.toggleBaoThuc('${al.id}', this.checked)" style="margin: 0; opacity: ${opacity}; transition: opacity 0.3s;">
+                <div onclick="window.xoaBaoThuc('${al.id}')" style="font-size: 16px; color: #dc3545; cursor: pointer; background: #ffebee; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 50%; opacity: ${opacity}; transition: transform 0.2s, opacity 0.3s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'" title="Xóa báo thức này">🗑️</div>
             </div>
+
         </div>`;
     });
     container.innerHTML = html;

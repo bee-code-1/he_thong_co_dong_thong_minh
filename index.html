@@ -2643,16 +2643,30 @@ window.luuTienTrinh = function() {
     if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
 };
 
-// === BIẾN TOÀN CỤC CHO TÍNH NĂNG NHẤN GIỮ ===
-let pressTimer = null;
+// === HÀM BẬT/TẮT DANH SÁCH THEO NGÀY (ACCORDION) ===
+window.moRongNgay = function(ngayId) {
+    const div = document.getElementById('group-' + ngayId);
+    if (div.style.display === 'none') {
+        div.style.display = 'flex';
+        div.style.animation = 'dropDownAccordion 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+    } else {
+        div.style.display = 'none';
+        div.style.animation = '';
+    }
+};
 
-// === HÀM XÓA TIẾN TRÌNH (ĐÃ FIX: XÓA THẺ KHÔNG LÀM TỤT LEVEL) ===
-window.xoaTienTrinh = function(recordKey, btnElement) {
+// === HÀM XÓA TIẾN TRÌNH KHI BẤM NÚT TRƯỢT THÙNG RÁC ===
+window.xoaTienTrinh = function(recordKey) {
     window.moCustomAlert({
         type: 'confirm', icon: '🗑️', title: 'Xóa tiến trình', titleColor: '#dc3545',
         message: 'Bạn có chắc chắn muốn xóa tiến trình này không?', confirmColor: '#dc3545',
         callback: function(confirmed) {
-            if (!confirmed) return;
+            if (!confirmed) {
+                // Hủy xóa -> Tự động vuốt trả thẻ về vị trí cũ mượt mà
+                const swipeContents = document.querySelectorAll('.swipe-content');
+                swipeContents.forEach(c => c.style.transform = 'translateX(0)');
+                return;
+            }
             let username = localStorage.getItem('currentUser');
             if (username && typeof window.db !== 'undefined') {
                 window.db.ref('tien_trinh_tap_luyen/' + username + '/' + recordKey).remove()
@@ -2662,7 +2676,9 @@ window.xoaTienTrinh = function(recordKey, btnElement) {
                     window.db.ref('tien_trinh_tap_luyen/' + username).once('value').then((snapshot) => {
                         if(snapshot.val()) {
                             window.veToanBoTienTrinh(snapshot.val());
+                            if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy();
                         } else {
+                            if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy();
                             const emptyMsg = document.getElementById('empty-progress');
                             if (emptyMsg) emptyMsg.style.display = 'block';
                         }
@@ -2674,38 +2690,11 @@ window.xoaTienTrinh = function(recordKey, btnElement) {
     });
 };
 
-// === LOGIC XỬ LÝ NHẤN GIỮ (1.5 GIÂY) ===
-window.batDauXoa = function(recordKey, element) {
-    pressTimer = setTimeout(() => {
-        window.xoaTienTrinh(recordKey, element);
-    }, 1500);
-};
-
-window.huyBamGiu = function() {
-    if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-    }
-};
-
-// === HÀM BẬT/TẮT DANH SÁCH THEO NGÀY (ACCORDION) ===
-window.moRongNgay = function(ngayId) {
-    const div = document.getElementById('group-' + ngayId);
-    if (div.style.display === 'none') {
-        div.style.display = 'flex';
-        // Bơm animation trượt xuống mượt mà từ mặt dưới của thẻ xanh
-        div.style.animation = 'dropDownAccordion 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
-    } else {
-        div.style.display = 'none';
-        div.style.animation = ''; // Reset animation cho lần mở sau
-    }
-};;
-
-// === LÕI MỚI: RENDER TOÀN BỘ TIẾN TRÌNH (GOM NHÓM THEO NGÀY) ===
+// === LÕI MỚI: RENDER TOÀN BỘ TIẾN TRÌNH (SẮP XẾP MỚI NHẤT + TRƯỢT XÓA) ===
 window.veToanBoTienTrinh = function(dataObj) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
-
+    
     if (!dataObj) {
         listContainer.innerHTML = '';
         if (emptyMsg) emptyMsg.style.display = 'block';
@@ -2713,40 +2702,50 @@ window.veToanBoTienTrinh = function(dataObj) {
     }
     if (emptyMsg) emptyMsg.style.display = 'none';
 
-    // 1. Chuyển Object thành Mảng & Sắp xếp MỚI NHẤT lên đầu
+    // 1. Chuyển Object thành Mảng & Sắp xếp Thẻ tập MỚI NHẤT lên đầu
     const records = Object.keys(dataObj).map(key => ({ key: key, data: dataObj[key] }));
     records.sort((a, b) => b.data.timestamp - a.data.timestamp);
 
-    // 2. Thuật toán Gom nhóm (Group By) và Cộng dồn chỉ số theo Ngày
+    // 2. Thuật toán Gom nhóm Ngày và Lưu kèm mác Thời gian lớn nhất để Sắp xếp
     let nhomTheoNgay = {};
     records.forEach(r => {
         let ngay = r.data.ngay || "Chưa rõ";
         if (!nhomTheoNgay[ngay]) {
-            nhomTheoNgay[ngay] = { items: [], tongKm: 0, tongCalo: 0, tongGiay: 0 };
+            nhomTheoNgay[ngay] = { items: [], tongKm: 0, tongCalo: 0, tongGiay: 0, tongBuoc: 0, timeStampNgay: r.data.timestamp };
         }
         nhomTheoNgay[ngay].items.push(r);
-
-        // Cộng dồn chỉ số 
+        
+        // Cộng dồn chỉ số
         nhomTheoNgay[ngay].tongKm += parseFloat(r.data.quang_duong) || 0;
         nhomTheoNgay[ngay].tongCalo += parseFloat(r.data.calo) || 0;
+        nhomTheoNgay[ngay].tongBuoc += parseInt(r.data.buoc_chan) || 0;
+        
+        // Tính toán lại giây
+        let thoiGianArr = (r.data.thoi_gian || "00:00").split(':');
+        if (thoiGianArr.length === 2) {
+            nhomTheoNgay[ngay].tongGiay += (parseInt(thoiGianArr) * 60) + parseInt(thoiGianArr[1]);
+        }
 
-        // Ép thời gian (MM:SS) ra giây để cộng cho chuẩn
-        let timeParts = (r.data.thoi_gian || "00:00").split(':');
-        if (timeParts.length === 2) {
-            nhomTheoNgay[ngay].tongGiay += parseInt(timeParts) * 60 + parseInt(timeParts[1]);
+        // Cập nhật timestamp lớn nhất đại diện cho nhóm ngày đó
+        if (r.data.timestamp > nhomTheoNgay[ngay].timeStampNgay) {
+            nhomTheoNgay[ngay].timeStampNgay = r.data.timestamp;
         }
     });
 
-    // 3. Đổ dữ liệu ra HTML
-    let html = '';
-    let canvasQueue = []; // Xếp hàng đợi vẽ Bản đồ
+    // 3. Ép Nhóm Ngày thành Mảng và Sắp xếp Ngày GẦN NHẤT lên trên cùng
+    let mangNhomNgay = Object.keys(nhomTheoNgay).map(ngay => ({ ngay: ngay, data: nhomTheoNgay[ngay] }));
+    mangNhomNgay.sort((a, b) => b.data.timeStampNgay - a.data.timeStampNgay);
 
-    for (let ngay in nhomTheoNgay) {
-        let g = nhomTheoNgay[ngay];
+    let html = '';
+
+    mangNhomNgay.forEach(nhom => {
+        let ngay = nhom.ngay;
+        let g = nhom.data;
+        
         let phut = Math.floor(g.tongGiay / 60);
         let giay = g.tongGiay % 60;
         let timeStr = `${phut}p${giay}s`;
-        let ngayId = ngay.replace(/\//g, ''); // Tạo ID không chứa ký tự lạ
+        let ngayId = ngay.replace(/\//g, '');
 
         // A. VẼ VIÊN THUỐC (PILL) HEADER NGÀY
         html += `
@@ -2757,114 +2756,74 @@ window.veToanBoTienTrinh = function(dataObj) {
                     <span>📏 ${g.tongKm.toFixed(1)}km</span>
                     <span>👟 ${g.tongBuoc} bước</span>
                     <span>🔥 ${g.tongCalo.toFixed(1)}kcal</span>
-                    <span>⏱ ${timeStr}</span>
                 </div>
             </div>
-            <!-- Vùng chứa các thẻ con (Mặc định giấu đi, animation sẽ do JS bơm vào khi click) -->
-        <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
+            <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
         `;
-        // B. VẼ CÁC THẺ BÊN TRONG CỦA NGÀY ĐÓ (Giao diện tối giản mới nhất)
+
+        // B. VẼ CÁC THẺ CON VỚI HIỆU ỨNG TRƯỢT SWIPE-TO-DELETE
         g.items.forEach(r => {
             let data = r.data;
             let recordKey = r.key;
-
             let isIndoor = data.loai_hinh === 'trong_nha';
+            
             let borderColor = "#aaa", bgCard = "#f8f9fa", iconTheThao = "🏃";
-
             if (isIndoor) {
-                borderColor = "#28a745"; bgCard = "#e8f5e9"; 
-                let indoorIcon = "🧘‍♂️";
-                if (data.ten_bai_tap) {
-                    let tenBT = data.ten_bai_tap.toLowerCase();
-                    if (tenBT.includes("squat")) indoorIcon = "🦵";
-                    else if (tenBT.includes("wall") || tenBT.includes("thiên thần")) indoorIcon = "👼";
-                    else if (tenBT.includes("mèo") || tenBT.includes("cat") || tenBT.includes("cow")) indoorIcon = "🐈";
-                    else if (tenBT.includes("cầu") || tenBT.includes("bridge")) indoorIcon = "🌉";
-                    else if (tenBT.includes("gối") || tenBT.includes("knee")) indoorIcon = "🪑";
-                }
-                iconTheThao = indoorIcon; 
-            } else if (data.loai_hinh === 'walk') { borderColor = "#fd7e14"; bgCard = "#fff5eb"; iconTheThao = "🚶";
-            } else if (data.loai_hinh === 'cycle') { borderColor = "#004BAd"; bgCard = "#e8f0fe"; iconTheThao = "🚴";
-            } else { borderColor = "#dc3545"; bgCard = "#fff1f0"; iconTheThao = "🏃"; }
+                borderColor = "#28a745"; bgCard = "#e8f5e9";
+                if (data.ten_bai_tap && data.ten_bai_tap.includes('Squat')) iconTheThao = "🏋️";
+                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Wall Angel')) iconTheThao = "🧍";
+                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Cat')) iconTheThao = "🐈";
+                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Glute')) iconTheThao = "🌉";
+                else iconTheThao = "🧘";
+            } else if (data.loai_hinh === 'walk') {
+                borderColor = "#fd7e14"; bgCard = "#fff5eb"; iconTheThao = "🚶";
+            } else if (data.loai_hinh === 'cycle') {
+                borderColor = "#6f42c1"; bgCard = "#f3e5f5"; iconTheThao = "🚴";
+            } else {
+                borderColor = "#004BAd"; bgCard = "#e3f2fd";
+            }
 
-            const cardStyle = `background: ${bgCard}; border: 2px solid ${borderColor}; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; user-select: none; -webkit-user-select: none; cursor: pointer; transition: transform 0.2s;`;
-
-            const canvasId = `minimap_${recordKey}`;
-            const uiTrai = isIndoor 
-                ? `<div style="width:70px; height:70px; background:white; border-radius:12px; display:flex; justify-content:center; align-items:center; font-size:35px; border:2px dashed ${borderColor}; flex-shrink:0;">${iconTheThao}</div>`
-                : `<canvas id="${canvasId}" width="70" height="70" style="background:#e9ecef; border-radius:12px; border:2px solid ${borderColor}; flex-shrink:0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"></canvas>`;
-
-            const contentLeft = isIndoor
-                ? `<div style="font-weight: 900; font-size: 16px; color: #004BAd; margin-bottom: 5px;">${data.ten_bai_tap}</div>
-                   <div style="font-size: 14px; font-weight: bold; line-height: 1.6; color: #444;">
-                       ⏱ <span style="color:#28a745;">${data.thoi_gian}</span><br>
-                       🎯 <span style="color:#dc3545; font-size:16px;">${data.so_reps}</span> cái<br>
-                       🔥 <span style="color:#ff9800;">${data.calo}</span> kcal
-                   </div>`
-                : `<div style="font-size: 14px; font-weight: bold; line-height: 1.6; color: #444;">
-                       ⏱ <span style="color:#004BAd;">${data.thoi_gian || "00:00"}</span><br>
-                       ⚡ <span style="color:#28a745;">${data.van_toc || "0"} km/h</span><br>
-                       📏 <span style="color:#dc3545;">${data.quang_duong || "0"}</span><br>
-                       👟 <span style="color:#6f42c1;">${data.buoc_chan || "0"} bước</span><br>
-                       🔥 <span style="color:#ff9800;">${data.calo || "0"} kcal</span>
-                   </div>`;
+            let cardStyle = `background: ${bgCard}; padding: 15px; display: flex; justify-content: space-between; align-items: center; user-select: none; width: 100%; box-sizing: border-box; border-radius: 15px;`;
+            let uiTrai = ``; let contentLeft = ``; let uiPhai = ``;
+            
+            if (isIndoor) {
+                uiTrai = `<div style="font-size: 30px; background: white; width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid ${borderColor};">${iconTheThao}</div>`;
+                contentLeft = `<div style="font-weight: 900; font-size: 16px; color: ${borderColor}; margin-bottom: 5px;">${data.ten_bai_tap || 'Tập trong nhà'}</div><div style="font-weight: bold; color: #555;">Mục tiêu: ${data.muc_tieu || 0}</div><div style="font-weight: bold; color: #dc3545;">Thực tế: ${data.so_rep_thuc_te || 0} cái</div>`;
+                uiPhai = `<div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div><div>⏱ ${data.thoi_gian}</div>`;
+            } else {
+                uiTrai = `<div style="font-size: 26px;">${data.gio_bat_dau}</div>`;
+                contentLeft = `<div style="font-weight: bold; color: #555;">Đến: ${data.gio_ket_thuc}</div><div style="font-weight: bold; color: #555;">Vận tốc: ${data.van_toc} km/h</div><div style="font-weight: bold; color: #555;">Bước: ${data.buoc_chan}</div>`;
+                uiPhai = `<div style="color: #004BAd; font-size: 16px; margin-bottom: 5px;">${parseFloat(data.quang_duong).toFixed(2)} km</div><div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div><div>⏱ ${data.thoi_gian}</div>`;
+            }
 
             const tieuDeNgoaiTroi = isIndoor ? "" : `<div style="font-weight:900; font-size:15px; color:${borderColor}; margin-bottom:3px;">${iconTheThao} ${data.loai_hinh === 'walk' ? 'Đi dạo' : (data.loai_hinh === 'cycle' ? 'Đạp xe' : 'Chạy bộ')}</div>`;
 
-            // HTML Thẻ con (Cạo chữ Ngày đi vì đã có ở Viên thuốc)
+            // HTML: NHÚNG VỎ BỌC SWIPE CỦA APPLE
             html += `
-            <div class="progress-card" onmousedown="window.batDauXoa('${recordKey}', this)" onmouseup="window.huyBamGiu()" onmouseleave="window.huyBamGiu()" ontouchstart="window.batDauXoa('${recordKey}', this)" ontouchend="window.huyBamGiu()" style="${cardStyle}">
-                <div style="display:flex; align-items:center; gap: 15px; pointer-events:none;">
-                    ${uiTrai}
-                    <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
-                        ${tieuDeNgoaiTroi}
-                        ${contentLeft}
+            <div class="swipe-container progress-card" style="margin-bottom: 0px; border-radius: 15px; background: #dc3545; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div class="swipe-actions" onclick="window.xoaTienTrinh('${recordKey}')">🗑️</div>
+                <div class="swipe-content" style="${cardStyle}">
+                    <div style="display:flex; align-items:center; gap: 15px; pointer-events:none;">
+                        ${uiTrai}
+                        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
+                            ${tieuDeNgoaiTroi}
+                            ${contentLeft}
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 60px; pointer-events: none;">
+                        ${uiPhai}
                     </div>
                 </div>
-                <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 60px; pointer-events: none;">
-                    <div>${data.gio_bat_dau}</div>
-                    <div style="font-size: 10px; color: #888; margin: 2px 0;">↓</div>
-                    <div>${data.gio_ket_thuc}</div>
-                </div>
             </div>`;
-
-            if (!isIndoor && data.toado_path && data.toado_path.length > 1) {
-                canvasQueue.push({ id: canvasId, path: data.toado_path });
-            }
         });
 
-        html += `</div></div>`; // Đóng Group và Đóng Daily-Group
-    }
+        html += `</div></div>`;
+    });
 
     listContainer.innerHTML = html;
 
-    // C. VẼ CANVAS MINI-MAP TĨNH (SIÊU NHẸ)
-    setTimeout(() => {
-        canvasQueue.forEach(item => {
-            const canvas = document.getElementById(item.id);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let minLat = 999, maxLat = -999, minLng = 999, maxLng = -999;
-            item.path.forEach(p => {
-                if(p.lat < minLat) minLat = p.lat; if(p.lat > maxLat) maxLat = p.lat;
-                if(p.lng < minLng) minLng = p.lng; if(p.lng > maxLng) maxLng = p.lng;
-            });
-            let latDiff = maxLat - minLat; let lngDiff = maxLng - minLng;
-            let maxDiff = Math.max(latDiff, lngDiff) || 0.0001; 
-            let pad = 8; let w = canvas.width - pad*2; let h = canvas.height - pad*2;
-            ctx.beginPath(); ctx.strokeStyle = '#004BAd'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            item.path.forEach((p, i) => {
-                let x = pad + ((p.lng - minLng) / maxDiff) * w;
-                let y = pad + (h - ((p.lat - minLat) / maxDiff) * h); 
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-            let lastP = item.path[item.path.length - 1];
-            let lastX = pad + ((lastP.lng - minLng) / maxDiff) * w;
-            let lastY = pad + (h - ((lastP.lat - minLat) / maxDiff) * h);
-            ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, 2*Math.PI); ctx.fillStyle = '#dc3545'; ctx.fill();
-        });
-    }, 50);
+    // 💥 CHỐT HẠ: ÁP DỤNG MA THUẬT LẮNG NGHE VUỐT CHO CÁC THẺ VỪA VẼ RA
+    if (typeof window.ganSuKienVuot === 'function') window.ganSuKienVuot();
 };
 // === TỰ ĐỘNG TẢI LỊCH SỬ VÀ LEVEL KHI MỞ TRANG (F5) ===
 window.addEventListener('load', function() {

@@ -697,10 +697,6 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
 <div id="cat-assistant" class="idle-cat" style="position: absolute; top: 15px; right: 15px; z-index: 2000; touch-action: none;">
            <!-- MENU TÙY CHỌN CỦA MÈO (LONG PRESS ĐỂ MỞ) -->
 <div id="cat-options-popup" style="display: none; position: absolute; right: 80px; top: 10px; background: white; border: 2px solid #004BAd; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 3000; flex-direction: column; width: 190px; white-space: normal; overflow: hidden; font-weight: bold; font-size: 14px; line-height: 1.4;">
-    
-    <div onclick="window.hoiThoiTietNhanh(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #d35400; transition: background 0.2s;" onmousedown="this.style.background='#fff3cd'" onmouseup="this.style.background='white'">
-         Phân tích thời tiết
-    </div>
 
     <div onclick="window.moChatTuMenu(event)" style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; transition: background 0.2s;" onmousedown="this.style.background='#f0f0f0'" onmouseup="this.style.background='white'">
          Chat với Mèo
@@ -1450,11 +1446,11 @@ NHẬN THƯỞNG
     <!-- BẢNG CÀI ĐẶT HỆ THỐNG (SETTINGS) THAY THẾ HỒ SƠ CŨ -->
     <div id="hoso-modal" onclick="window.dongHoSo()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;">
         <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 40px 20px 50px 20px; border-radius: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; overflow-y: auto; text-align: center; position: relative; box-sizing: border-box;">
-            <!-- Header Cố định -->
-            <div style="position: sticky; top: 0; background: white; padding: 15px; border-bottom: 2px solid #eee; z-index: 10; display: flex; justify-content: center; align-items: center;">
-                <h2 style="color: #004BAd; margin: 0; font-size: 20px;">⚙️ Cài Đặt</h2>
-                <span onclick="window.dongHoSo()" style="position: absolute; right: 20px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
+            <!-- Header Trôi Theo Cuộn (Không bám dính) -->
+<div style="position: relative; background: white; padding: 15px; border-bottom: 2px solid #eee; border-radius: 15px 15px 0 0; z-index: 10; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+<h2 style="color: #004BAd; margin: 0; font-size: 20px;">⚙️ Cài Đặt</h2>
+<span onclick="window.dongHoSo()" style="position: absolute; right: 20px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1;">&times;</span>
+</div>
 
             <div style="padding: 20px;">
                 <!-- KHU VỰC 1: QUẢN LÝ TÀI KHOẢN & Y TẾ -->
@@ -2042,15 +2038,29 @@ window.saveProfile = function(isSkip) {
 
     //  gọi bản đồ bay về vị trí hiện tại
     function flyToMyLocation() {
-        if (latestLatLng) { 
-            map.flyTo(latestLatLng, 18, {
-                animate: true,
-                duration: 1.5
+    if (latestLatLng) {
+        // Đã có tọa độ -> Bay thẳng mượt mà về vị trí
+        map.flyTo(latestLatLng, 18, {
+            animate: true,
+            duration: 1.5
+        });
+    } else {
+        // Chưa có tọa độ -> Chủ động đánh thức vệ tinh
+        if (typeof initGPS === 'function' && !gpsWatcherId) {
+            initGPS(); // Kích hoạt bộ quét GPS ngầm
+            window.moCustomAlert({ 
+                type: 'alert', icon: '📡', title: 'Đang kết nối GPS', titleColor: '#004BAd', 
+                message: 'Đã kích hoạt Radar vệ tinh! Cậu đợi vài giây để chốt tọa độ nhé...' 
             });
         } else {
-            alert("Đang tìm tín hiệu GPS, vui lòng đợi...");
+            // Vệ tinh đang dò rồi nhưng chưa ra số
+            window.moCustomAlert({ 
+                type: 'alert', icon: '⏳', title: 'Đang dò sóng', titleColor: '#ff9800', 
+                message: 'Vệ tinh đang quét, cậu kiên nhẫn chút nha...' 
+            });
         }
     }
+}
 
     // --- TRACKING ACTIONS ---
 //  XỬ LÝ NÚT BẮT ĐẦU (ĐÃ FIX: Chống Crash APK toàn diện)
@@ -2816,6 +2826,9 @@ window.veToanBoTienTrinh = function(dataObj) {
                 if (data.loai_hinh === 'walk') { bgCard = "#fff5eb"; borderColor = "#fd7e14"; }
                 else if (data.loai_hinh === 'cycle') { bgCard = "#f3e5f5"; borderColor = "#6f42c1"; }
 
+                // Lấy tên môn thể thao kèm icon để lấp vào khoảng trống
+                let tenMon = data.loai_hinh === 'walk' ? '🚶 Đi bộ' : (data.loai_hinh === 'cycle' ? '🚴 Đạp xe' : '🏃 Chạy bộ');
+
                 cardContent = `
                     <div style="display:flex; justify-content: space-between; width: 100%; align-items: center; pointer-events: none;">
                         <!-- Cột 1: Thông số chi tiết -->
@@ -2827,8 +2840,9 @@ window.veToanBoTienTrinh = function(dataObj) {
                             <div>🔥 Calo: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.calo || 0).toFixed(1)} kcal</span></div>
                         </div>
 
-                        <!-- Cột 2: Thời gian 24h -->
-                        <div style="text-align: center; font-size: 12px; font-weight: bold; color: #444; border-left: 1px dashed #aaa; border-right: 1px dashed #aaa; padding: 0 8px; margin: 0 8px; min-width: 45px;">
+                        <!-- Cột 2: Thời gian 24h & Tên Hoạt Động -->
+                        <div style="text-align: center; font-size: 12px; font-weight: bold; color: #444; border-left: 1px dashed #aaa; border-right: 1px dashed #aaa; padding: 0 8px; margin: 0 8px; min-width: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            <div style="font-size: 11px; font-weight: 900; color: ${borderColor}; margin-bottom: 5px; white-space: nowrap; background: rgba(255,255,255,0.6); padding: 2px 6px; border-radius: 8px;">${tenMon}</div>
                             <div>${start24h}</div>
                             <div style="font-size: 10px; color: #888; margin: 2px 0;">|</div>
                             <div>${end24h}</div>
@@ -7730,7 +7744,7 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         const data = await res.json();
         if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
 
-        // ĐÃ FIX: Lấy phần tử  và đảo ngược tọa độ [Kinh, Vĩ] thành [Vĩ, Kinh] chuẩn Leaflet
+        // BÓC TÁCH CHUẨN XÁC 100%: [Kinh, Vĩ] -> [Vĩ, Kinh]
         let routeFast = data.routes;
         let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]); 
         let distFast = (routeFast.distance / 1000).toFixed(1);
@@ -7743,22 +7757,29 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
 
         // 💥 CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
         window.currentRouteDistance = parseFloat(distFast);
-        window.updateDynamicSwitchData(); 
+        window.updateDynamicSwitchData();
+
+         let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
+        let aqiVal = window.currentAQIValue || "--";
+        let iconCanhBao = (mauBuiThucTe === '#dc3545' || mauBuiThucTe === '#6f42c1' || mauBuiThucTe === '#7e0023') ? '😷' : '⚡';
 
         if (window.isEcoRoute) {
-            // === CHẾ ĐỘ XANH ===
+            // === CHẾ ĐỘ XANH (HIỂN THỊ CẢ 2 ĐƯỜNG ĐỂ SO SÁNH) ===
             if (data.routes.length > 1) {
-                L.polyline(coordsFast, { color: '#ffc107', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
-                 .bindTooltip(`⚖️ Cân bằng: ${distFast}km`, {permanent: true, direction: 'bottom'});
+                // 1. Vẽ đường nhanh ở dưới: Nhuộm màu AQI, trong suốt 50%, nét đứt
+                L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 0.5, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
+                 .bindTooltip(`${iconCanhBao} Nhanh (${aqiVal}): ${distFast}km`, {permanent: true, direction: 'bottom'});
             }
+            // 2. Vẽ đường Xanh đè lên trên: Nét đặc, xanh lá mướt
             L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`🌿 Xanh nhất: ${distEco}km`, {permanent: true, direction: 'top'});
+             .bindTooltip(`🌿 Trong lành nhất: ${distEco}km`, {permanent: true, direction: 'top'});
+             
             map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
 
         } else {
-            // === CHẾ ĐỘ NHANH NHẤT ===
-            L.polyline(coordsFast, { color: '#007bff', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`⚡ Nhanh nhất: ${distFast}km`, {permanent: true, direction: 'top'});
+            // === CHẾ ĐỘ NHANH NHẤT (NHUỘM MÀU CẢNH BÁO BỤI MỊN) ===
+            L.polyline(coordsFast, { color: mauBuiThucTe, weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(`${iconCanhBao} Nhanh nhất: ${distFast}km (AQI: ${aqiVal})`, {permanent: true, direction: 'top'});
             map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
         }
 

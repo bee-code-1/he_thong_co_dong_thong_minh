@@ -2050,13 +2050,13 @@ window.saveProfile = function(isSkip) {
             initGPS(); // Kích hoạt bộ quét GPS ngầm
             window.moCustomAlert({ 
                 type: 'alert', icon: '📡', title: 'Đang kết nối GPS', titleColor: '#004BAd', 
-                message: 'Đã kích hoạt Radar vệ tinh! Cậu đợi vài giây để chốt tọa độ nhé...' 
+                message: 'Đã kích hoạt Radar vệ tinh! Bạn đợi chút để chốt tọa độ nhé...' 
             });
         } else {
             // Vệ tinh đang dò rồi nhưng chưa ra số
             window.moCustomAlert({ 
                 type: 'alert', icon: '⏳', title: 'Đang dò sóng', titleColor: '#ff9800', 
-                message: 'Vệ tinh đang quét, cậu kiên nhẫn chút nha...' 
+                message: 'Vệ tinh đang quét, bạn kiên nhẫn chút nha...' 
             });
         }
     }
@@ -7759,7 +7759,7 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         window.currentRouteDistance = parseFloat(distFast);
         window.updateDynamicSwitchData();
 
-        // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống để nhuộm đường Nhanh
+         // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống
         let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
         let aqiVal = window.currentAQIValue || "--";
         let iconCanhBao = (mauBuiThucTe === '#dc3545' || mauBuiThucTe === '#6f42c1' || mauBuiThucTe === '#7e0023') ? '😷' : '⚡';
@@ -7767,19 +7767,26 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         if (window.isEcoRoute) {
             // === CHẾ ĐỘ XANH (HIỂN THỊ CẢ 2 ĐƯỜNG ĐỂ SO SÁNH) ===
             if (data.routes.length > 1) {
-                L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 0.5, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
+                // 1. ĐƯỜNG NHANH BỊ LÀM MỜ: Vẽ viền trắng liền ở dưới, và lõi nét đứt màu AQI đè lên trên
+                L.polyline(coordsFast, { color: '#ffffff', weight: 8, opacity: 0.6 }).addTo(window.routeLayerGroup);
+                L.polyline(coordsFast, { color: mauBuiThucTe, weight: 5, opacity: 0.9, dashArray: '8, 10' }).addTo(window.routeLayerGroup)
                  .bindTooltip(`${iconCanhBao} Nhanh (${aqiVal}): ${distFast}km`, {permanent: true, direction: 'bottom'});
             }
-            L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+            
+            // 2. ĐƯỜNG TRONG LÀNH NHẤT: Bọc viền trắng căng đét + Nhuộm màu AQI thực tế
+            L.polyline(coordsEco, { color: '#ffffff', weight: 10, opacity: 0.9 }).addTo(window.routeLayerGroup);
+            L.polyline(coordsEco, { color: mauBuiThucTe, weight: 6, opacity: 1 }).addTo(window.routeLayerGroup)
              .bindTooltip(`🌿 Trong lành nhất: ${distEco}km`, {permanent: true, direction: 'top'});
              
             map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
 
         } else {
-            // === CHẾ ĐỘ NHANH NHẤT (NHUỘM MÀU CẢNH BÁO BỤI MỊN) ===
-            L.polyline(coordsFast, { color: mauBuiThucTe, weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+            // === CHẾ ĐỘ NHANH NHẤT ===
+            L.polyline(coordsFast, { color: '#ffffff', weight: 10, opacity: 0.9 }).addTo(window.routeLayerGroup);
+            L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 1 }).addTo(window.routeLayerGroup)
              .bindTooltip(`${iconCanhBao} Nhanh nhất: ${distFast}km (AQI: ${aqiVal})`, {permanent: true, direction: 'top'});
             map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
+        }
         }
 
     } catch (err) {

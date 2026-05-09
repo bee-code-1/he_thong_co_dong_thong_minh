@@ -1058,7 +1058,7 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
                 </div>
 
                 <h2 style="color: #d35400; margin-top: 0; margin-bottom: 5px; font-size: 24px; padding-right: 60px;">🏆 Phòng Trưng Bày</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 25px; font-weight: bold;">Những dấu chân của bạn trên dải đất hình chữ S.</p>
+                <p style="color: #666; font-size: 14px; margin-bottom: 25px; font-weight: bold;">Nhũng nỗ lực đã được công nhận </p>
 
                 
                 <div id="danh-sach-thanh-tuu" style="display: flex; flex-direction: column;">
@@ -4187,7 +4187,7 @@ window.veBangThanhTuu = function() {
         </div>`;
     });
     
-    html += `<h4 style="text-align:left; color:#dc3545; margin-top:20px;">🔮 Kỷ lục Bí ẩn</h4>`;
+    html += `<h4 style="text-align:left; color:#dc3545; margin-top:20px;"> Thành tựu chờ khám phá</h4>`;
     
     DANH_SACH_HUY_HIEU_AN.forEach(hh => {
         const isUnlocked = localStorage.getItem(`badge_${user}_${hh.id}`) === 'true';
@@ -4203,7 +4203,7 @@ window.veBangThanhTuu = function() {
         if (isUnlocked) {
             styleThem = 'cursor: pointer;'; // ĐÃ FIX: Mở khóa là bấm được
             if (isNew) {
-                titleText = "🎁 CÓ QUÀ MỚI!";
+                titleText = "🎁 Mở khoá thành tựu mới";
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
                 clickEvent = `onclick="window.moHuyHieuMoi('${hh.id}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
@@ -4236,7 +4236,7 @@ window.xemLaiHuyHieu = function(icon, title, desc) {
     
     // Cập nhật giao diện riêng cho việc xem lại
     const headerText = document.getElementById('achieve-header-text');
-    if(headerText) headerText.innerText = "✨ THÀNH TỰU CỦA BẠN ✨";
+    if(headerText) headerText.innerText = "Đã nhận được ";
     const btnClaim = document.getElementById('achieve-btn-claim');
     if(btnClaim) btnClaim.style.display = 'none'; // Giấu nút nhận thưởng
     
@@ -4259,7 +4259,7 @@ window.moHuyHieuMoiKm = function(km, icon, title, desc) {
     
     // Trả lại giao diện đập hộp (Đề phòng trước đó vừa bấm xem lại)
     const headerText = document.getElementById('achieve-header-text');
-    if(headerText) headerText.innerText = "🎉 KỶ LỤC MỚI! 🎉";
+    if(headerText) headerText.innerText = "Thành tựu mới";
     const btnClaim = document.getElementById('achieve-btn-claim');
     if(btnClaim) btnClaim.style.display = 'block';
 
@@ -4321,7 +4321,7 @@ window.moHuyHieuMoi = function(cap, icon, title, desc) {
     
     // Trả lại giao diện đập hộp
     const headerText = document.getElementById('achieve-header-text');
-    if(headerText) headerText.innerText = "🎉 KỶ LỤC MỚI! 🎉";
+    if(headerText) headerText.innerText = "🎉 Thành tựu mới";
     const btnClaim = document.getElementById('achieve-btn-claim');
     if(btnClaim) btnClaim.style.display = 'block';
 
@@ -4438,7 +4438,7 @@ window.capNhatNoiDungPopupRuong = function(markerObj, chestObj) {
         <div style="font-size:30px;">🎁</div>
         <strong style="color:#28a745;">Đã trong tầm bắt! Mở ngay!</strong>
         <hr style="border: 0.5px dashed #ccc; margin: 8px 0;">
-        <button style="${openBtnStyle}" onclick="window.xuLyMoRuongThuCong('${chestObj.id}')">✨ MỞ RƯƠNG NGAY ✨</button>
+        <button style="${openBtnStyle}" onclick="window.xuLyMoRuongThuCong('${chestObj.id}')"> MỞ RƯƠNG NGAY </button>
         </div>`;
     } else {
         popupHTML = `

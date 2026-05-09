@@ -7744,33 +7744,32 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         const data = await res.json();
         if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
 
-        // BÓC TÁCH CHUẨN XÁC 100%: [Kinh, Vĩ] -> [Vĩ, Kinh]
-        let routeFast = data.routes;
-        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]); 
+        // 💥 BÓC TÁCH CHUẨN XÁC 100%: Dùng .at() để chống nền tảng chat xóa ngoặc vuông 💥
+        let routeFast = data.routes.at(0);
+        let coordsFast = routeFast.geometry.coordinates.map(c => [c.at(1), c.at(0)]); 
         let distFast = (routeFast.distance / 1000).toFixed(1);
 
-        let routeEco = data.routes.length > 1 ? data.routes[1] : routeFast;
-        let coordsEco = routeEco.geometry.coordinates.map(c => [c[1], c]);
+        let routeEco = data.routes.length > 1 ? data.routes.at(1) : routeFast;
+        let coordsEco = routeEco.geometry.coordinates.map(c => [c.at(1), c.at(0)]);
         let distEco = (routeEco.distance / 1000).toFixed(1);
 
         map.closePopup();
 
-        // 💥 CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
+        // CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
         window.currentRouteDistance = parseFloat(distFast);
         window.updateDynamicSwitchData();
 
-         let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
+        // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống để nhuộm đường Nhanh
+        let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
         let aqiVal = window.currentAQIValue || "--";
         let iconCanhBao = (mauBuiThucTe === '#dc3545' || mauBuiThucTe === '#6f42c1' || mauBuiThucTe === '#7e0023') ? '😷' : '⚡';
 
         if (window.isEcoRoute) {
             // === CHẾ ĐỘ XANH (HIỂN THỊ CẢ 2 ĐƯỜNG ĐỂ SO SÁNH) ===
             if (data.routes.length > 1) {
-                // 1. Vẽ đường nhanh ở dưới: Nhuộm màu AQI, trong suốt 50%, nét đứt
                 L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 0.5, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
                  .bindTooltip(`${iconCanhBao} Nhanh (${aqiVal}): ${distFast}km`, {permanent: true, direction: 'bottom'});
             }
-            // 2. Vẽ đường Xanh đè lên trên: Nét đặc, xanh lá mướt
             L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
              .bindTooltip(`🌿 Trong lành nhất: ${distEco}km`, {permanent: true, direction: 'top'});
              

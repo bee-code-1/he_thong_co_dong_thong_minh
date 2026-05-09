@@ -1189,17 +1189,16 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
     <!-- Khung pháo hoa xài riêng cho Thành tựu -->
     <canvas id="achieve-fireworks-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></canvas>
     
-    <!-- Hộp quà bên trong (Bấm vào hộp không bị tắt) -->
-    <div onclick="event.stopPropagation()" id="achieve-box" style="background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%); padding: 30px 20px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 0 30px #ffc107; position: relative; z-index: 2; transform: scale(0); opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
-        <h2 style="color: #d35400; margin-top: 0; font-size: 22px;">🎉 KỶ LỤC MỚI! 🎉</h2>
-        <div id="achieve-icon" style="font-size: 80px; filter: drop-shadow(0 0 15px #ffeb3b); margin: 15px 0; animation: catPulse 1.5s infinite;">🏆</div>
-        <h3 id="achieve-title" style="color: #333; margin: 10px 0; font-size: 20px;">Tên Thành Tựu</h3>
-        <p id="achieve-desc" style="color: #555; font-size: 14px; font-weight: bold; line-height: 1.5; padding: 0 10px;"></p>
-        
-        <button onclick="window.dongHuyHieuMoi()" style="margin-top: 15px; background-color: #ffc107; color: #d35400; width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-            NHẬN THƯỞNG
-        </button>
-    </div>
+<!-- Hộp quà bên trong  -->
+<div onclick="event.stopPropagation()" id="achieve-box" style="background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%); padding: 30px 20px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 0 30px #ffc107; position: relative; z-index: 2; transform: scale(0); opacity: 0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+<h2 id="achieve-header-text" style="color: #d35400; margin-top: 0; font-size: 22px;">🎉 KỶ LỤC MỚI! 🎉</h2>
+<div id="achieve-icon" style="font-size: 80px; filter: drop-shadow(0 0 15px #ffeb3b); margin: 15px 0; animation: catPulse 1.5s infinite;">🏆</div>
+<h3 id="achieve-title" style="color: #333; margin: 10px 0; font-size: 20px;">Tên Thành Tựu</h3>
+<p id="achieve-desc" style="color: #555; font-size: 14px; font-weight: bold; line-height: 1.5; padding: 0 10px;"></p>
+<button id="achieve-btn-claim" onclick="window.dongHuyHieuMoi()" style="margin-top: 15px; background-color: #ffc107; color: #d35400; width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+NHẬN THƯỞNG
+</button>
+</div>
 </div>
 
         <!-- POPUP RECAP CHÚC MỪNG (Bình thường sẽ ẩn đi) -->
@@ -4131,9 +4130,9 @@ window.veBangThanhTuu = function() {
     // Rút KM thật từ giao diện đã được bơm từ Database
     let txtKm = document.getElementById('tong-km-tab2') ? document.getElementById('tong-km-tab2').innerText : "0";
     let currentKm = parseFloat(txtKm) || 0;
-
+    
     let html = `<h4 style="text-align:left; color:#004BAd; margin-top:0;"> Hành trình Khám phá</h4>`;
-
+    
     DANH_SACH_HUY_HIEU.forEach(hh => {
         const isUnlocked = currentKm >= hh.km;
         const keyNew = `badge_new_${user}_km_${hh.km}`;
@@ -4145,7 +4144,7 @@ window.veBangThanhTuu = function() {
             const chamDo = document.getElementById('cham-do-thanh-tuu');
             if(chamDo) chamDo.style.display = 'block';
         }
-
+        
         const isNew = localStorage.getItem(keyNew) === 'true';
         let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #ffeb3b);' : '';
@@ -4153,21 +4152,26 @@ window.veBangThanhTuu = function() {
         let descText = `<i>Tích lũy đủ ${hh.km.toLocaleString()} km để khám phá bí mật này...</i>`;
         let titleText = `Thử thách ${hh.km} km`;
         let clickEvent = '';
-
+        let styleThem = '';
+        
         if (isUnlocked) {
+            styleThem = 'cursor: pointer;'; // ĐÃ FIX: Mở khóa là bấm được
             if (isNew) {
                 titleText = "🎁 CÓ QUÀ MỚI!";
                 descText = "<b>👉 CHẠM VÀO ĐÂY ĐỂ ĐẬP HỘP!</b>";
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
                 clickEvent = `onclick="window.moHuyHieuMoiKm('${hh.km}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+                styleThem += ' border-color: #dc3545;';
             } else {
                 titleText = hh.title; descText = hh.desc;
+                // ĐÃ FIX: Cho phép xem lại thông tin thành tựu đã nhận
+                clickEvent = `onclick="window.xemLaiHuyHieu('${hh.icon}', '${hh.title}', '${hh.desc}')"`;
             }
         }
-
+        
         html += `
-        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
+        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${styleThem}">
             <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
             <div style="flex: 1; text-align: left; padding-right: 20px;">
                 <div style="font-weight: 900; font-size: 15px; margin-bottom: 5px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#555'};">${titleText}</div>
@@ -4176,27 +4180,36 @@ window.veBangThanhTuu = function() {
             ${lockIcon}
         </div>`;
     });
-
+    
     html += `<h4 style="text-align:left; color:#dc3545; margin-top:20px;">🔮 Kỷ lục Bí ẩn</h4>`;
+    
     DANH_SACH_HUY_HIEU_AN.forEach(hh => {
         const isUnlocked = localStorage.getItem(`badge_${user}_${hh.id}`) === 'true';
         const isNew = localStorage.getItem(`badge_new_${user}_${hh.id}`) === 'true';
+        
         let trangThaiClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
         let lockIcon = isUnlocked ? '' : '<div class="badge-lock-icon">🔒</div>';
         let glowStyle = isUnlocked ? 'filter: drop-shadow(0 0 10px #dc3545);' : 'filter: grayscale(1); opacity: 0.3;';
         let titleText = hh.title;
         let clickEvent = '';
-
+        let styleThem = '';
+        
         if (isUnlocked) {
+            styleThem = 'cursor: pointer;'; // ĐÃ FIX: Mở khóa là bấm được
             if (isNew) {
                 titleText = "🎁 CÓ QUÀ MỚI!";
                 trangThaiClass = 'badge-unlocked';
                 glowStyle = 'filter: drop-shadow(0 0 15px #dc3545) drop-shadow(0 0 30px #ff9800); animation: catPulse 1s infinite;';
                 clickEvent = `onclick="window.moHuyHieuMoi('${hh.id}', '${hh.icon}', '${hh.title}', '${hh.desc}')"`;
+                styleThem += ' border-color: #dc3545;';
+            } else {
+                // ĐÃ FIX: Cho phép xem lại thông tin thành tựu đã nhận
+                clickEvent = `onclick="window.xemLaiHuyHieu('${hh.icon}', '${hh.title}', '${hh.desc}')"`;
             }
         }
+        
         html += `
-        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${isNew ? 'cursor: pointer; border-color: #dc3545;' : ''}">
+        <div class="badge-item ${trangThaiClass}" ${clickEvent} style="${styleThem}">
             <div class="badge-icon" style="${glowStyle}">${hh.icon}</div>
             <div style="flex: 1; text-align: left; padding-right: 20px;">
                 <div style="font-weight: 900; font-size: 15px; color: ${isUnlocked ? (isNew ? '#dc3545' : '#d35400') : '#888'};">${titleText}</div>
@@ -4204,7 +4217,30 @@ window.veBangThanhTuu = function() {
             ${lockIcon}
         </div>`;
     });
+    
     container.innerHTML = html;
+};
+
+// ĐÃ THÊM: Hàm xem lại huy hiệu đã nhận (Không có nút Nhận Thưởng)
+window.xemLaiHuyHieu = function(icon, title, desc) {
+    window.phatAmThanh('pop'); // Tiếng Pop nhẹ nhàng thay vì tiếng nhạc hoành tráng
+    document.getElementById('achieve-icon').innerText = icon;
+    document.getElementById('achieve-title').innerText = title;
+    document.getElementById('achieve-desc').innerHTML = desc;
+    
+    // Cập nhật giao diện riêng cho việc xem lại
+    const headerText = document.getElementById('achieve-header-text');
+    if(headerText) headerText.innerText = "✨ THÀNH TỰU CỦA BẠN ✨";
+    const btnClaim = document.getElementById('achieve-btn-claim');
+    if(btnClaim) btnClaim.style.display = 'none'; // Giấu nút nhận thưởng
+    
+    const modal = document.getElementById('achievement-modal');
+    const box = document.getElementById('achieve-box');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        box.style.transform = 'scale(1)';
+        box.style.opacity = '1';
+    }, 50);
 };
 
 // Hàm đập hộp riêng cho Huy hiệu KM (Đổi mác nhận quà)
@@ -4215,6 +4251,12 @@ window.moHuyHieuMoiKm = function(km, icon, title, desc) {
     document.getElementById('achieve-title').innerText = title;
     document.getElementById('achieve-desc').innerHTML = desc;
     
+    // Trả lại giao diện đập hộp (Đề phòng trước đó vừa bấm xem lại)
+    const headerText = document.getElementById('achieve-header-text');
+    if(headerText) headerText.innerText = "🎉 KỶ LỤC MỚI! 🎉";
+    const btnClaim = document.getElementById('achieve-btn-claim');
+    if(btnClaim) btnClaim.style.display = 'block';
+
     const modal = document.getElementById('achievement-modal');
     const box = document.getElementById('achieve-box');
     modal.style.display = 'flex';
@@ -4232,15 +4274,15 @@ window.kiemTraVaNoHuyHieuAn = function(badgeId) {
     if(!user) return;
     const key = `badge_${user}_${badgeId}`;
     if (localStorage.getItem(key) === 'true') return; // Đã lấy rồi thì tha
-
+    
     // Đánh dấu đã nhận & Gắn mác hàng mới
     localStorage.setItem(key, 'true');
     localStorage.setItem(`badge_new_${user}_${badgeId}`, 'true');
-
+    
     // Bật chấm đỏ ở Tab 5
     const chamDo = document.getElementById('cham-do-thanh-tuu');
     if(chamDo) chamDo.style.display = 'block';
-
+    
     // Bắn thông báo ngoài màn hình để dụ bấm vào Tab 5
     alert("🏆 Bạn vừa hoàn thành một thành tựu !\nVào Phòng Trưng Bày xem ngay!");
     if (typeof window.veBangThanhTuu === 'function') window.veBangThanhTuu();
@@ -4255,15 +4297,23 @@ window.switchTab = function(tabIndex) {
     }
 };
 window.addEventListener('load', () => { setTimeout(() => window.veBangThanhTuu(), 1500); });
-// === LOGIC ANIMATION MỞ KHÓA THÀNH TỰU ===
+
+// === LOGIC ANIMATION MỞ KHÓA THÀNH TỰU (CÚP ẨN) ===
 window.moHuyHieuMoi = function(cap, icon, title, desc) {
-window.phatAmThanh('thanh_tuu'); //  KÍCH HOẠT NHẠC ĐẬP HỘP THÀNH TỰU
-const user = localStorage.getItem('currentUser');
-// 1. Nhồi dữ liệu vào hộp quà
+    window.phatAmThanh('thanh_tuu'); //  KÍCH HOẠT NHẠC ĐẬP HỘP THÀNH TỰU
+    const user = localStorage.getItem('currentUser');
+    
+    // 1. Nhồi dữ liệu vào hộp quà
     document.getElementById('achieve-icon').innerText = icon;
     document.getElementById('achieve-title').innerText = title;
     document.getElementById('achieve-desc').innerHTML = desc;
     
+    // Trả lại giao diện đập hộp
+    const headerText = document.getElementById('achieve-header-text');
+    if(headerText) headerText.innerText = "🎉 KỶ LỤC MỚI! 🎉";
+    const btnClaim = document.getElementById('achieve-btn-claim');
+    if(btnClaim) btnClaim.style.display = 'block';
+
     // 2. Nảy Popup ra giữa màn hình
     const modal = document.getElementById('achievement-modal');
     const box = document.getElementById('achieve-box');
@@ -4274,7 +4324,6 @@ const user = localStorage.getItem('currentUser');
         
         // 3. Mượn tạm code Pháo Hoa để bắn
         if(typeof bungPhaoHoa === 'function') {
-            // Gian lận một chút, trỏ tạm canvas pháo hoa cũ sang thẻ canvas mới
             const canvasCu = document.getElementById('fireworks-canvas');
             if(canvasCu) canvasCu.id = 'fireworks-canvas-backup';
             const canvasMoi = document.getElementById('achieve-fireworks-canvas');

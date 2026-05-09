@@ -7008,9 +7008,27 @@ async function guiTinNhanMeo() {
     const text = input.value.trim();
     if (!text) return;
 
+    // 💥 ĐÃ FIX: Tự động Gập bàn phím & Khóa nút bấm 15 giây 💥
+    input.blur(); // Ép điện thoại hạ bàn phím xuống ngay lập tức
+    const sendBtn = input.nextElementSibling;
+    if (sendBtn && sendBtn.tagName === 'BUTTON') {
+        let oldHTML = sendBtn.innerHTML;
+        sendBtn.disabled = true; // Khóa nút
+        sendBtn.style.background = '#888'; // Đổi màu xám tịt
+        sendBtn.style.cursor = 'not-allowed';
+        sendBtn.innerHTML = '⏳'; // Chuyển icon chờ
+        
+        // Tự động mở khóa sau 15 giây
+        setTimeout(() => {
+            sendBtn.disabled = false;
+            sendBtn.style.background = '#004BAd';
+            sendBtn.style.cursor = 'pointer';
+            sendBtn.innerHTML = oldHTML;
+        }, 15000);
+    }
+
     const user = localStorage.getItem('currentUser') || "Khach";
     let history = JSON.parse(localStorage.getItem('cat_chat_' + user)) || [];
-    
     // 1. Lưu và in tin nhắn của User
     history.push({ sender: 'user', text: text });
     localStorage.setItem('cat_chat_' + user, JSON.stringify(history));
@@ -7073,15 +7091,21 @@ try {
     let bmi = (uWeight / Math.pow(uHeight / 100, 2)).toFixed(1);
     let benhLyText = userCondition === 'asthma' ? "Hen suyễn/Viêm xoang" : (userCondition === 'heart' ? "Tim mạch/Huyết áp cao" : "Khỏe mạnh");
 
+    // ĐÃ THÊM: Lấy thời gian thực của thiết bị
+    const nowD = new Date();
+    const timeString = nowD.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const dateString = nowD.toLocaleDateString('vi-VN');
+
     // --- BƯỚC B: BƠM VÀO LÕI PROMPT BỘ QUY TẮC NGHIÊM NGẶT ---
     const promptGiaoTiep = `Bạn là Trợ lý Mèo ảo, chuyên gia y tế thể thao của CMD Health.
 Tính cách: thông minh, hài hước, mặn mòi, đáng yêu, khá láo nháo nhưng quan tâm sức khỏe.
 QUY TẮC BẮT BUỘC:
 1. XƯNG HÔ: Tự xưng là "Mèo" và gọi người dùng là "bạn". Không dùng từ khác.
-2. ĐỘ DÀI: Trả lời ngắn gọn, đi thẳng vào vấn đề, có thể dài ngắn tuỳ câu hỏi nhưng cố gắng đảm bảo độ dài vừa phải để ai cx dễ dàng đọc dc hết.
+2. ĐỘ DÀI: Trả lời ngắn gọn, đi thẳng vào vấn đề, có thể dài ngắn tuỳ câu hỏi nhưng cố gắng đảm bảo độ dài vừa phải để ai cx dễ dàng đọc dc hết câu trl.
 3. BẢO MẬT DỮ LIỆU: Dưới đây là thông số hệ thống tự cung cấp cho bạn. Bạn CHỈ DÙNG CHÚNG ĐỂ TƯ VẤN BỆNH LÝ. TUYỆT ĐỐI KHÔNG liệt kê lại, không đọc lại các thông số này ra màn hình như một cái máy. Không dùng dấu ngoặc kép.
 
 --- DATA HỆ THỐNG GỬI NGẦM ---
+- Thời gian hiện tại: ${timeString} ngày ${dateString}.
 - Người dùng: ${userAge} tuổi, Cao ${uHeight}cm, Nặng ${uWeight}kg (Chỉ số BMI: ${bmi}) | Bệnh lý: ${benhLyText}.
 - Khoảng cách vừa chạy hôm nay: ${kmDaDi} km.
 - Môi trường: Nhiệt độ ${thoiTiet}, Bụi mịn AQI: ${aqiNumber} (${aqiInfo}).

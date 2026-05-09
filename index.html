@@ -5738,28 +5738,43 @@ window.ganSuKienVuot = function() {
         content.setAttribute('data-swiped', 'true');
         
         let startX = 0; 
+        let startY = 0;
         let currentX = 0;
         let isDragging = false;
+        let isScrolling = false; // Cờ phân biệt vuốt ngang và cuộn dọc
 
         // Hàm chung bắt đầu kéo
-        const startDrag = (clientX) => {
+        const startDrag = (clientX, clientY) => {
             isDragging = true;
+            isScrolling = false;
             startX = clientX;
-            content.style.transition = 'none'; // Tắt mượt để kéo dính theo ngón tay/chuột
+            startY = clientY;
+            content.style.transition = 'none'; // Tắt mượt để dính chặt tay
         };
 
         // Hàm chung khi đang kéo
-        const moveDrag = (clientX) => {
+        const moveDrag = (clientX, clientY, e) => {
             if (!isDragging) return;
-            let move = clientX - startX;
-            if (move < 0) { // Chỉ cho vuốt sang trái
-                currentX = move; 
+            
+            let deltaX = clientX - startX;
+            let deltaY = clientY - startY;
+
+            // Nếu người dùng vuốt dọc nhiều hơn ngang (Vuốt danh sách lên xuống) -> Hủy kéo ngang
+            if (Math.abs(deltaY) > Math.abs(deltaX) && currentX === 0) {
+                isScrolling = true;
+            }
+
+            if (isScrolling) return; // Đang cuộn dọc thì kệ nó
+
+            if (deltaX < 0) { // Chỉ cho vuốt sang trái
+                if (e.cancelable) e.preventDefault(); // Chặn cuộn dọc khi đang kéo ngang thành công
+                currentX = deltaX; 
                 if (currentX < -100) currentX = -100; // Căng đét giới hạn 100px
                 content.style.transform = `translateX(${currentX}px)`; 
             }
         };
 
-        // Hàm chung khi nhả tay/nhả chuột
+        // Hàm chung khi nhả tay/chuột
         const endDrag = () => {
             if (!isDragging) return;
             isDragging = false;
@@ -5772,19 +5787,18 @@ window.ganSuKienVuot = function() {
             currentX = 0;
         };
 
-        // --- GẮN CẢM BIẾN CHO ĐIỆN THOẠI (TOUCH) ---
-        content.addEventListener('touchstart', e => startDrag(e.touches.clientX), {passive: true});
-        content.addEventListener('touchmove', e => moveDrag(e.touches.clientX), {passive: true});
+        // --- GẮN CẢM BIẾN CHO ĐIỆN THOẠI (TOUCH - FIX LỖI NGÓN TAY ) ---
+        content.addEventListener('touchstart', e => startDrag(e.touches.clientX, e.touches.clientY), {passive: true});
+        content.addEventListener('touchmove', e => moveDrag(e.touches.clientX, e.touches.clientY, e), {passive: false});
         content.addEventListener('touchend', endDrag);
 
         // --- GẮN CẢM BIẾN CHO MÁY TÍNH (MOUSE) ---
-        content.addEventListener('mousedown', e => startDrag(e.clientX));
-        content.addEventListener('mousemove', e => moveDrag(e.clientX));
+        content.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+        content.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY, e));
         content.addEventListener('mouseup', endDrag);
-        content.addEventListener('mouseleave', endDrag); // Kéo lố ra ngoài cũng tự nhả
+        content.addEventListener('mouseleave', endDrag); 
     });
 };
-
 // 2. GỬI TƯƠNG TÁC (Đẩy lên Đám mây)
 window.guiTuongTac = function(loai, noiDung, nguoiNhan, inputElement) {
     const user = localStorage.getItem('currentUser');

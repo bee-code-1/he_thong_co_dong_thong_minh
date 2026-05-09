@@ -7061,24 +7061,29 @@ try {
 
     let userCondition = 'none'; 
     let userAge = 20;
+    let uHeight = 170;
+    let uWeight = 65;
     let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
     if (parsed) { 
         userCondition = parsed.condition || 'none'; 
         userAge = parsed.age || 20; 
+        uHeight = parseFloat(parsed.height) || 170;
+        uWeight = parseFloat(parsed.weight) || 65;
     }
+    let bmi = (uWeight / Math.pow(uHeight / 100, 2)).toFixed(1);
     let benhLyText = userCondition === 'asthma' ? "Hen suyễn/Viêm xoang" : (userCondition === 'heart' ? "Tim mạch/Huyết áp cao" : "Khỏe mạnh");
 
-    // --- BƯỚC B: BƠM VÀO LÕI PROMPT VÀ MỞ KHÓA ĐỘ DÀI ---
+    // --- BƯỚC B: BƠM VÀO LÕI PROMPT BỘ QUY TẮC NGHIÊM NGẶT ---
     const promptGiaoTiep = `Bạn là Trợ lý Mèo ảo, chuyên gia y tế thể thao của CMD Health.
-Tính cách: thông minh, xéo xắt, mặn mòi, hay mắng mỏ nhưng cực kỳ quan tâm sức khỏe.
+Tính cách: thông minh, hài hước, mặn mòi, đáng yêu, khá láo nháo nhưng quan tâm sức khỏe.
 QUY TẮC BẮT BUỘC:
 1. XƯNG HÔ: Tự xưng là "Mèo" và gọi người dùng là "bạn". Không dùng từ khác.
-2. ĐỘ DÀI: Trả lời ngắn gọn, đi thẳng vào vấn đề, hỏi gì thì trả lời cái ấy, tuyệt đối không nói lan man bằng những thông tin không liên quan hoặc không có ích gì với nội dung cuộc trò chuyện.
-3. BẢO MẬT DỮ LIỆU: Dưới đây là thông số hệ thống tự cung cấp cho bạn. Bạn CHỈ DÙNG CHÚNG ĐỂ TƯ VẤN (ví dụ: thấy AQI cao thì khuyên ở nhà). TUYỆT ĐỐI KHÔNG liệt kê lại, không đọc lại các thông số này ra màn hình như một cái máy. Không dùng dấu ngoặc kép.
+2. ĐỘ DÀI: Trả lời ngắn gọn, đi thẳng vào vấn đề, có thể dài ngắn tuỳ câu hỏi nhưng cố gắng đảm bảo độ dài vừa phải để ai cx dễ dàng đọc dc hết.
+3. BẢO MẬT DỮ LIỆU: Dưới đây là thông số hệ thống tự cung cấp cho bạn. Bạn CHỈ DÙNG CHÚNG ĐỂ TƯ VẤN BỆNH LÝ. TUYỆT ĐỐI KHÔNG liệt kê lại, không đọc lại các thông số này ra màn hình như một cái máy. Không dùng dấu ngoặc kép.
 
 --- DATA HỆ THỐNG GỬI NGẦM ---
-- Người dùng: ${userAge} tuổi | Bệnh lý: ${benhLyText}.
-- Khoảng cách vừa chạy: ${kmDaDi} km.
+- Người dùng: ${userAge} tuổi, Cao ${uHeight}cm, Nặng ${uWeight}kg (Chỉ số BMI: ${bmi}) | Bệnh lý: ${benhLyText}.
+- Khoảng cách vừa chạy hôm nay: ${kmDaDi} km.
 - Môi trường: Nhiệt độ ${thoiTiet}, Bụi mịn AQI: ${aqiNumber} (${aqiInfo}).
 
 Hãy trả lời câu hỏi sau của bạn ấy: "${text}"`;
@@ -8558,12 +8563,51 @@ window.taiLopBanDoChonLoc = function() {
         }).addTo(window.poiLayerGroup);
     }).catch(e => console.warn("Lỗi tải POI GeoJSON"));
 };
+    // === XỬ LÝ BÀN PHÍM ẢO ĐIỆN THOẠI (VISUAL VIEWPORT) CHỐNG ĐÈ CHAT ===
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+        let vh = window.visualViewport.height;
+        const catScreen = document.getElementById('cat-chat-screen');
+        const humanScreen = document.getElementById('human-chat-screen');
+
+        // Ép chiều cao màn hình chat bằng đúng khoảng nhìn thấy khi phím nảy lên
+        if (catScreen && catScreen.classList.contains('active')) {
+            catScreen.style.height = vh + 'px';
+            let catHistory = document.getElementById('cat-chat-history');
+            if (catHistory) catHistory.scrollTop = catHistory.scrollHeight;
+        }
+        if (humanScreen && humanScreen.style.display !== 'none') {
+            humanScreen.style.height = vh + 'px';
+            let humanHistory = document.getElementById('human-chat-history');
+            if (humanHistory) humanHistory.scrollTop = humanHistory.scrollHeight;
+        }
+    });
+}
+
+// Lắng nghe thêm sự kiện click vào ô nhập liệu để đẩy cuộn mượt hơn (Cho cả iOS/Android cũ)
+['cat-chat-input', 'human-chat-input'].forEach(id => {
+    const input = document.getElementById(id);
+    if(input) {
+        input.addEventListener('focus', () => {
+            setTimeout(() => {
+                let historyId = id === 'cat-chat-input' ? 'cat-chat-history' : 'human-chat-history';
+                let history = document.getElementById(historyId);
+                if(history) history.scrollTop = history.scrollHeight;
+            }, 300); // Đợi bàn phím nảy lên hoàn toàn
+        });
+        
+        // Khi thu bàn phím xuống thì trả lại nguyên trạng full màn
+        input.addEventListener('blur', () => {
+            const catScreen = document.getElementById('cat-chat-screen');
+            const humanScreen = document.getElementById('human-chat-screen');
+            if (catScreen) catScreen.style.height = '100dvh';
+            if (humanScreen) humanScreen.style.height = '100dvh';
+        });
+    }
+});
     
 </script>
-    <!-- =======================================================
-         KHU VỰC CHUẨN BỊ TEMPLATE WIDGET CHO BẢN ĐÓNG APK 
-         (Đang ẩn, hệ thống Android sẽ tự động Extract từ đây)
-    ======================================================== -->
+    <!-- ======= KHU VỰC CHUẨN BỊ TEMPLATE WIDGET CHO BẢN ĐÓNG APK ======= -->
     <div id="apk-widget-templates" style="display: none;">
         
         <!-- WIDGET 1: CAMERA LOCKET (160x160) -->

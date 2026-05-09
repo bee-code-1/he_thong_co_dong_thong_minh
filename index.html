@@ -7024,14 +7024,121 @@ window.capNhatBangTichLuy = function() {
 window.addEventListener('load', function() {
     setTimeout(() => {
         let savedUser = localStorage.getItem('currentUser');
+// ... [một đoạn code xổ xuống Firebase] ...
+                // TÂN BINH CHƯA CÓ DATA -> ÉP TÍNH LEVEL ĐỂ HIỆN MỤC TIÊU LÊN CẤP 2
+                if(typeof window.capNhatHeThongLevel === 'function') window.capNhatHeThongLevel(0);
+            }
+        });
+    }
+    }, 1500);
+});
+3. Dán đè Lõi Đếm Bước Bất Tử này vào:
+// === HỆ THỐNG ĐẾM BƯỚC CHÂN NGẦM 24/7 (PEDOMETER CORDOVA) ===
+window.khoiDongDemBuocNgam = function() {
+    if (typeof window.pedometer === 'undefined') {
+        console.log("Chưa tải được Cảm biến Pedometer");
+        return;
+    }
+
+    window.pedometer.isStepCountingAvailable(function(available) {
+        if (available) {
+            // Lắng nghe số bước liên tục từ phần cứng
+            window.pedometer.startPedometerUpdates(function(result) {
+                let hardwareSteps = result.numberOfSteps; // Tổng số bước từ chip
+                let user = localStorage.getItem('currentUser');
+                if (!user) return;
+
+                // Lấy ngày hiện tại chuẩn VN (DD/MM/YYYY)
+                const todayStr = new Date().toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
+                let savedDate = localStorage.getItem('ngay_luu_cot_moc_' + user);
+                let cotMoc0h = parseInt(localStorage.getItem('cot_moc_0h_' + user));
+
+                // 1. THUẬT TOÁN TRỪ HAO (Reset về 0 khi qua ngày mới)
+                if (!savedDate || savedDate !== todayStr || isNaN(cotMoc0h) || hardwareSteps < cotMoc0h) {
+                    cotMoc0h = hardwareSteps;
+                    localStorage.setItem('cot_moc_0h_' + user, cotMoc0h);
+                    localStorage.setItem('ngay_luu_cot_moc_' + user, todayStr);
+                    localStorage.setItem('last_saved_steps_' + user, 0); 
+                }
+
+                // 2. TÍNH SỐ BƯỚC & CHUYỂN ĐỔI SANG KM, CALO
+                let buocHomNay = hardwareSteps - cotMoc0h;
+                if (buocHomNay <= 0) return;
+
+                let weight = parseFloat(localStorage.getItem('appUser_weight')) || 65;
+                let stride = parseFloat(localStorage.getItem('appUser_stride')) || 0.7;
+
+                let caloHomNay = (buocHomNay * weight * 0.0005).toFixed(1);
+                let kmHomNay = (buocHomNay * stride / 1000).toFixed(2);
+
+                // 3. TẠO THẺ TIẾN TRÌNH CẢ NGÀY (Nó sẽ tự gộp vào Thẻ Xanh Dương của ngày hôm đó)
+                const recordId = "bg_walk_" + todayStr.replace(/\//g, '');
+                let dateParts = todayStr.split('/'); 
+                // Fix thời gian về 00:00 chuẩn xác để luôn nằm dưới cùng
+                let baseTimestamp = new Date(`${dateParts[1]}-${dateParts[2]}-${dateParts}T00:00:00`).getTime();
+
+                const recordData = {
+                    ngay: todayStr, gio_bat_dau: "Cả ngày", gio_ket_thuc: "Ngầm",
+                    thoi_gian: "00:00", van_toc: "0.00", quang_duong: kmHomNay,
+                    buoc_chan: buocHomNay, calo: caloHomNay, timestamp: baseTimestamp,
+                    loai_hinh: 'walk', toado_path: []
+                };
+
+                // 4. BẢO VỆ MÁY CHỦ: BẮN LÊN FIREBASE KHI ĐI ĐƯỢC THÊM 50 BƯỚC
+                let lastSavedSteps = parseInt(localStorage.getItem('last_saved_steps_' + user)) || 0;
+                if (buocHomNay - lastSavedSteps >= 50) {
+                    let buocThem = buocHomNay - lastSavedSteps;
+                    let caloThem = buocThem * weight * 0.0005;
+                    let kmThem = buocThem * stride / 1000;
+
+                    if (typeof window.db !== 'undefined') {
+                        // Nhồi thẻ ngầm vào Firebase (Tự động ghi đè thẻ ngầm cũ của hôm nay)
+                        window.db.ref('tien_trinh_tap_luyen/' + user + '/' + recordId).set(recordData);
+                        
+                        // Cộng dồn Thống kê tổng (Level, Tổng Km)
+                        if (typeof window.congDonThongKe === 'function') window.congDonThongKe(kmThem, buocThem, caloThem, 0);
+                        
+                        // Lệnh cho UI ở Tab 2 tự động nảy số Update thời gian thực
+                        window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then((snapshot) => {
+                            if(snapshot.val() && typeof window.veToanBoTienTrinh === 'function') {
+                                window.capNhatBangTichLuy(); // Cập nhật số tổng trên top
+                                window.veToanBoTienTrinh(snapshot.val()); // Cập nhật thẻ Accordion
+                            }
+                        });
+                    }
+                    localStorage.setItem('last_saved_steps_' + user, buocHomNay);
+
+                    // Mắt thần nổ cúp Thợ Săn ẩn
+                    if (typeof window.kiemTraVaNoHuyHieuAn === 'function' && buocHomNay >= 10000) {
+                        window.kiemTraVaNoHuyHieuAn('tho_san_tien'); 
+                    }
+                }
+            }, function(error) {
+                console.log("Lỗi Pedometer Updates:", error);
+            });
+        } else {
+            console.log("Thiết bị này không có chip đếm bước vật lý!");
+        }
+    }, function(error) {
+        console.log("Lỗi kiểm tra Pedometer:", error);
+    });
+};
+
+// === KHỞI ĐỘNG HỆ THỐNG KHI MỞ APP ===
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        // 1. Khởi động Cảm biến Đếm bước Ngầm (Nếu chạy trên APK)
+        if (typeof window.khoiDongDemBuocNgam === 'function') window.khoiDongDemBuocNgam();
+
+        let savedUser = localStorage.getItem('currentUser');
         if (savedUser && typeof window.db !== 'undefined') {
+            // 2. Kéo tiến trình cũ về vẽ giao diện
             window.db.ref('tien_trinh_tap_luyen/' + savedUser).once('value').then((snapshot) => {
                 const dataObj = snapshot.val();
                 if (dataObj) {
-                    window.capNhatBangTichLuy(dataObj);
-                   window.veToanBoTienTrinh(dataObj);
+                    window.capNhatBangTichLuy();
+                    window.veToanBoTienTrinh(dataObj);
                 } else {
-                    // TÂN BINH CHƯA CÓ DATA -> ÉP TÍNH LEVEL ĐỂ HIỆN MỤC TIÊU LÊN CẤP 2
                     if(typeof window.capNhatHeThongLevel === 'function') window.capNhatHeThongLevel(0);
                 }
             });

@@ -769,12 +769,12 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
     </ul>
 </div>
 
-<!-- 2. CÔNG TẮC ĐỊNH TUYẾN (THÔNG MINH - AUTO SIZE) -->
-<div id="routing-switch-container" onclick="window.toggleRoutingMode()" style="position: absolute; top: 140px; left: 15px; min-width: 85px; width: max-content; height: 38px; background: #28a745; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; z-index: 1000; display: flex; flex-direction: row-reverse; align-items: center; padding: 4px; box-sizing: border-box; transition: all 0.3s ease; gap: 6px;">
+<!-- 2. CÔNG TẮC ĐỊNH TUYẾN (CÓ ANIMATION MƯỢT TRÊN AUTO SIZE) -->
+<div id="routing-switch-container" onclick="window.toggleRoutingMode()" style="position: absolute; top: 140px; left: 15px; min-width: 85px; width: max-content; height: 38px; background: #28a745; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; z-index: 1000; display: flex; align-items: center; padding: 4px 6px; box-sizing: border-box; transition: background 0.3s ease; gap: 6px;">
     <!-- Viên bi trượt -->
-    <div id="route-switch-knob" style="width: 30px; height: 30px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); flex-shrink: 0;">🌿</div>
+    <div id="route-switch-knob" style="width: 30px; height: 30px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); flex-shrink: 0; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;">🌿</div>
     <!-- Chữ Data linh hoạt -->
-    <div id="route-switch-text" style="color: white; font-weight: 900; font-size: 13px; white-space: nowrap; padding-left: 6px; padding-right: 2px;">AQI: --</div>
+    <div id="route-switch-text" style="color: white; font-weight: 900; font-size: 13px; white-space: nowrap; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">AQI: --</div>
 </div>
     <!-- ===== HỆ THỐNG LỚP BẢN ĐỒ BÊN PHẢI==== -->
 <div id="dynamic-layer-island">
@@ -3639,8 +3639,7 @@ window.toggleRadarAndShare = function() {
         alert(" Đã tắt chia sẻ vị trí cá nhân !");
     }
 };
-// === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN 2 CHẾ ĐỘ (AQI / FAST) ===
-// === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN THÔNG MINH (LIVE DATA) ===
+// === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN THÔNG MINH (LIVE DATA + ANIMATION MƯỢT) ===
 let lopBanDoBui = null;
 window.isEcoRoute = true; // Mặc định là Chế độ Xanh
 window.currentRouteDistance = 0; // Lưu km quãng đường A-B
@@ -3648,37 +3647,21 @@ window.liveSpeedKmh = 0; // Vận tốc thực tế theo giây
 
 window.toggleRoutingMode = function() {
     window.isEcoRoute = !window.isEcoRoute;
-    const container = document.getElementById('routing-switch-container');
     const knob = document.getElementById('route-switch-knob');
-    const txtText = document.getElementById('route-switch-text');
 
     if (window.isEcoRoute) {
-        // CHẾ ĐỘ XANH (AQI) - Gạt bi sang phải (Row-reverse)
-        container.style.flexDirection = 'row-reverse';
-        container.style.background = window.currentAQIColor || '#28a745';
         knob.innerHTML = '🌿';
-        txtText.style.paddingLeft = '6px'; txtText.style.paddingRight = '2px';
-
-        // Bật lớp sương mù AQI
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', { maxZoom: 18, opacity: 0.9 });
         }
         if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
-
     } else {
-        // CHẾ ĐỘ NHANH (BLUE) - Gạt bi sang trái (Row)
-        container.style.flexDirection = 'row';
-        container.style.background = '#007bff';
         knob.innerHTML = '⚡';
-        txtText.style.paddingLeft = '2px'; txtText.style.paddingRight = '6px';
-
-        // Tắt lớp sương mù AQI
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
 
-    window.updateDynamicSwitchData(); // Nảy số ngay lập tức
+    window.updateDynamicSwitchData(); // Nảy số và kích hoạt trượt ngay lập tức
 
-    // Ép vẽ lại đường nếu đang có sẵn 2 điểm
     if (window.pointA && window.pointB && typeof window.drawAQIRoute === 'function') {
         window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
     } else if (window.isRouteMode === false && typeof latestLatLng !== 'undefined' && latestLatLng && window.pointB) {
@@ -3689,59 +3672,68 @@ window.toggleRoutingMode = function() {
 // --- NHỊP TIM ĐO GIA TỐC & UPDATE CHỮ (1 giây / lần) ---
 let tempLastMeter = 0;
 setInterval(function() {
-    // 1. Đo tốc độ dựa trên quãng đường thật
     let currentMeter = typeof totalDistanceMeter !== 'undefined' ? totalDistanceMeter : 0;
     let speedMs = currentMeter - tempLastMeter; 
-    window.liveSpeedKmh = speedMs * 3.6; // Đổi m/s sang km/h
+    window.liveSpeedKmh = speedMs * 3.6; 
     tempLastMeter = currentMeter;
-
-    // 2. Bơm data lên UI
     window.updateDynamicSwitchData();
 }, 1000);
 
 window.updateDynamicSwitchData = function() {
     const txt = document.getElementById('route-switch-text');
     const container = document.getElementById('routing-switch-container');
-    if (!txt) return;
+    const knob = document.getElementById('route-switch-knob');
+    if (!txt || !container || !knob) return;
 
     if (window.isEcoRoute) {
-        // CHẾ ĐỘ XANH: Luôn hiện AQI thực tế và đổi màu khung
+        // CHẾ ĐỘ XANH: Hiện AQI thực tế
         let aqiVal = window.currentAQIValue || "--";
         txt.innerHTML = `AQI: ${aqiVal}`;
         container.style.background = window.currentAQIColor || '#28a745';
+        
+        // THUẬT TOÁN HOÁN VỊ ANIMATION (Bi sang phải, Chữ sang trái)
+        let gap = 6;
+        setTimeout(() => {
+            let textWidth = txt.offsetWidth;
+            knob.style.transform = `translateX(${textWidth + gap}px)`;
+            txt.style.transform = `translateX(-${30 + gap}px)`; // 30 là độ rộng của cục Bi
+        }, 20); // Delay siêu nhỏ để trình duyệt cập nhật xong width của Text
+        
     } else {
-        // CHẾ ĐỘ NHANH: 4 Kịch Bản
+        // CHẾ ĐỘ NHANH: Kịch bản tính Toán
         let hasRoute = (window.currentRouteDistance > 0 && window.pointB);
-        let isMoving = window.liveSpeedKmh > 1.5; // Đi trên 1.5km/h mới tính là di chuyển
+        let isMoving = window.liveSpeedKmh > 1.5; 
         let isRunningApp = typeof isTracking !== 'undefined' && isTracking;
 
         if (hasRoute) {
             if (isMoving) {
-                // Đang có đường + Đang di chuyển -> Tính ETA
                 let thoiGianGio = window.currentRouteDistance / window.liveSpeedKmh;
                 let phut = Math.round(thoiGianGio * 60);
                 txt.innerHTML = `Còn ~${phut}p`;
             } else {
-                // Có đường + Đứng im -> Hiện Khoảng cách
                 txt.innerHTML = `${window.currentRouteDistance} km`;
             }
         } else {
             if (isRunningApp && isMoving) {
-                // Không dẫn đường + Đang tập + Đang di chuyển -> Tốc độ live
                 txt.innerHTML = `${window.liveSpeedKmh.toFixed(1)} km/h`;
             } else {
-                // Đứng im / Rảnh rỗi -> Hiện giờ hiện tại (00:00)
                 let d = new Date();
                 let h = d.getHours().toString().padStart(2, '0');
                 let m = d.getMinutes().toString().padStart(2, '0');
                 txt.innerHTML = `${h}:${m}`;
             }
         }
+        
+        container.style.background = '#007bff';
+        // TRẢ BI VÀ CHỮ VỀ VỊ TRÍ GỐC (Bi bên trái, chữ bên phải)
+        knob.style.transform = `translateX(0px)`;
+        txt.style.transform = `translateX(0px)`;
     }
 };
 
 // Khởi động lớp bụi khi load app
 window.addEventListener('load', () => {
+    window.updateDynamicSwitchData(); // Chốt bi trượt vào vị trí Xanh ngay lập tức
     setTimeout(() => {
         if (window.isEcoRoute && typeof map !== 'undefined') {
             lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', { maxZoom: 18, opacity: 0.9 });

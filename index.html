@@ -5237,16 +5237,18 @@ let timerXoaTB = null;
 // 1. QUẢN LÝ THÔNG BÁO VÀ HỆ THỐNG VUỐT XÓA + GỌI GIẤY NOTE
 window.luuThongBaoLocal = function() {
     const container = document.getElementById('list-thong-bao-content');
-    if(container) localStorage.setItem('locket_notifications', container.innerHTML);
+    const user = localStorage.getItem('currentUser') || "Khach";
+    if(container) localStorage.setItem('locket_notifications_' + user, container.innerHTML);
 };
 
 window.xacNhanXoaTB = function(idTB) {
     if(confirm("Bạn muốn xóa thông báo này?")) {
         const el = document.getElementById(idTB);
         if(el) el.remove();
-        // Nếu xóa mất 2 tin hệ thống thì lưu cờ để không mọc lại nữa
-        if(idTB === 'sys_msg_1') localStorage.setItem('del_sys_msg_1', 'true');
-        if(idTB === 'sys_msg_2') localStorage.setItem('del_sys_msg_2', 'true');
+        const user = localStorage.getItem('currentUser') || "Khach";
+        // Nếu xóa mất 2 tin hệ thống thì lưu cờ để không mọc lại nữa (Lưu theo từng tài khoản)
+        if(idTB === 'sys_msg_1') localStorage.setItem('del_sys_msg_1_' + user, 'true');
+        if(idTB === 'sys_msg_2') localStorage.setItem('del_sys_msg_2_' + user, 'true');
         window.luuThongBaoLocal();
     } else {
         // Reset vuốt nếu hủy
@@ -5256,7 +5258,8 @@ window.xacNhanXoaTB = function(idTB) {
 };
 
 window.taiThongBaoLocal = function() {
-    const savedData = localStorage.getItem('locket_notifications');
+    const user = localStorage.getItem('currentUser') || "Khach";
+    const savedData = localStorage.getItem('locket_notifications_' + user);
     const container = document.getElementById('list-thong-bao-content');
     
     if (savedData && savedData.trim() !== '' && container) {
@@ -5264,30 +5267,31 @@ window.taiThongBaoLocal = function() {
     } else {
         if(container) container.innerHTML = '';
     }
-    
-    // ĐÃ FIX: TIÊM 2 THÔNG BÁO HỆ THỐNG (GHIM CỐ ĐỊNH, KHÔNG CHO XÓA)
-    const currentUser = localStorage.getItem('currentUser') || "bạn";
-    
-    window.themThongBaoHeThong(
-        'sys_msg_1',
-        ' Lời từ nhà phát triển',
-        'Bấm vào đây để mở thư chào mừng...',
-        `Mến chào <b>${currentUser}</b> , người bạn mới.<br><br>Trong lúc khói bụi và sự bận rộn đang khiến chúng ta ngại ra đường, việc bước chân ra ngoài tập luyện đôi khi cần một sự quyết tâm rất lớn. Ứng dụng này ra đời để bảo vệ từng nhịp thở của bạn bằng công nghệ vệ tinh và trí tuệ nhân tạo, giúp tự động chọn ra những con đường có không khí trong lành và địa hình dễ đi nhất.<br><br>Tại đây, bạn sẽ không bao giờ phải tập luyện một mình. Một cộng đồng luôn sẵn sàng để chúng ta cùng kết nối, chia sẻ niềm vui và tiếp thêm động lực cho nhau mỗi ngày.<br><br>Chúng tôi lo phần công nghệ phức tạp phía sau, từ vệ tinh cho đến trí tuệ nhân tạo, chỉ để đổi lấy một việc đơn giản: Thấy bạn xỏ giày và bước ra khỏi cửa. Suy cho cùng, sức khỏe của bạn với chúng tôi vẫn là thứ quan trọng nhất.`,
-        'Đội ngũ phát triển'
-    );
-    
-    window.themThongBaoHeThong(
-        'sys_msg_2',
-        '😼 Hồ sơ trợ lý Mèo',
-        'Hy vọng bạn sẽ sống hoà thuận cùng nó...',
-        `<b>Hãy nhớ:</b> Mèo không phải thú cưng, nó là huấn luyện viên cá nhân có quyền lực cao nhất ở đây. Nó có thể hơi xéo xắt, láo nháo, nhưng đó là vì cái bụng 6 múi của bạn.<br><br>Dưới đây là cách để giao tiếp với Mèo:<br><br>👆 <b>Chạm nhẹ:</b> ...? Ai mà biết được<br>✌️ <b>Gõ đầu 2 cái:</b> Nó sẽ phán ngay thời tiết và chỉ số ô nhiễm để quyết định xem bạn nên ra đường hay tập tại chỗ<br>⏱️ <b>Nhấn giữ:</b> Mở ra cánh cửa thần kỳ, nơi bạn tâm sự mục tiêu hoặc... tạm thời khóa mõm khi nó càu nhàu quá nhiều<br>🌪️ <b>Túm cổ kéo đi:</b> Nhẹ tay thôi, kéo gắt quá là nó mắng đấy.<br>📳 <b>Lắc điện thoại:</b> Mèo thù nhất cảm giác chóng mặt. Bạn mà lắc, nó có thể sẽ dỗi. Lúc đó đừng mong nó tính calo cho bạn.<br><br><i>Lời khuyên từ đội ngũ phát triển:</i> Mèo rất thẳng thắn và đôi khi hơi láo quá mức, nhưng tất cả là vì cái bụng 6 múi của bạn. Hãy đối xử tốt với nó, và nó sẽ đưa bạn đến vạch đích một cách... bớt đau khổ nhất..... hoặc không.`,
-        'Mèo (đã ký)'
-    );
-    
+
+    // ĐÃ FIX: TIÊM 2 THÔNG BÁO HỆ THỐNG (KIỂM TRA CỜ XÓA THEO TỪNG TÀI KHOẢN)
+    if (localStorage.getItem('del_sys_msg_1_' + user) !== 'true') {
+        window.themThongBaoHeThong(
+            'sys_msg_1',
+            ' Lời từ nhà phát triển',
+            'Bấm vào đây để mở thư chào mừng...',
+            `Mến chào <b>${user}</b>, người bạn mới.<br><br>Trong lúc khói bụi và sự bận rộn đang khiến chúng ta ngại ra đường, việc bước chân ra ngoài tập luyện đôi khi cần một sự quyết tâm rất lớn. Ứng dụng này ra đời để bảo vệ từng nhịp thở của bạn bằng công nghệ vệ tinh và trí tuệ nhân tạo, giúp tự động chọn ra những con đường có không khí trong lành và địa hình dễ đi nhất.<br><br>Tại đây, bạn sẽ không bao giờ phải tập luyện một mình. Một cộng đồng luôn sẵn sàng để chúng ta cùng kết nối, chia sẻ niềm vui và tiếp thêm động lực cho nhau mỗi ngày.<br><br>Chúng tôi lo phần công nghệ phức tạp phía sau, từ vệ tinh cho đến trí tuệ nhân tạo, chỉ để đổi lấy một việc đơn giản: Thấy bạn xỏ giày và bước ra khỏi cửa. Suy cho cùng, sức khỏe của bạn với chúng tôi vẫn là thứ quan trọng nhất.`,
+            'Đội ngũ phát triển'
+        );
+    }
+
+    if (localStorage.getItem('del_sys_msg_2_' + user) !== 'true') {
+        window.themThongBaoHeThong(
+            'sys_msg_2',
+            '😼 Hồ sơ trợ lý Mèo',
+            'Hy vọng bạn sẽ sống hoà thuận cùng nó...',
+            `<b>Hãy nhớ:</b> Mèo không phải thú cưng, nó là huấn luyện viên cá nhân có quyền lực cao nhất ở đây. Nó có thể hơi xéo xắt, láo nháo, nhưng đó là vì cái bụng 6 múi của bạn.<br><br>Dưới đây là cách để giao tiếp với Mèo:<br><br>👆 <b>Chạm nhẹ:</b> ...? Ai mà biết được<br>✌️ <b>Gõ đầu 2 cái:</b> Nó sẽ phán ngay thời tiết và chỉ số ô nhiễm để quyết định xem bạn nên ra đường hay tập tại chỗ<br>⏱️ <b>Nhấn giữ:</b> Mở ra cánh cửa thần kỳ, nơi bạn tâm sự mục tiêu hoặc... tạm thời khóa mõm khi nó càu nhàu quá nhiều<br>🌪️ <b>Túm cổ kéo đi:</b> Nhẹ tay thôi, kéo gắt quá là nó mắng đấy.<br>📳 <b>Lắc điện thoại:</b> Mèo thù nhất cảm giác chóng mặt. Bạn mà lắc, nó có thể sẽ dỗi. Lúc đó đừng mong nó tính calo cho bạn.<br><br><i>Lời khuyên từ đội ngũ phát triển:</i> Mèo rất thẳng thắn và đôi khi hơi láo quá mức, nhưng tất cả là vì cái bụng 6 múi của bạn. Hãy đối xử tốt với nó, và nó sẽ đưa bạn đến vạch đích một cách... bớt đau khổ nhất..... hoặc không.`,
+            'Mèo (đã ký)'
+        );
+    }
+
     window.ganSuKienVuot(); // Vẫn gọi để gắn event cho các thông báo locket khác
 };
 
-// === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
 // === HỆ THỐNG XIN QUYỀN THÔNG BÁO ĐẨY (PUSH NOTIFICATIONS) ===
 window.xinQuyenThongBao = async function() {
     if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
@@ -5380,7 +5384,7 @@ window.toggleBaoThuc = function(id, isChecked) {
         theAlarm.isON = isChecked;
         localStorage.setItem('user_alarms_' + user, JSON.stringify(alarms));
         
-        // ĐÃ FIX: Chỉ thay đổi CSS trực tiếp của thẻ được bấm, KHÔNG RENDER LẠI TOÀN BỘ DANH SÁCH
+        // Chỉ thay đổi CSS trực tiếp của thẻ được bấm, KHÔNG RENDER LẠI TOÀN BỘ DANH SÁCH
         const card = document.getElementById('card-' + id);
         const wrap = document.getElementById('wrap-' + id);
         const timeInput = document.getElementById('time-' + id);
@@ -5395,14 +5399,18 @@ window.toggleBaoThuc = function(id, isChecked) {
         if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
             let numId = parseInt(id.replace('al_', '')) + 8000; 
             if (isChecked) {
+                // ĐÃ FIX LỖI TOÁN HỌC CẮT CHUỖI GIỜ/PHÚT  VÀ [1]
                 let timeParts = theAlarm.time.split(':');
+                let gio = parseInt(timeParts);
+                let phut = parseInt(timeParts[1]);
+
                 window.Capacitor.Plugins.LocalNotifications.schedule({
                     notifications: [{
                         title: "⏰ " + theAlarm.title,
-                        body: "Đến giờ rồi cậu ơi! Dậy vận động thôi!",
+                        body: "Đến giờ rồi ! Mèo đang gọi kìa!",
                         id: numId,
                         smallIcon: "logo_nho",
-                        schedule: { on: { hour: parseInt(timeParts), minute: parseInt(timeParts[4]) }, repeats: true }
+                        schedule: { on: { hour: gio, minute: phut }, repeats: true }
                     }]
                 });
             } else {
@@ -7457,7 +7465,7 @@ if (isOnline) {
     sttDiv.style.background = "#e9ecef";
 }
 
-        // Cập nhật nút bấm (Kết bạn hoặc Chat)
+        // Cập nhật nút bấm 
         const isFriend = window.danhSachBanBeThuc.includes(username);
         const actionBtnContainer = document.getElementById('public-action-btn');
         if (isFriend) {
@@ -7480,19 +7488,21 @@ window.timVaMoHoSo = function() {
 
 // 4. Mở Popup Thông Báo chuẩn UX
 window.moThongBao = function() {
+    // Ép hệ thống chạy lại hàm tạo thông báo riêng cho user mỗi khi ấn chuông
+    if (typeof window.taiThongBaoLocal === 'function') window.taiThongBaoLocal();
+
     const modalTB = document.getElementById('modal-thong-bao');
     if(modalTB) modalTB.style.display = 'flex';
-    
     // Tắt cái chấm đỏ (badge) đi vì người dùng đã mở xem rồi
     const chamDo = document.getElementById('cham-do-thong-bao');
     if(chamDo) chamDo.style.display = 'none';
 };
 
-// HỆ THỐNG CHAT 1-1 (TRẠM TRUNG CHUYỂN FIREBASE -> LOCAL STORAGE)
+// HỆ THỐNG CHAT 1-1
 let currentChatFriend = null;
 let chatListenerRef = null;
 
-// Hàm phụ: Vẽ 1 tin nhắn lên màn hình
+// Hàm phụ Vẽ 1 tin nhắn lên màn hình
 window.renderTinNhanDon = function(msg) {
     const container = document.getElementById('human-chat-history');
     const currentUser = localStorage.getItem('currentUser');

@@ -7590,8 +7590,44 @@ map.on('click', function(e) {
 window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
     window.currentRouteDistance = 0; // Reset km cũ
-    
-    // ... [Rất nhiều code gọi API và đẻ 2 đường Xanh/Nhanh ở giữa] ...
+    L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang phân tích vệ tinh...</div>`).openOn(map);
+
+    try {
+        const res = await fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson&alternatives=true`);
+        const data = await res.json();
+        if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
+
+        // BẢN FIX KINH ĐIỂN: Lấy đúng phần tử của mảng vệ tinh và đảo tọa độ chuẩn Leaflet
+        let routeFast = data.routes;
+        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]);
+        let distFast = (routeFast.distance / 1000).toFixed(1);
+
+        let routeEco = data.routes.length > 1 ? data.routes[1] : routeFast;
+        let coordsEco = routeEco.geometry.coordinates.map(c => [c[1], c]);
+        let distEco = (routeEco.distance / 1000).toFixed(1);
+
+        map.closePopup();
+
+        // 💥 CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
+        window.currentRouteDistance = parseFloat(distFast);
+        window.updateDynamicSwitchData(); // Gọi update UI ngay lập tức
+
+        if (window.isEcoRoute) {
+            // === CHẾ ĐỘ XANH ===
+            if (data.routes.length > 1) {
+                L.polyline(coordsFast, { color: '#ffc107', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
+                 .bindTooltip(`⚖️ Cân bằng: ${distFast}km`, {permanent: true, direction: 'bottom'});
+            }
+            L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(`🌿 Xanh nhất: ${distEco}km`, {permanent: true, direction: 'top'});
+            map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
+
+        } else {
+            // === CHẾ ĐỘ NHANH NHẤT ===
+            L.polyline(coordsFast, { color: '#007bff', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(`⚡ Nhanh nhất: ${distFast}km`, {permanent: true, direction: 'top'});
+            map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
+        }
 
     } catch (err) {
         console.warn("Lỗi API Định tuyến:", err);
@@ -7601,8 +7637,16 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
         L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
         map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
-        L.popup().setLatLng([lat2, lng2]).setContent(`<div style="font-weight:bold; color:#dc3545; text-align:center;">📡 Vệ tinh đang nghẽn!<br>Khoảng cách thẳng: ~${window.currentRouteDistance} km</div>`).openOn(map);
+        L.popup().setLatLng([lat2, lng2]).setContent(`<div style="font-weight:bold; color:#dc3545; text-align:center;">📡 Vệ tinh đang nghẽn!<br>Khoảng cách thẳng: ~${window.currentRouteDistance} km<br><button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%;">⭐ Lưu địa điểm</button></div>`).openOn(map);
     }
+};
+
+// ĐÃ FIX: Reset km khi người dùng hủy chỉ đường
+const oldThayDoiDiem = window.thayDoiDiem;
+window.thayDoiDiem = function(loai) {
+    if(typeof oldThayDoiDiem === 'function') oldThayDoiDiem(loai);
+    window.currentRouteDistance = 0; 
+    window.updateDynamicSwitchData();
 };
 // === HỆ THỐNG QUẢN LÝ SỔ TAY ĐỊA ĐIỂM (CÓ ICON & ẨN HIỆN) ===
 window.soTayLayerGroup = null;

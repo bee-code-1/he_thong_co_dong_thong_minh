@@ -2694,7 +2694,7 @@ window.xoaTienTrinh = function(recordKey) {
 window.veToanBoTienTrinh = function(dataObj) {
     const listContainer = document.getElementById('progress-list');
     const emptyMsg = document.getElementById('empty-progress');
-    
+
     if (!dataObj) {
         listContainer.innerHTML = '';
         if (emptyMsg) emptyMsg.style.display = 'block';
@@ -2714,12 +2714,12 @@ window.veToanBoTienTrinh = function(dataObj) {
             nhomTheoNgay[ngay] = { items: [], tongKm: 0, tongCalo: 0, tongGiay: 0, tongBuoc: 0, timeStampNgay: r.data.timestamp };
         }
         nhomTheoNgay[ngay].items.push(r);
-        
+
         // Cộng dồn chỉ số
         nhomTheoNgay[ngay].tongKm += parseFloat(r.data.quang_duong) || 0;
         nhomTheoNgay[ngay].tongCalo += parseFloat(r.data.calo) || 0;
         nhomTheoNgay[ngay].tongBuoc += parseInt(r.data.buoc_chan) || 0;
-        
+
         // Tính toán lại giây
         let thoiGianArr = (r.data.thoi_gian || "00:00").split(':');
         if (thoiGianArr.length === 2) {
@@ -2737,11 +2737,12 @@ window.veToanBoTienTrinh = function(dataObj) {
     mangNhomNgay.sort((a, b) => b.data.timeStampNgay - a.data.timeStampNgay);
 
     let html = '';
+    window.canvasQueue = []; // Khởi tạo mảng chờ vẽ bản đồ mini
 
     mangNhomNgay.forEach(nhom => {
         let ngay = nhom.ngay;
         let g = nhom.data;
-        
+
         let phut = Math.floor(g.tongGiay / 60);
         let giay = g.tongGiay % 60;
         let timeStr = `${phut}p${giay}s`;
@@ -2822,8 +2823,8 @@ window.veToanBoTienTrinh = function(dataObj) {
                             <div>⏱ Thời gian: <span style="color: ${borderColor}; font-weight: bold;">${data.thoi_gian || "00:00"}</span></div>
                             <div>⚡ Vận tốc TB: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.van_toc || 0).toFixed(2)} km/h</span></div>
                             <div>📏 Quãng đường: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.quang_duong || 0).toFixed(2)} km</span></div>
-                            <div>👟 Bước chân: <span style="color: ${borderColor}; font-weight: bold;">${data.buoc_chan || "0"} bước</span></div>
-                            <div>🔥 Calo tiêu thụ: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.calo || 0).toFixed(1)} kcal</span></div>
+                            <div>👟 Bước: <span style="color: ${borderColor}; font-weight: bold;">${data.buoc_chan || "0"}</span></div>
+                            <div>🔥 Calo: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.calo || 0).toFixed(1)} kcal</span></div>
                         </div>
 
                         <!-- Cột 2: Thời gian 24h -->
@@ -2841,11 +2842,10 @@ window.veToanBoTienTrinh = function(dataObj) {
 
                 // Đẩy vào hàng đợi vẽ Map
                 if (data.toado_path && data.toado_path.length > 1) {
-                    canvasQueue.push({ id: canvasId, path: data.toado_path });
+                    window.canvasQueue.push({ id: canvasId, path: data.toado_path });
                 }
             }
 
-            // GÓI VÀO KHUNG SWIPE (Đã dọn dẹp sạch sự kiện nhấn giữ onmousedown)
             let cardStyle = `background: ${bgCard}; padding: 12px; display: flex; justify-content: space-between; align-items: center; user-select: none; width: 100%; box-sizing: border-box; border-radius: 15px;`;
 
             html += `
@@ -2856,14 +2856,47 @@ window.veToanBoTienTrinh = function(dataObj) {
                 </div>
             </div>`;
         });
-
         html += `</div></div>`;
     });
 
     listContainer.innerHTML = html;
 
-    // 💥 CHỐT HẠ: ÁP DỤNG MA THUẬT LẮNG NGHE VUỐT CHO CÁC THẺ VỪA VẼ RA
+    //  CHỐT HẠ 1 LẮNG NGHE VUỐT CHO CÁC THẺ VỪA VẼ RA
     if (typeof window.ganSuKienVuot === 'function') window.ganSuKienVuot();
+
+    //  CHỐT HẠ 2: VẼ TOÀN BỘ BẢN ĐỒ MINI TRONG HÀNG ĐỢI
+    setTimeout(() => {
+        if (!window.canvasQueue) return;
+        window.canvasQueue.forEach(item => {
+            let canvas = document.getElementById(item.id);
+            if (!canvas) return;
+            let ctx = canvas.getContext('2d');
+            let w = canvas.width; let h = canvas.height;
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            item.path.forEach(p => {
+                if (p.lat < minLat) minLat = p.lat; if (p.lat > maxLat) maxLat = p.lat;
+                if (p.lng < minLng) minLng = p.lng; if (p.lng > maxLng) maxLng = p.lng;
+            });
+            let latDiff = maxLat - minLat; let lngDiff = maxLng - minLng;
+            let maxDiff = Math.max(latDiff, lngDiff) || 0.001;
+            let pad = 10; w -= pad*2; h -= pad*2;
+            ctx.beginPath();
+            ctx.strokeStyle = '#004BAd';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            item.path.forEach((p, i) => {
+                let x = pad + ((p.lng - minLng) / maxDiff) * w;
+                let y = pad + (h - ((p.lat - minLat) / maxDiff) * h);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            let lastP = item.path[item.path.length - 1];
+            let lastX = pad + ((lastP.lng - minLng) / maxDiff) * w;
+            let lastY = pad + (h - ((lastP.lat - minLat) / maxDiff) * h);
+            ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, 2*Math.PI); ctx.fillStyle = '#dc3545'; ctx.fill();
+        });
+    }, 50);
 };
 // === TỰ ĐỘNG TẢI LỊCH SỬ VÀ LEVEL KHI MỞ TRANG (F5) ===
 window.addEventListener('load', function() {

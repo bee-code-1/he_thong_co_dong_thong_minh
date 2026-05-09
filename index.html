@@ -1032,6 +1032,7 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
             <!-- Tổng kết nhỏ đáy bảng (Pill) -->
             <div style="background: rgba(0,0,0,0.15); padding: 3% 4%; border-radius: 10px; font-size: 3.2vw; font-weight: bold; margin-top: 6%; display: flex; justify-content: space-between; align-items: center;">
                 <div>📏 <span id="tong-km-tab2">0.0</span> km</div>
+                <div>👟 <span id="tong-buoc-tab2">0</span> bước</div>
                 <div>🔥 <span id="tong-calo-tab2">0</span> kcal</div>
                 <div>⏱️ <span id="tong-thoigian-tab2">0h 0m</span></div>
             </div>
@@ -2754,6 +2755,7 @@ window.veToanBoTienTrinh = function(dataObj) {
                 <div style="font-weight: 900; font-size: 15px; white-space: nowrap;">📅 ${ngay}</div>
                 <div style="font-size: 12px; font-weight: bold; display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px;">
                     <span>📏 ${g.tongKm.toFixed(1)}km</span>
+                    <span>👟 ${g.tongBuoc} bước</span>
                     <span>🔥 ${g.tongCalo.toFixed(1)}kcal</span>
                     <span>⏱ ${timeStr}</span>
                 </div>
@@ -4070,12 +4072,12 @@ window.batDauVoiCheDo = function(mode) {
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.add('nav-hidden');
     
-    document.getElementById('action-btns-container').classList.add('running');
+   document.getElementById('action-btns-container').classList.add('running');
     const pBtn = document.getElementById('pause-btn');
     if (pBtn) { pBtn.innerText = '⏸ TẠM DỪNG'; pBtn.style.backgroundColor = ''; pBtn.style.color = ''; }
-    
     document.getElementById('time-display').style.display = 'block';
-    if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'none';
+    if(document.getElementById('dynamic-layer-island')) document.getElementById('dynamic-layer-island').style.display = 'flex';
+
     
     if (typeof startTrackingAction === 'function') startTrackingAction();
     if (window.currentAQIColor === "#dc3545" || window.currentAQIColor === "#6f42c1" || window.currentAQIColor === "#7e0023") {
@@ -7589,9 +7591,9 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         const data = await res.json();
         if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
 
-        // BẢN FIX KINH ĐIỂN: Lấy đúng phần tử của mảng vệ tinh và đảo tọa độ chuẩn Leaflet
+        // ĐÃ FIX: Lấy phần tử  và đảo ngược tọa độ [Kinh, Vĩ] thành [Vĩ, Kinh] chuẩn Leaflet
         let routeFast = data.routes;
-        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]);
+        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]); 
         let distFast = (routeFast.distance / 1000).toFixed(1);
 
         let routeEco = data.routes.length > 1 ? data.routes[1] : routeFast;
@@ -7602,7 +7604,7 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
 
         // 💥 CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
         window.currentRouteDistance = parseFloat(distFast);
-        window.updateDynamicSwitchData(); // Gọi update UI ngay lập tức
+        window.updateDynamicSwitchData(); 
 
         if (window.isEcoRoute) {
             // === CHẾ ĐỘ XANH ===

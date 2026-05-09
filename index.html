@@ -4137,10 +4137,16 @@ window.veBangThanhTuu = function() {
         const isUnlocked = currentKm >= hh.km;
         const keyNew = `badge_new_${user}_km_${hh.km}`;
         
-        // Quét Huy hiệu mới chưa từng bóc tem
+         // Quét Huy hiệu mới chưa từng bóc tem
         if (isUnlocked && localStorage.getItem(`badge_unlocked_${user}_km_${hh.km}`) !== 'true') {
             localStorage.setItem(`badge_unlocked_${user}_km_${hh.km}`, 'true');
             localStorage.setItem(keyNew, 'true');
+            
+            // ĐỒNG BỘ LÊN ĐÁM MÂY CHỐNG MẤT KHI F5 HOẶC ĐỔI THIẾT BỊ
+            if (typeof window.db !== 'undefined') {
+                window.db.ref('nguoi_dung/' + user + '/thanh_tuu_km/km_' + hh.km.toString().replace('.', '_')).set(true);
+            }
+            
             const chamDo = document.getElementById('cham-do-thanh-tuu');
             if(chamDo) chamDo.style.display = 'block';
         }
@@ -4278,6 +4284,11 @@ window.kiemTraVaNoHuyHieuAn = function(badgeId) {
     // Đánh dấu đã nhận & Gắn mác hàng mới
     localStorage.setItem(key, 'true');
     localStorage.setItem(`badge_new_${user}_${badgeId}`, 'true');
+
+    // ĐỒNG BỘ LÊN ĐÁM MÂY CHỐNG MẤT KHI F5 HOẶC ĐỔI THIẾT BỊ
+    if (typeof window.db !== 'undefined') {
+        window.db.ref('nguoi_dung/' + user + '/thanh_tuu_an/' + badgeId).set(true);
+    }
     
     // Bật chấm đỏ ở Tab 5
     const chamDo = document.getElementById('cham-do-thanh-tuu');
@@ -4579,7 +4590,7 @@ window.muaVatPham = function(tenVatPham, gia) {
         if (typeof bungPhaoHoa === 'function') bungPhaoHoa(); 
         
         // Thông báo lầy lội theo ý cộng sự
-        alert("Mua thành công thôi, chưa có gì cả, tại làm đéo có ai đã có ngần ấy mà đổi!");
+        alert("Mua thành công thôi, chưa có gì cả, tại nhà phát triển làm gì có tiền!");
     }
 }; 
     
@@ -6311,9 +6322,10 @@ window.addEventListener('devicemotion', function(e) {
     }
 });
 
-// === 5. CƠ CHẾ KÉO THẢ & NHẤN GIỮ (NÂNG CẤP) ===
+// === 5. CƠ CHẾ KÉO THẢ & NHẤN GIỮ (BẢN FIX CHUẨN UX) ===
 let catLongPressTimer = null;
 let isCatLongPress = false;
+let dragThreshold = 10; // Giới hạn 10px để phân biệt ấn giữ và kéo lê
 
 function dragStart(e) {
     if (e.type === "touchstart") {
@@ -6326,18 +6338,17 @@ function dragStart(e) {
 
     if (e.target.closest('#cat-body')) {
         isCatDragging = true;
-        isCatLongPress = false; // Reset cờ nhấn giữ
-        
-        // Bắt đầu đếm giờ nhấn giữ (800ms)
+        isCatLongPress = false; 
+
+        // 1. Bắt đầu đếm giờ nhấn giữ (800ms) - Chỉ thành công nếu không bị kéo đi xa
         catLongPressTimer = setTimeout(() => {
             isCatLongPress = true;
-            window.moMenuMeo(); // Bật Menu 3 tùy chọn
-            if (navigator.vibrate) navigator.vibrate(50); // Rung nhẹ phản hồi
+            window.moMenuMeo(); // Nảy bảng chức năng
+            if (navigator.vibrate) navigator.vibrate(50);
         }, 800);
-        
+
         catAssistant.classList.remove('idle-cat');
         catBubble.style.display = 'none';
-        // ĐÃ FIX: Không làm Mèo chóng mặt ngay khi vừa chạm nhẹ nữa!
     }
 }
 
@@ -6349,11 +6360,14 @@ function drag(e) {
         currentX = clientX - initialX;
         currentY = clientY - initialY;
 
-        if (Math.abs(currentX - xOffset) > 10 || Math.abs(currentY - yOffset) > 10) {
-            clearTimeout(catLongPressTimer);
-            // ĐÃ FIX: Khi thực sự bị kéo lê một đoạn thì mới thêm class và đổi mặt chóng mặt
+        let distance = Math.sqrt(currentX * currentX + currentY * currentY);
+
+        // 2. KỶ LUẬT KHÔNG GIAN: Nếu kéo lệch khỏi ổ quá 10px -> HỦY LỆNH NHẤN GIỮ
+        if (distance > dragThreshold) {
+            clearTimeout(catLongPressTimer); 
+            isCatLongPress = false;
             catAssistant.classList.add('dragging-cat');
-            catImgObj.src = imgChongMat; 
+            catImgObj.src = imgChongMat; // Cho Mèo chóng mặt khi đang lơ lửng
         }
 
         xOffset = currentX;
@@ -6363,30 +6377,28 @@ function drag(e) {
 }
 
 function dragEnd(e) {
-    clearTimeout(catLongPressTimer); // Hủy đếm giờ nhấn giữ khi nhấc tay lên
+    clearTimeout(catLongPressTimer); // Nhấc tay lên là lập tức hủy bộ đếm
     if (!isCatDragging) return;
 
-    if (isCatLongPress) {
-        isCatDragging = false;
-        catAssistant.classList.remove('dragging-cat');
-        catAssistant.classList.add('idle-cat');
-        catImgObj.src = getAnhMacDinh();
-        return;
-    }
+    let distanceMoved = Math.sqrt(currentX * currentX + currentY * currentY);
 
-    const distanceMoved = Math.sqrt(Math.pow(currentX, 2) + Math.pow(currentY, 2));
-    initialX = currentX; initialY = currentY;
+    // 3. ÉP MÈO VỀ NHÀ NGAY LẬP TỨC
     isCatDragging = false;
+    initialX = 0; initialY = 0; currentX = 0; currentY = 0;
+    xOffset = 0; yOffset = 0;
 
     catAssistant.classList.remove('dragging-cat');
-    xOffset = 0; yOffset = 0;
     catAssistant.classList.add('idle-cat');
-    catAssistant.style.transform = `translate(0px, 0px)`;
-    
-    // ĐÃ FIX: Luôn trả lại khuôn mặt bình thường khi nhấc tay ra khỏi Mèo
-    catImgObj.src = getAnhMacDinh();
+    catAssistant.style.transform = `translate(0px, 0px)`; // Nảy về tọa độ gốc
+    catImgObj.src = getAnhMacDinh(); // Trả lại mặt bình thường
 
-    if (distanceMoved > 120) {
+    // 4. PHÂN XỬ HÀNH ĐỘNG DỰA VÀO CỜ VÀ KHOẢNG CÁCH
+    if (isCatLongPress) {
+        return; 
+    }
+
+    if (distanceMoved > dragThreshold) {
+        // TRƯỜNG HỢP KÉO THẢ: Vừa thả ra là càu nhàu
         const thaMsgs = ["Kéo kéo cái cmm", "Nghịch ít thôi", "Bỏ cái tay ra nha 😼"];
         catBubble.innerText = thaMsgs[Math.floor(Math.random() * thaMsgs.length)];
         catBubble.style.backgroundColor = '#fff9c4';
@@ -6398,8 +6410,8 @@ function dragEnd(e) {
             catBubble.classList.remove('show-bubble');
             setTimeout(() => catBubble.style.display = 'none', 600);
         }, 3000);
-    } else if (distanceMoved < 10) {
-        // ĐÃ FIX: 1 chạm (Tap) là gọi thẳng hàm Mèo khịa, xóa bỏ hàm ma kichHoatAIKhia
+    } else {
+        // TRƯỜNG HỢP CHẠM 1 LẦN (TAP): Bắn bong bóng AI khịa
         if (typeof showRandomCatMessage === 'function') {
             showRandomCatMessage();
         }
@@ -6963,29 +6975,51 @@ window.congDonThongKe = function(kmMoi, buocMoi, caloMoi, phutMoi) {
     });
 };
 
-// 1. ĐỌC THỐNG KÊ BẤT TỬ Ở TAB 2 (KHÔNG PHỤ THUỘC LỊCH SỬ)
+// 1. ĐỌC THỐNG KÊ VÀ ĐỒNG BỘ THÀNH TỰU BẤT TỬ KHI VỪA MỞ APP (F5)
 window.capNhatBangTichLuy = function() {
     const user = localStorage.getItem('currentUser');
     if (!user || typeof window.db === 'undefined') return;
-
+    
+    // A. Kéo Thống kê Level, Km, Calo
     window.db.ref('nguoi_dung/' + user + '/thong_ke').once('value').then(snap => {
         let thongKe = snap.val() || { tong_km: 0, tong_buoc: 0, tong_calo: 0, tong_phut: 0 };
-
+        
         if(document.getElementById('tong-km-tab2')) document.getElementById('tong-km-tab2').innerText = (thongKe.tong_km || 0).toFixed(1);
         if(document.getElementById('tong-buoc-tab2')) document.getElementById('tong-buoc-tab2').innerText = Math.round(thongKe.tong_buoc || 0);
         if(document.getElementById('tong-calo-tab2')) document.getElementById('tong-calo-tab2').innerText = (thongKe.tong_calo || 0).toFixed(1);
         
-        let gio = Math.floor((thongKe.tong_phut || 0) / 60); 
+        let gio = Math.floor((thongKe.tong_phut || 0) / 60);
         let phut = (thongKe.tong_phut || 0) % 60;
+        
         if(document.getElementById('tong-thoigian-tab2')) document.getElementById('tong-thoigian-tab2').innerText = `${gio}h ${phut}m`;
-
+        
         // Bơm TỔNG CALO vào hệ thống Level
         if(typeof window.capNhatHeThongLevel === 'function') {
             window.capNhatHeThongLevel(thongKe.tong_calo || 0);
         }
     });
-};
 
+    // B. Kéo Thành Tựu Ẩn từ Mây về LocalStorage
+    window.db.ref('nguoi_dung/' + user + '/thanh_tuu_an').once('value').then(snap => {
+        let thanhTuuAn = snap.val();
+        if(thanhTuuAn) {
+            for(let badgeId in thanhTuuAn) {
+                localStorage.setItem(`badge_${user}_${badgeId}`, 'true');
+            }
+        }
+    });
+
+    // C. Kéo Thành Tựu KM từ Mây về LocalStorage
+    window.db.ref('nguoi_dung/' + user + '/thanh_tuu_km').once('value').then(snap => {
+        let thanhTuuKm = snap.val();
+        if(thanhTuuKm) {
+            for(let key in thanhTuuKm) {
+                let realKm = key.replace('km_', '').replace('_', '.');
+                localStorage.setItem(`badge_unlocked_${user}_km_${realKm}`, 'true');
+            }
+        }
+    });
+};
 // Ghi đè hàm Load để Sắp xếp MỚI NHẤT lên đầu và tải Bảng tích lũy
 window.addEventListener('load', function() {
     setTimeout(() => {

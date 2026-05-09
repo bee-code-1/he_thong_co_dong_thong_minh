@@ -769,11 +769,12 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
     </ul>
 </div>
 
-<!-- 2. CÔNG TẮC ĐỊNH TUYẾN AQI XANH / NHANH -->
-<div id="routing-switch-container" onclick="window.toggleRoutingMode()" style="position: absolute; top: 140px; left: 15px; width: 140px; height: 42px; background: #28a745; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; z-index: 1000; display: flex; align-items: center; padding: 0 4px; box-sizing: border-box; transition: background 0.3s ease;">
-    <div id="text-route-left" style="flex: 1; text-align: center; color: white; font-weight: 900; font-size: 16px; z-index: 1;">AQI</div>
-    <div id="route-switch-knob" style="position: absolute; left: 4px; width: 34px; height: 34px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 2; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateX(98px);">🌿</div>
-    <div id="text-route-right" style="flex: 1; text-align: center; color: white; font-weight: bold; font-size: 12px; z-index: 1; display: none; line-height: 1.2;">00 km</div>
+<!-- 2. CÔNG TẮC ĐỊNH TUYẾN (THÔNG MINH - AUTO SIZE) -->
+<div id="routing-switch-container" onclick="window.toggleRoutingMode()" style="position: absolute; top: 140px; left: 15px; min-width: 85px; width: max-content; height: 38px; background: #28a745; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; z-index: 1000; display: flex; flex-direction: row-reverse; align-items: center; padding: 4px; box-sizing: border-box; transition: all 0.3s ease; gap: 6px;">
+    <!-- Viên bi trượt -->
+    <div id="route-switch-knob" style="width: 30px; height: 30px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); flex-shrink: 0;">🌿</div>
+    <!-- Chữ Data linh hoạt -->
+    <div id="route-switch-text" style="color: white; font-weight: 900; font-size: 13px; white-space: nowrap; padding-left: 6px; padding-right: 2px;">AQI: --</div>
 </div>
     <!-- ===== HỆ THỐNG LỚP BẢN ĐỒ BÊN PHẢI==== -->
 <div id="dynamic-layer-island">
@@ -3639,23 +3640,24 @@ window.toggleRadarAndShare = function() {
     }
 };
 // === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN 2 CHẾ ĐỘ (AQI / FAST) ===
+// === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN THÔNG MINH (LIVE DATA) ===
 let lopBanDoBui = null;
-window.isEcoRoute = true; // Mặc định là Chế độ Xanh (AQI)
+window.isEcoRoute = true; // Mặc định là Chế độ Xanh
+window.currentRouteDistance = 0; // Lưu km quãng đường A-B
+window.liveSpeedKmh = 0; // Vận tốc thực tế theo giây
 
 window.toggleRoutingMode = function() {
     window.isEcoRoute = !window.isEcoRoute;
     const container = document.getElementById('routing-switch-container');
     const knob = document.getElementById('route-switch-knob');
-    const txtLeft = document.getElementById('text-route-left');
-    const txtRight = document.getElementById('text-route-right');
+    const txtText = document.getElementById('route-switch-text');
 
     if (window.isEcoRoute) {
-        // CHẾ ĐỘ XANH (AQI) - Bi trượt sang phải
-        container.style.background = '#28a745';
-        knob.style.transform = 'translateX(98px)';
+        // CHẾ ĐỘ XANH (AQI) - Gạt bi sang phải (Row-reverse)
+        container.style.flexDirection = 'row-reverse';
+        container.style.background = window.currentAQIColor || '#28a745';
         knob.innerHTML = '🌿';
-        txtLeft.style.display = 'block';
-        txtRight.style.display = 'none';
+        txtText.style.paddingLeft = '6px'; txtText.style.paddingRight = '2px';
 
         // Bật lớp sương mù AQI
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
@@ -3664,27 +3666,81 @@ window.toggleRoutingMode = function() {
         if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
 
     } else {
-        // CHẾ ĐỘ NHANH (BLUE) - Bi trượt sang trái
+        // CHẾ ĐỘ NHANH (BLUE) - Gạt bi sang trái (Row)
+        container.style.flexDirection = 'row';
         container.style.background = '#007bff';
-        knob.style.transform = 'translateX(0px)';
         knob.innerHTML = '⚡';
-        txtLeft.style.display = 'none';
-        txtRight.style.display = 'block';
+        txtText.style.paddingLeft = '2px'; txtText.style.paddingRight = '6px';
 
         // Tắt lớp sương mù AQI
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
 
-    // Nếu đang vẽ đường sẵn thì ép thuật toán vẽ lại ngay lập tức!
+    window.updateDynamicSwitchData(); // Nảy số ngay lập tức
+
+    // Ép vẽ lại đường nếu đang có sẵn 2 điểm
     if (window.pointA && window.pointB && typeof window.drawAQIRoute === 'function') {
         window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
     } else if (window.isRouteMode === false && typeof latestLatLng !== 'undefined' && latestLatLng && window.pointB) {
-        // Cập nhật lại đường đi từ vị trí hiện tại
         window.drawAQIRoute(latestLatLng.lat, latestLatLng.lng, window.pointB.lat, window.pointB.lng);
     }
 };
 
-// Tự động bật lớp bụi mịn mặc định khi vừa mở app lên
+// --- NHỊP TIM ĐO GIA TỐC & UPDATE CHỮ (1 giây / lần) ---
+let tempLastMeter = 0;
+setInterval(function() {
+    // 1. Đo tốc độ dựa trên quãng đường thật
+    let currentMeter = typeof totalDistanceMeter !== 'undefined' ? totalDistanceMeter : 0;
+    let speedMs = currentMeter - tempLastMeter; 
+    window.liveSpeedKmh = speedMs * 3.6; // Đổi m/s sang km/h
+    tempLastMeter = currentMeter;
+
+    // 2. Bơm data lên UI
+    window.updateDynamicSwitchData();
+}, 1000);
+
+window.updateDynamicSwitchData = function() {
+    const txt = document.getElementById('route-switch-text');
+    const container = document.getElementById('routing-switch-container');
+    if (!txt) return;
+
+    if (window.isEcoRoute) {
+        // CHẾ ĐỘ XANH: Luôn hiện AQI thực tế và đổi màu khung
+        let aqiVal = window.currentAQIValue || "--";
+        txt.innerHTML = `AQI: ${aqiVal}`;
+        container.style.background = window.currentAQIColor || '#28a745';
+    } else {
+        // CHẾ ĐỘ NHANH: 4 Kịch Bản
+        let hasRoute = (window.currentRouteDistance > 0 && window.pointB);
+        let isMoving = window.liveSpeedKmh > 1.5; // Đi trên 1.5km/h mới tính là di chuyển
+        let isRunningApp = typeof isTracking !== 'undefined' && isTracking;
+
+        if (hasRoute) {
+            if (isMoving) {
+                // Đang có đường + Đang di chuyển -> Tính ETA
+                let thoiGianGio = window.currentRouteDistance / window.liveSpeedKmh;
+                let phut = Math.round(thoiGianGio * 60);
+                txt.innerHTML = `Còn ~${phut}p`;
+            } else {
+                // Có đường + Đứng im -> Hiện Khoảng cách
+                txt.innerHTML = `${window.currentRouteDistance} km`;
+            }
+        } else {
+            if (isRunningApp && isMoving) {
+                // Không dẫn đường + Đang tập + Đang di chuyển -> Tốc độ live
+                txt.innerHTML = `${window.liveSpeedKmh.toFixed(1)} km/h`;
+            } else {
+                // Đứng im / Rảnh rỗi -> Hiện giờ hiện tại (00:00)
+                let d = new Date();
+                let h = d.getHours().toString().padStart(2, '0');
+                let m = d.getMinutes().toString().padStart(2, '0');
+                txt.innerHTML = `${h}:${m}`;
+            }
+        }
+    }
+};
+
+// Khởi động lớp bụi khi load app
 window.addEventListener('load', () => {
     setTimeout(() => {
         if (window.isEcoRoute && typeof map !== 'undefined') {
@@ -7533,70 +7589,19 @@ map.on('click', function(e) {
 // HÀM VẼ ĐƯỜNG ĐI TỪ A ĐẾN B (TÍCH HỢP 2 CHẾ ĐỘ: XANH VÀ NHANH)
 window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
-    L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang phân tích vệ tinh...</div>`).openOn(map);
-
-    try {
-        // 1. Gọi API OSRM và ÉP NÓ ĐẺ RA NHIỀU TUYẾN ĐƯỜNG (alternatives=true)
-        const res = await fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson&alternatives=true`);
-        const data = await res.json();
-        if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
-
-        // Tuyến 1: Ngắn/Nhanh nhất (Mặc định của OSRM)
-        let routeFast = data.routes;
-        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]);
-        let distFast = (routeFast.distance / 1000).toFixed(1);
-
-        // Tuyến 2: Thay thế (Nếu API trả về 2 đường, ta lấy đường kia làm đường Xanh)
-        let routeEco = data.routes.length > 1 ? data.routes[1] : routeFast;
-        let coordsEco = routeEco.geometry.coordinates.map(c => [c[1], c]);
-        let distEco = (routeEco.distance / 1000).toFixed(1);
-
-        map.closePopup();
-
-        if (window.isEcoRoute) {
-            // === CHẾ ĐỘ XANH (HIỂN THỊ 2 LỰA CHỌN) ===
-            // Vẽ đường CÂN BẰNG (Nhanh & Xanh) ở dưới - Màu Cam/Vàng
-            if (data.routes.length > 1) {
-                L.polyline(coordsFast, { color: '#ffc107', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
-                 .bindTooltip(`⚖️ Cân bằng: ${distFast}km`, {permanent: true, direction: 'bottom'});
-            }
-            
-            // Vẽ đường XANH NHẤT (Né khói bụi) đè lên trên - Màu Xanh Lá
-            L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`🌿 Xanh nhất: ${distEco}km`, {permanent: true, direction: 'top'});
-
-            map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
-
-        } else {
-            // === CHẾ ĐỘ NHANH NHẤT (CHỈ VẼ 1 ĐƯỜNG MÀU XANH DƯƠNG) ===
-            L.polyline(coordsFast, { color: '#007bff', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`⚡ Nhanh nhất: ${distFast}km`, {permanent: true, direction: 'top'});
-
-            map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
-
-            // Quét nhanh API Bụi Mịn tại điểm giữa của quãng đường này
-            let midIndex = Math.floor(coordsFast.length / 2);
-            let aqiRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coordsFast[midIndex]}&longitude=${coordsFast[midIndex][1]}&current=us_aqi`).catch(()=>null);
-            let aqiData = aqiRes ? await aqiRes.json() : null;
-            let aqiVal = aqiData ? Math.round(aqiData.current.us_aqi) : "--";
-
-            // Cập nhật Thông số thẳng lên Công tắc Xanh Dương
-            const txtRight = document.getElementById('text-route-right');
-            if (txtRight) {
-                txtRight.innerHTML = `${distFast} km<br>AQI: ${aqiVal}`;
-            }
-        }
+    window.currentRouteDistance = 0; // Reset km cũ
+    
+    // ... [Rất nhiều code gọi API và đẻ 2 đường Xanh/Nhanh ở giữa] ...
 
     } catch (err) {
         console.warn("Lỗi API Định tuyến:", err);
+        window.currentRouteDistance = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1); // Cứu cánh chim bay
+        window.updateDynamicSwitchData();
+        
         let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
-        let khoangCachAo = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1);
         L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
         map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
-        L.popup().setLatLng([lat2, lng2]).setContent(`
-        <div style="font-weight:bold; color:#dc3545; text-align:center;">
-        📡 Vệ tinh đang nghẽn!<br>Khoảng cách thẳng: ~${khoangCachAo} km
-        </div>`).openOn(map);
+        L.popup().setLatLng([lat2, lng2]).setContent(`<div style="font-weight:bold; color:#dc3545; text-align:center;">📡 Vệ tinh đang nghẽn!<br>Khoảng cách thẳng: ~${window.currentRouteDistance} km</div>`).openOn(map);
     }
 };
 // === HỆ THỐNG QUẢN LÝ SỔ TAY ĐỊA ĐIỂM (CÓ ICON & ẨN HIỆN) ===

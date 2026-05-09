@@ -769,11 +769,13 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
     </ul>
 </div>
 
-<!-- 2. NÚT BỤI MỊN  -->
-<button id="btn-bui-min" onclick="window.toggleBuiMin()" style="position: absolute; top: 140px; left: 15px; background: rgba(255, 255, 255, 0.9); border: 2px solid #004BAd; border-radius: 15px; padding: 8px 12px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; pointer-events: auto; z-index: 1000;"> Chất lượng kk <br>🔴 OFF</button>
-<!-- ==========================================
-     HỆ THỐNG DYNAMIC ISLAND (LỚP BẢN ĐỒ BÊN PHẢI)
-=========================================== -->
+<!-- 2. CÔNG TẮC ĐỊNH TUYẾN AQI XANH / NHANH -->
+<div id="routing-switch-container" onclick="window.toggleRoutingMode()" style="position: absolute; top: 140px; left: 15px; width: 140px; height: 42px; background: #28a745; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto; z-index: 1000; display: flex; align-items: center; padding: 0 4px; box-sizing: border-box; transition: background 0.3s ease;">
+    <div id="text-route-left" style="flex: 1; text-align: center; color: white; font-weight: 900; font-size: 16px; z-index: 1;">AQI</div>
+    <div id="route-switch-knob" style="position: absolute; left: 4px; width: 34px; height: 34px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 2; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateX(98px);">🌿</div>
+    <div id="text-route-right" style="flex: 1; text-align: center; color: white; font-weight: bold; font-size: 12px; z-index: 1; display: none; line-height: 1.2;">00 km</div>
+</div>
+    <!-- ===== HỆ THỐNG LỚP BẢN ĐỒ BÊN PHẢI==== -->
 <div id="dynamic-layer-island">
     <!-- Nút Lõi (Đầu viên nhộng) -->
     <div id="btn-main-island" class="island-btn" onclick="window.toggleIslandMenu(event)" title="Lớp bản đồ">
@@ -3636,39 +3638,61 @@ window.toggleRadarAndShare = function() {
         alert(" Đã tắt chia sẻ vị trí cá nhân !");
     }
 };
+// === HỆ THỐNG CÔNG TẮC ĐỊNH TUYẾN 2 CHẾ ĐỘ (AQI / FAST) ===
 let lopBanDoBui = null;
-window.currentAQIColor = window.currentAQIColor || '#28a745'; // Màu dự phòng ban đầu
+window.isEcoRoute = true; // Mặc định là Chế độ Xanh (AQI)
 
-window.toggleBuiMin = function() {
-    if (typeof window.isHienBui === 'undefined') window.isHienBui = false;
-    window.isHienBui = !window.isHienBui;
-    
-    const btn = document.getElementById('btn-bui-min');
-    if (!btn) return;
+window.toggleRoutingMode = function() {
+    window.isEcoRoute = !window.isEcoRoute;
+    const container = document.getElementById('routing-switch-container');
+    const knob = document.getElementById('route-switch-knob');
+    const txtLeft = document.getElementById('text-route-left');
+    const txtRight = document.getElementById('text-route-right');
 
-    if (window.isHienBui) {
-        // TRẠNG THÁI ON: Hiện thẳng chỉ số AQI thực tế + Màu cảnh báo
-        let aqiVal = window.currentAQIValue || "--";
-        btn.style.backgroundColor = window.currentAQIColor;
-        btn.style.color = 'white';
-        btn.style.border = '2px solid white';
-        btn.innerHTML = `<span style="font-size: 16px;">AQI: ${aqiVal}</span><br>🟢 Đang bật`;
-        
+    if (window.isEcoRoute) {
+        // CHẾ ĐỘ XANH (AQI) - Bi trượt sang phải
+        container.style.background = '#28a745';
+        knob.style.transform = 'translateX(98px)';
+        knob.innerHTML = '🌿';
+        txtLeft.style.display = 'block';
+        txtRight.style.display = 'none';
+
+        // Bật lớp sương mù AQI
         if (!lopBanDoBui && typeof L !== 'undefined' && typeof map !== 'undefined') {
-            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', {
-                maxZoom: 18, opacity: 0.9, attribution: 'Air Quality by WAQI'
-            });
+            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', { maxZoom: 18, opacity: 0.9 });
         }
         if (lopBanDoBui && typeof map !== 'undefined') lopBanDoBui.addTo(map);
+
     } else {
-        // TRẠNG THÁI OFF: Trả về chữ thu gọn tĩnh lặng
-        btn.style.backgroundColor = '#555';
-        btn.style.color = 'white';
-        btn.style.border = '2px solid #333';
-        btn.innerHTML = 'Lớp Bụi mịn<br>🔴 OFF';
+        // CHẾ ĐỘ NHANH (BLUE) - Bi trượt sang trái
+        container.style.background = '#007bff';
+        knob.style.transform = 'translateX(0px)';
+        knob.innerHTML = '⚡';
+        txtLeft.style.display = 'none';
+        txtRight.style.display = 'block';
+
+        // Tắt lớp sương mù AQI
         if (lopBanDoBui && typeof map !== 'undefined') map.removeLayer(lopBanDoBui);
     }
+
+    // Nếu đang vẽ đường sẵn thì ép thuật toán vẽ lại ngay lập tức!
+    if (window.pointA && window.pointB && typeof window.drawAQIRoute === 'function') {
+        window.drawAQIRoute(window.pointA.lat, window.pointA.lng, window.pointB.lat, window.pointB.lng);
+    } else if (window.isRouteMode === false && typeof latestLatLng !== 'undefined' && latestLatLng && window.pointB) {
+        // Cập nhật lại đường đi từ vị trí hiện tại
+        window.drawAQIRoute(latestLatLng.lat, latestLatLng.lng, window.pointB.lat, window.pointB.lng);
+    }
 };
+
+// Tự động bật lớp bụi mịn mặc định khi vừa mở app lên
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (window.isEcoRoute && typeof map !== 'undefined') {
+            lopBanDoBui = L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=demo', { maxZoom: 18, opacity: 0.9 });
+            lopBanDoBui.addTo(map);
+        }
+    }, 2500);
+});
 // === LOGIC BẬT TẮT BẢN ĐỒ ĐỊA HÌNH ===
 let lopDiaHinh = null;
 window.isHienDiaHinh = false;
@@ -7506,89 +7530,75 @@ map.on('click', function(e) {
     }
 });
 
-// HÀM VẼ ĐƯỜNG ĐI AQI TỪ A ĐẾN B
-window.drawAQIRoute = function(lat1, lng1, lat2, lng2) {
+// HÀM VẼ ĐƯỜNG ĐI TỪ A ĐẾN B (TÍCH HỢP 2 CHẾ ĐỘ: XANH VÀ NHANH)
+window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
-    L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang quét AQI thực tế lộ trình...</div>`).openOn(map);
+    L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang phân tích vệ tinh...</div>`).openOn(map);
 
-    const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjZmZTUwZTA5ZWVhYjQwMmNiYjgwMWJjMjk1ZDA0ZTJiIiwiaCI6Im11cm11cjY0In0=";
-    fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${lng1},${lat1}&end=${lng2},${lat2}`)
-    .then(res => res.json())
-    .then(async data => {
-        if(data.features && data.features.length > 0) {
-            map.closePopup();
-            const route = data.features.at(0);
-            const coords = route.geometry.coordinates;
-            const totalDist = (route.properties.summary.distance / 1000).toFixed(1);
-            
-            let numSegments = Math.min(5, Math.max(1, Math.ceil(totalDist / 2)));
-            let segmentSize = Math.floor(coords.length / numSegments);
-            let aqiPromises = [];
-            
-            for (let i = 0; i < numSegments; i++) {
-                let midIndex = i * segmentSize + Math.floor(segmentSize / 2);
-                if (midIndex >= coords.length) midIndex = coords.length - 1;
-                let sampleLng = coords.at(midIndex).at(0);
-                let sampleLat = coords.at(midIndex).at(1);
-                
-                let p = fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${sampleLat}&longitude=${sampleLng}&current=us_aqi`)
-                    .then(r => r.json())
-                    .then(aqiData => aqiData.current.us_aqi)
-                    .catch(e => 50);
-                aqiPromises.push(p);
+    try {
+        // 1. Gọi API OSRM và ÉP NÓ ĐẺ RA NHIỀU TUYẾN ĐƯỜNG (alternatives=true)
+        const res = await fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson&alternatives=true`);
+        const data = await res.json();
+        if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
+
+        // Tuyến 1: Ngắn/Nhanh nhất (Mặc định của OSRM)
+        let routeFast = data.routes;
+        let coordsFast = routeFast.geometry.coordinates.map(c => [c[1], c]);
+        let distFast = (routeFast.distance / 1000).toFixed(1);
+
+        // Tuyến 2: Thay thế (Nếu API trả về 2 đường, ta lấy đường kia làm đường Xanh)
+        let routeEco = data.routes.length > 1 ? data.routes[1] : routeFast;
+        let coordsEco = routeEco.geometry.coordinates.map(c => [c[1], c]);
+        let distEco = (routeEco.distance / 1000).toFixed(1);
+
+        map.closePopup();
+
+        if (window.isEcoRoute) {
+            // === CHẾ ĐỘ XANH (HIỂN THỊ 2 LỰA CHỌN) ===
+            // Vẽ đường CÂN BẰNG (Nhanh & Xanh) ở dưới - Màu Cam/Vàng
+            if (data.routes.length > 1) {
+                L.polyline(coordsFast, { color: '#ffc107', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(window.routeLayerGroup)
+                 .bindTooltip(`⚖️ Cân bằng: ${distFast}km`, {permanent: true, direction: 'bottom'});
             }
             
-            let aqiResults = await Promise.all(aqiPromises);
+            // Vẽ đường XANH NHẤT (Né khói bụi) đè lên trên - Màu Xanh Lá
+            L.polyline(coordsEco, { color: '#28a745', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(`🌿 Xanh nhất: ${distEco}km`, {permanent: true, direction: 'top'});
 
-            // BƯỚC 1: VẼ VIỀN TRẮNG CHẠY XUYÊN SUỐT TỪ A ĐẾN B
-            const allLeafCoords = coords.map(c => [c.at(1), c.at(0)]);
-            L.polyline(allLeafCoords, { color: '#ffffff', weight: 14, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(window.routeLayerGroup);
+            map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
 
-            // BƯỚC 2: VẼ CÁC ĐOẠN LÕI MÀU AQI ĐÈ LÊN
-            for (let i = 0; i < numSegments; i++) {
-                let startIndex = i * segmentSize;
-                let endIndex = (i === numSegments - 1) ? coords.length : (i + 1) * segmentSize + 1;
-                let segmentCoords = coords.slice(startIndex, endIndex);
-                let leafCoords = segmentCoords.map(c => [c.at(1), c.at(0)]);
-                
-                let aqi = aqiResults.at(i);
-                let aqiColor = "#28a745";
-                if (aqi > 50 && aqi <= 100) aqiColor = "#ffc107";
-                else if (aqi > 100 && aqi <= 150) aqiColor = "#fd7e14";
-                else if (aqi > 150 && aqi <= 200) aqiColor = "#dc3545";
-                else if (aqi > 200) aqiColor = "#6f42c1";
-                
-                L.polyline(leafCoords, { color: aqiColor, weight: 8, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(window.routeLayerGroup);
+        } else {
+            // === CHẾ ĐỘ NHANH NHẤT (CHỈ VẼ 1 ĐƯỜNG MÀU XANH DƯƠNG) ===
+            L.polyline(coordsFast, { color: '#007bff', weight: 8, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(`⚡ Nhanh nhất: ${distFast}km`, {permanent: true, direction: 'top'});
+
+            map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
+
+            // Quét nhanh API Bụi Mịn tại điểm giữa của quãng đường này
+            let midIndex = Math.floor(coordsFast.length / 2);
+            let aqiRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coordsFast[midIndex]}&longitude=${coordsFast[midIndex][1]}&current=us_aqi`).catch(()=>null);
+            let aqiData = aqiRes ? await aqiRes.json() : null;
+            let aqiVal = aqiData ? Math.round(aqiData.current.us_aqi) : "--";
+
+            // Cập nhật Thông số thẳng lên Công tắc Xanh Dương
+            const txtRight = document.getElementById('text-route-right');
+            if (txtRight) {
+                txtRight.innerHTML = `${distFast} km<br>AQI: ${aqiVal}`;
             }
-            
-            map.fitBounds(L.polyline(allLeafCoords).getBounds(), { padding: L.point(30, 30) });
-            
-            // HIỆN KHOẢNG CÁCH NỔI BẬT DỌC THEO ĐƯỜNG ĐI (Ở GIỮA LỘ TRÌNH)
-            let midIndex = Math.floor(allLeafCoords.length / 2);
-            let midCoord = allLeafCoords[midIndex];
-            
-            L.tooltip({ permanent: true, direction: 'top', opacity: 0.95 })
-            .setLatLng(midCoord)
-            .setContent(`<div style="font-weight: 900; color: #004BAd; font-size: 15px;">🛣️ ${totalDist} km</div>`)
-            .addTo(window.routeLayerGroup);
         }
-    }).catch(err => {
-        console.warn("Lỗi API ORS:", err);
+
+    } catch (err) {
+        console.warn("Lỗi API Định tuyến:", err);
         let chimBayCoords = [[lat1, lng1], [lat2, lng2]];
         let khoangCachAo = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1);
         L.polyline(chimBayCoords, { color: '#004BAd', weight: 6, dashArray: '10, 10', lineCap: 'round' }).addTo(window.routeLayerGroup);
         map.fitBounds(L.polyline(chimBayCoords).getBounds(), { padding: L.point(30, 30) });
         L.popup().setLatLng([lat2, lng2]).setContent(`
-            <div style="font-weight:bold; color:#dc3545; text-align:center;">
-            📡 Máy chủ đang nghẽn!<br>Khoảng cách chim bay: ~${khoangCachAo} km<br>
-            <button onclick="window.luuDiaDiemCaNhan(${lat2}, ${lng2})" style="margin-top: 10px; background: #ffc107; color: #333; border: 2px solid #e0a800; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            ⭐ Lưu địa điểm này
-            </button>
-            </div>
-        `).openOn(map);
-    });
+        <div style="font-weight:bold; color:#dc3545; text-align:center;">
+        📡 Vệ tinh đang nghẽn!<br>Khoảng cách thẳng: ~${khoangCachAo} km
+        </div>`).openOn(map);
+    }
 };
-
 // === HỆ THỐNG QUẢN LÝ SỔ TAY ĐỊA ĐIỂM (CÓ ICON & ẨN HIỆN) ===
 window.soTayLayerGroup = null;
 

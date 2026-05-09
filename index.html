@@ -7759,7 +7759,7 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         window.currentRouteDistance = parseFloat(distFast);
         window.updateDynamicSwitchData();
 
-         // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống
+        // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống
         let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
         let aqiVal = window.currentAQIValue || "--";
         let iconCanhBao = (mauBuiThucTe === '#dc3545' || mauBuiThucTe === '#6f42c1' || mauBuiThucTe === '#7e0023') ? '😷' : '⚡';
@@ -7786,7 +7786,6 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
             L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 1 }).addTo(window.routeLayerGroup)
              .bindTooltip(`${iconCanhBao} Nhanh nhất: ${distFast}km (AQI: ${aqiVal})`, {permanent: true, direction: 'top'});
             map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
-        }
         }
 
     } catch (err) {

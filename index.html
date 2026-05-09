@@ -565,7 +565,7 @@
 /* === HIỆU ỨNG VUỐT XÓA THÔNG BÁO === */
 .swipe-container { position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); background: #dc3545; }
 .swipe-content { position: relative; background: #cccccc; padding: 10px; display: flex; align-items: center; z-index: 2; transition: transform 0.3s ease; width: 100%; box-sizing: border-box; }
-.swipe-actions { position: absolute; top: 0; right: 0; width: 80px; height: 100%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 24px; cursor: pointer; z-index: 1; }
+.swipe-actions { position: absolute; right: 0; top: 0; height: 100%; width: 80px; display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; cursor: pointer; z-index: 1; }
 
 /* === TRẠNG THÁI THÔNG BÁO CHƯA ĐỌC === */
 .unread-msg {
@@ -1045,7 +1045,7 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
 
         
         <!-- Danh sách các chuyến chạy bộ sẽ được Javascript nhồi vào đây -->
-        <div id="progress-list" style="display: flex; flex-direction: column-reverse;">
+        <div id="progress-list" style="display: flex; flex-direction: column;">
             <!-- Dữ liệu trống mặc định -->
             <div id="empty-progress" style="color: #555; font-style: italic; margin-top: 20px;">
                 Ko chạy là ko có dữ liệu đâu, ra ngoài và bắt đầu hành trình đi !!
@@ -2761,58 +2761,98 @@ window.veToanBoTienTrinh = function(dataObj) {
             <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
         `;
 
-        // B. VẼ CÁC THẺ CON VỚI HIỆU ỨNG TRƯỢT SWIPE-TO-DELETE
+        // B. VẼ CÁC THẺ CON VỚI BỐ CỤC CHUẨN + HIỆU ỨNG TRƯỢT (SWIPE-TO-DELETE)
         g.items.forEach(r => {
             let data = r.data;
             let recordKey = r.key;
             let isIndoor = data.loai_hinh === 'trong_nha';
-            
-            let borderColor = "#aaa", bgCard = "#f8f9fa", iconTheThao = "🏃";
+            let canvasId = 'map-' + recordKey;
+
+            // Thuật toán chuyển đổi giờ AM/PM sang chuẩn 24h
+            const convertTo24h = (timeStr) => {
+                if(!timeStr) return "--:--";
+                if(!timeStr.includes('AM') && !timeStr.includes('PM')) return timeStr; 
+                let [time, modifier] = timeStr.split(' ');
+                let [hours, minutes] = time.split(':');
+                if (hours === '12') hours = '00';
+                if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+                return `${hours.toString().padStart(2, '0')}:${minutes}`;
+            };
+
+            let start24h = convertTo24h(data.gio_bat_dau);
+            let end24h = convertTo24h(data.gio_ket_thuc);
+
+            let cardContent = ``;
+            let bgCard = "#e3f2fd"; let borderColor = "#004BAd"; // Mặc định xanh dương
+
             if (isIndoor) {
-                borderColor = "#28a745"; bgCard = "#e8f5e9";
-                if (data.ten_bai_tap && data.ten_bai_tap.includes('Squat')) iconTheThao = "🏋️";
-                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Wall Angel')) iconTheThao = "🧍";
-                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Cat')) iconTheThao = "🐈";
-                else if (data.ten_bai_tap && data.ten_bai_tap.includes('Glute')) iconTheThao = "🌉";
-                else iconTheThao = "🧘";
-            } else if (data.loai_hinh === 'walk') {
-                borderColor = "#fd7e14"; bgCard = "#fff5eb"; iconTheThao = "🚶";
-            } else if (data.loai_hinh === 'cycle') {
-                borderColor = "#6f42c1"; bgCard = "#f3e5f5"; iconTheThao = "🚴";
+                // --- GIAO DIỆN TRONG NHÀ ---
+                bgCard = "#e8f5e9"; borderColor = "#28a745";
+                let indoorIcon = "🧘";
+                if(data.ten_bai_tap) {
+                    if(data.ten_bai_tap.includes("Squat")) indoorIcon = "🦵";
+                    else if(data.ten_bai_tap.includes("Wall")) indoorIcon = "👼";
+                    else if(data.ten_bai_tap.includes("Cat")) indoorIcon = "🐈";
+                    else if(data.ten_bai_tap.includes("Glute")) indoorIcon = "🌉";
+                    else if(data.ten_bai_tap.includes("gối") || data.ten_bai_tap.includes("Knee")) indoorIcon = "🪑";
+                }
+                
+                cardContent = `
+                    <div style="display:flex; justify-content: space-between; width: 100%; align-items: center; pointer-events: none;">
+                        <div style="font-size: 30px; background: white; width: 55px; height: 55px; border-radius: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid ${borderColor}; margin-right: 15px;">${indoorIcon}</div>
+                        <div style="flex: 1; text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
+                            <div style="font-weight: 900; font-size: 15px; color: ${borderColor}; margin-bottom: 3px;">${data.ten_bai_tap || 'Tập trong nhà'}</div>
+                            <div style="font-weight: bold; color: #555;">Thời gian: <span style="color: ${borderColor};">${data.thoi_gian}</span></div>
+                            <div style="font-weight: bold; color: #dc3545;">Thực tế: ${data.so_reps || data.so_rep_thuc_te || 0} cái</div>
+                        </div>
+                        <div style="text-align: center; font-size: 14px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 60px;">
+                            <div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div>
+                            <div style="font-size: 12px;">kcal</div>
+                        </div>
+                    </div>`;
             } else {
-                borderColor = "#004BAd"; bgCard = "#e3f2fd";
+                // --- GIAO DIỆN NGOÀI TRỜI (BỐ CỤC CHUẨN) ---
+                if (data.loai_hinh === 'walk') { bgCard = "#fff5eb"; borderColor = "#fd7e14"; }
+                else if (data.loai_hinh === 'cycle') { bgCard = "#f3e5f5"; borderColor = "#6f42c1"; }
+
+                cardContent = `
+                    <div style="display:flex; justify-content: space-between; width: 100%; align-items: center; pointer-events: none;">
+                        <!-- Cột 1: Thông số chi tiết -->
+                        <div style="flex: 1; text-align: left; font-size: 12px; line-height: 1.7; color: #555; white-space: nowrap;">
+                            <div>⏱ Thời gian: <span style="color: ${borderColor}; font-weight: bold;">${data.thoi_gian || "00:00"}</span></div>
+                            <div>⚡ Vận tốc TB: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.van_toc || 0).toFixed(2)} km/h</span></div>
+                            <div>📏 Quãng đường: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.quang_duong || 0).toFixed(2)} km</span></div>
+                            <div>👟 Bước chân: <span style="color: ${borderColor}; font-weight: bold;">${data.buoc_chan || "0"} bước</span></div>
+                            <div>🔥 Calo tiêu thụ: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.calo || 0).toFixed(1)} kcal</span></div>
+                        </div>
+
+                        <!-- Cột 2: Thời gian 24h -->
+                        <div style="text-align: center; font-size: 12px; font-weight: bold; color: #444; border-left: 1px dashed #aaa; border-right: 1px dashed #aaa; padding: 0 8px; margin: 0 8px; min-width: 45px;">
+                            <div>${start24h}</div>
+                            <div style="font-size: 10px; color: #888; margin: 2px 0;">|</div>
+                            <div>${end24h}</div>
+                        </div>
+
+                        <!-- Cột 3: Mini Map Canvas -->
+                        <div style="width: 65px; height: 65px; background: #e9ecef; border-radius: 12px; flex-shrink: 0; overflow: hidden; border: 1.5px solid #ccc; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                            <canvas id="${canvasId}" width="65" height="65" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
+                        </div>
+                    </div>`;
+
+                // Đẩy vào hàng đợi vẽ Map
+                if (data.toado_path && data.toado_path.length > 1) {
+                    canvasQueue.push({ id: canvasId, path: data.toado_path });
+                }
             }
 
-            let cardStyle = `background: ${bgCard}; padding: 15px; display: flex; justify-content: space-between; align-items: center; user-select: none; width: 100%; box-sizing: border-box; border-radius: 15px;`;
-            let uiTrai = ``; let contentLeft = ``; let uiPhai = ``;
-            
-            if (isIndoor) {
-                uiTrai = `<div style="font-size: 30px; background: white; width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid ${borderColor};">${iconTheThao}</div>`;
-                contentLeft = `<div style="font-weight: 900; font-size: 16px; color: ${borderColor}; margin-bottom: 5px;">${data.ten_bai_tap || 'Tập trong nhà'}</div><div style="font-weight: bold; color: #555;">Mục tiêu: ${data.muc_tieu || 0}</div><div style="font-weight: bold; color: #dc3545;">Thực tế: ${data.so_rep_thuc_te || 0} cái</div>`;
-                uiPhai = `<div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div><div>⏱ ${data.thoi_gian}</div>`;
-            } else {
-                uiTrai = `<div style="font-size: 26px;">${data.gio_bat_dau}</div>`;
-                contentLeft = `<div style="font-weight: bold; color: #555;">Đến: ${data.gio_ket_thuc}</div><div style="font-weight: bold; color: #555;">Vận tốc: ${data.van_toc} km/h</div><div style="font-weight: bold; color: #555;">Bước: ${data.buoc_chan}</div>`;
-                uiPhai = `<div style="color: #004BAd; font-size: 16px; margin-bottom: 5px;">${parseFloat(data.quang_duong).toFixed(2)} km</div><div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div><div>⏱ ${data.thoi_gian}</div>`;
-            }
+            // GÓI VÀO KHUNG SWIPE (Đã dọn dẹp sạch sự kiện nhấn giữ onmousedown)
+            let cardStyle = `background: ${bgCard}; padding: 12px; display: flex; justify-content: space-between; align-items: center; user-select: none; width: 100%; box-sizing: border-box; border-radius: 15px;`;
 
-            const tieuDeNgoaiTroi = isIndoor ? "" : `<div style="font-weight:900; font-size:15px; color:${borderColor}; margin-bottom:3px;">${iconTheThao} ${data.loai_hinh === 'walk' ? 'Đi dạo' : (data.loai_hinh === 'cycle' ? 'Đạp xe' : 'Chạy bộ')}</div>`;
-
-            // HTML: NHÚNG VỎ BỌC SWIPE CỦA APPLE
             html += `
-            <div class="swipe-container progress-card" style="margin-bottom: 0px; border-radius: 15px; background: #dc3545; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div class="swipe-container progress-card" style="margin-bottom: 0px; border-radius: 15px; background: #dc3545; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1.5px solid ${borderColor};">
                 <div class="swipe-actions" onclick="window.xoaTienTrinh('${recordKey}')">🗑️</div>
                 <div class="swipe-content" style="${cardStyle}">
-                    <div style="display:flex; align-items:center; gap: 15px; pointer-events:none;">
-                        ${uiTrai}
-                        <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #333;">
-                            ${tieuDeNgoaiTroi}
-                            ${contentLeft}
-                        </div>
-                    </div>
-                    <div style="text-align: center; font-size: 13px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 60px; pointer-events: none;">
-                        ${uiPhai}
-                    </div>
+                    ${cardContent}
                 </div>
             </div>`;
         });
@@ -5657,26 +5697,58 @@ window.themThongBaoLocket = function(avatar, ten, noiDung) {
     }
 };
 
-// CƠ CHẾ VUỐT (SWIPE TO DELETE) ĐỈNH CAO
+// CƠ CHẾ VUỐT (SWIPE TO DELETE) HỖ TRỢ CẢ CHUỘT (PC) VÀ CẢM ỨNG (MOBILE)
 window.ganSuKienVuot = function() {
     const swipeContents = document.querySelectorAll('.swipe-content');
     swipeContents.forEach(content => {
         if(content.getAttribute('data-swiped')) return;
         content.setAttribute('data-swiped', 'true');
         
-        let startX = 0; let currentX = 0;
-        
-        content.addEventListener('touchstart', e => { startX = e.touches.clientX; content.style.transition = 'none'; }, {passive: true});
-        content.addEventListener('touchmove', e => {
-            let touch = e.touches; let move = touch.clientX - startX;
-            if(move < 0 && move > -100) { content.style.transform = `translateX(${move}px)`; currentX = move; }
-        }, {passive: true});
-        content.addEventListener('touchend', e => {
-            content.style.transition = 'transform 0.3s ease';
-            if(currentX < -40) { content.style.transform = 'translateX(-80px)'; } 
-            else { content.style.transform = 'translateX(0)'; }
+        let startX = 0; 
+        let currentX = 0;
+        let isDragging = false;
+
+        // Hàm chung bắt đầu kéo
+        const startDrag = (clientX) => {
+            isDragging = true;
+            startX = clientX;
+            content.style.transition = 'none'; // Tắt mượt để kéo dính theo ngón tay/chuột
+        };
+
+        // Hàm chung khi đang kéo
+        const moveDrag = (clientX) => {
+            if (!isDragging) return;
+            let move = clientX - startX;
+            if (move < 0) { // Chỉ cho vuốt sang trái
+                currentX = move; 
+                if (currentX < -100) currentX = -100; // Căng đét giới hạn 100px
+                content.style.transform = `translateX(${currentX}px)`; 
+            }
+        };
+
+        // Hàm chung khi nhả tay/nhả chuột
+        const endDrag = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            content.style.transition = 'transform 0.3s ease'; // Bật mượt nảy lại
+            if (currentX < -40) { 
+                content.style.transform = 'translateX(-80px)'; // Gắn chặt thùng rác
+            } else { 
+                content.style.transform = 'translateX(0)'; // Nảy về chỗ cũ
+            }
             currentX = 0;
-        });
+        };
+
+        // --- GẮN CẢM BIẾN CHO ĐIỆN THOẠI (TOUCH) ---
+        content.addEventListener('touchstart', e => startDrag(e.touches.clientX), {passive: true});
+        content.addEventListener('touchmove', e => moveDrag(e.touches.clientX), {passive: true});
+        content.addEventListener('touchend', endDrag);
+
+        // --- GẮN CẢM BIẾN CHO MÁY TÍNH (MOUSE) ---
+        content.addEventListener('mousedown', e => startDrag(e.clientX));
+        content.addEventListener('mousemove', e => moveDrag(e.clientX));
+        content.addEventListener('mouseup', endDrag);
+        content.addEventListener('mouseleave', endDrag); // Kéo lố ra ngoài cũng tự nhả
     });
 };
 
@@ -6926,19 +6998,42 @@ async function guiTinNhanMeo() {
         return; 
     }
 
-    // 3. GỌI API GEMINI VÀO KHUNG CHAT SÂU
-    try {
-        if (!GEMINI_API_KEY) throw new Error("Chưa có Key từ Firebase");
-        
-        const promptGiaoTiep = `Bạn là mèo trợ lý ảo mặn mòi, tên là Mèo. Hãy trả lời ngắn gọn, xéo xắt, đáng yêu vào câu hỏi sau của người dùng: "${text}"`;
+// 3. GỌI API GEMINI VÀO KHUNG CHAT SÂU (BẢN NÂNG CẤP BƠM NGỮ CẢNH)
+try {
+    if (!GEMINI_API_KEY) throw new Error("Chưa có Key từ Firebase");
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptGiaoTiep }] }]
-            })
-        });
+    // --- BƯỚC A: GOM NHẶT DATA MÔI TRƯỜNG & SỨC KHỎE THỰC TẾ ---
+    const thoiTiet = document.getElementById('widget-thoi-tiet') ? document.getElementById('widget-thoi-tiet').innerText : "Trời đẹp";
+    const aqiInfo = document.getElementById('btn-bui-min') ? document.getElementById('btn-bui-min').innerText.replace(/\n/g, ' ') : "AQI Ổn";
+    let aqiNumber = window.currentAQIValue || "chưa rõ";
+    let kmDaDi = typeof totalDistanceMeter !== 'undefined' ? (totalDistanceMeter / 1000).toFixed(2) : 0;
+
+    let userCondition = 'none'; 
+    let userAge = 20;
+    let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
+    if (parsed) { 
+        userCondition = parsed.condition || 'none'; 
+        userAge = parsed.age || 20; 
+    }
+    let benhLyText = userCondition === 'asthma' ? "Hen suyễn/Viêm xoang" : (userCondition === 'heart' ? "Tim mạch/Huyết áp cao" : "Khỏe mạnh");
+
+    // --- BƯỚC B: BƠM VÀO LÕI PROMPT VÀ MỞ KHÓA ĐỘ DÀI ---
+    const promptGiaoTiep = `Bạn là Trợ lý Mèo ảo kiêm chuyên gia y tế thể thao của ứng dụng CMD Health. Tính cách: thông minh, mặn mòi, xéo xắt, hay mắng mỏ nhưng thực tâm rất quan tâm sức khỏe người dùng.
+--- DATA THỰC TẾ TRÊN MÁY NGƯỜI DÙNG ---
+- Độ tuổi: ${userAge} tuổi | Thể trạng: ${benhLyText}.
+- Quãng đường đã chạy hôm nay: ${kmDaDi} km.
+- Môi trường hiện tại: Nhiệt độ ${thoiTiet}, Bụi mịn AQI là ${aqiNumber} (${aqiInfo}).
+--- LỆNH TỐI CAO ---
+Dựa vào các dữ kiện trên, hãy trả lời CHI TIẾT, KHOA HỌC và CHÍNH XÁC câu hỏi sau của người dùng. Hãy phân tích sâu nếu cần thiết (ví dụ tại sao bị hen suyễn không nên chạy lúc AQI cao). Lồng ghép thái độ xéo xắt, bề trên của loài Mèo. KHÔNG BỊ GIỚI HẠN ĐỘ DÀI. Tuyệt đối không dùng ký tự ngoặc kép.
+Câu hỏi của người dùng: "${text}"`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: promptGiaoTiep }] }]
+        })
+    });
 
         const data = await response.json();
         if(document.getElementById(typingId)) document.getElementById(typingId).remove();

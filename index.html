@@ -5464,13 +5464,18 @@ window.taiThongBaoLocal = function() {
         if (oldEl) oldEl.remove();
     });
 
-    // ThÊM THÔNG BÁO HỆ THỐNG
-    if (localStorage.getItem('del_sys_msg_1_' + user) !== 'true') {
+//  DỌN DẸP RÁC CACHE CŨ
+    ['sys_msg_1', 'sys_msg_2', 'sys_msg_3', 'sys_msg_5'].forEach(oldId => {
+        let oldEl = document.getElementById(oldId);
+        if (oldEl) oldEl.remove();
+    });
+
+    if (localStorage.getItem('del_sys_msg_6_' + user) !== 'true') {
         window.themThongBaoHeThong(
-            'sys_msg_1',
-            '💌 Lời từ nhà phát triển',
-            'Bấm vào đây để mở thư chào mừng...',
-            `Mến chào <b>${user}</b>, người bạn mới.<br><br>Trong lúc khói bụi và sự bận rộn đang khiến chúng ta ngại ra đường, việc bước chân ra ngoài tập luyện đôi khi cần một sự quyết tâm rất lớn. Ứng dụng này ra đời để bảo vệ từng nhịp thở của bạn bằng công nghệ vệ tinh và trí tuệ nhân tạo, giúp tự động chọn ra những con đường có không khí trong lành và địa hình dễ đi nhất.<br><br>Tại đây, bạn sẽ không bao giờ phải tập luyện một mình. Một cộng đồng luôn sẵn sàng để chúng ta cùng kết nối, chia sẻ niềm vui và tiếp thêm động lực cho nhau mỗi ngày.<br><br>Chúng tôi lo phần công nghệ phức tạp phía sau, từ vệ tinh cho đến trí tuệ nhân tạo, chỉ để đổi lấy một việc đơn giản: Thấy bạn xỏ giày và bước ra khỏi cửa, hoặc là tập luyện để cải thiện sức khoẻ thể chất của mình bởi suy cho cùng, sức khỏe của bạn với chúng tôi vẫn là thứ quan trọng nhất.`,
+            'sys_msg_6',
+            '💌 Lời từ Đội ngũ phát triển',
+            'Cảm ơn bạn đã lựa chọn đồng hành...',
+            `Mến chào <b>${user}</b>, người bạn mới.<br><br>Trong lúc khói bụi và sự bận rộn đang khiến chúng ta ngại ra đường, việc bước chân ra ngoài tập luyện đôi khi cần một sự quyết tâm rất lớn. Ứng dụng này ra đời để bảo vệ từng nhịp thở của bạn bằng công nghệ vệ tinh và trí tuệ nhân tạo, giúp tự động chọn ra những con đường có không khí trong lành và địa hình dễ đi nhất.<br><br>Tại đây, bạn sẽ không bao giờ phải tập luyện một mình. Một cộng đồng luôn sẵn sàng để chúng ta cùng kết nối, chia sẻ niềm vui và tiếp thêm động lực cho nhau mỗi ngày.<br><br>Chúng tôi lo phần công nghệ phức tạp phía sau, từ viễn thám, thuật toán cho đến trí tuệ nhân tạo, chỉ để đổi lấy một việc đơn giản: Thấy bạn xỏ giày và bước ra khỏi cửa, hoặc là tập luyện để nâng cao sức khoẻ thể chất bởi suy cho cùng, sức khỏe của bạn với chúng tôi vẫn là thứ quan trọng nhất.`,
             'Đội ngũ phát triển CMD Health'
         );
     }
@@ -5479,7 +5484,7 @@ window.taiThongBaoLocal = function() {
     if (localStorage.getItem('del_sys_msg_4_' + user) !== 'true') {
         window.themThongBaoHeThong(
             'sys_msg_4',
-            '😼 Hồ sơ trợ lý Mèo (Bản chính thức)',
+            ' Hồ sơ trợ lý Mèo ',
             'Hướng dẫn sử dụng HLV cá nhân của bạn...',
             `<b>Hãy nhớ:</b> Mèo không phải thú cưng, nó là huấn luyện viên cá nhân có quyền lực cao nhất ở đây. Nó có thể hơi xéo xắt, láo nháo, nhưng đó là vì cái bụng 6 múi của bạn.<br><br>Dưới đây là cách để giao tiếp với Mèo:<br><br>⏱️ <b>Nhấn giữ:</b> Mở ra cánh cửa thần kỳ, nơi Mèo sẽ phân tích thời tiết, đánh giá môi trường và gợi ý bài tập chuẩn xác nhất cho bạn.<br>🌪️ <b>Túm cổ kéo đi:</b> Nhẹ tay thôi, kéo gắt quá là nó mắng đấy.<br>📳 <b>Lắc điện thoại:</b> Mèo thù nhất cảm giác chóng mặt. Đừng lắc nếu không muốn nó nổi điên lên.<br><br><i>Lời khuyên từ đội ngũ phát triển:</i> Mèo rất thẳng thắn và đôi khi hơi láo quá mức. Hãy đối xử tốt với nó, và nó sẽ đưa bạn đến vạch đích một cách bớt đau khổ nhất..... hoặc không.`,
             '- Moè -'

@@ -4141,10 +4141,12 @@ window.batDauVoiCheDo = function(mode) {
     }
 };
 
-// CÔNG THỨC CHIA NHÁNH CALO THEO MET (Đi bộ, Chạy, Xe đạp)
+// CÔNG THỨC CHIA NHÁNH CALO THEO MET (Đi bộ, Chạy, Xe đạp) 
 window.tinhCaloThucTe = function(quangDuongMet, giayTroiQua) {
+    if (giayTroiQua === 0) return 0;
     let speedKmH = (quangDuongMet / 1000) / (giayTroiQua / 3600);
-    let met = 4.0; 
+    let met = 4.0;
+    
     if (window.currentSportMode === 'walk') {
         met = speedKmH < 4 ? 3.0 : 4.5;
     } else if (window.currentSportMode === 'cycle') {
@@ -4152,8 +4154,20 @@ window.tinhCaloThucTe = function(quangDuongMet, giayTroiQua) {
     } else { // Mặc định là Chạy bộ
         met = speedKmH < 8 ? 8.0 : 11.5;
     }
-    // Công thức: Calo/phút = (MET * Cân nặng * 3.5) / 200
-    let caloPhut = (met * window.userWeight * 3.5) / 200;
+
+    // Kéo dữ liệu cân nặng chuẩn xác từ LocalStorage để không bị lỗi NaN (Not a Number)
+    let canNang = 65; // Cân nặng mặc định nếu chưa khai báo
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+        let parsed = JSON.parse(localStorage.getItem("appUser_" + user));
+        if (parsed && parsed.weight) canNang = parseFloat(parsed.weight);
+    }
+
+    // Tích hợp hệ số nhiệt độ (Trời càng nóng, cơ thể đốt càng nhiều calo để làm mát)
+    let heSoNhietDo = (typeof window.currentWBGT !== 'undefined' && window.currentWBGT >= 29.3) ? 1.08 : 1.0;
+
+    // Công thức Y khoa: Calo/phút = (MET * Cân nặng * 3.5) / 200
+    let caloPhut = ((met * canNang * 3.5) / 200) * heSoNhietDo;
     return caloPhut * (giayTroiQua / 60);
 };
 

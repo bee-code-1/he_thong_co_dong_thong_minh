@@ -1521,12 +1521,12 @@ NHẬN THƯỞNG
                 </div>
 
                 <!-- KHU VỰC 4: QUẢN LÝ BỘ NHỚ -->
-                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
-                    <h4 style="margin: 0 0 10px 0; color: #e67e22; font-size: 16px;">🧹 Dọn dẹp Bộ nhớ</h4>
-                    <button onclick="window.xoaLichSuChatMeo()" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: left;">🗑️ Xóa Lịch sử Chat với Mèo</button>
-                    <button onclick="window.moBangXoaChatNguoi()" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: left;">💬 Quản lý tin nhắn 1-1</button>
-                    <button onclick="alert('Đã xóa bộ nhớ đệm Bản đồ (Cache Layer)!')" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; text-align: left;">🗺️ Xóa Cache Bản đồ</button>
-                </div>
+            <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+            <h4 style="margin: 0 0 10px 0; color: #dc3545; font-size: 14px;">Bảo trì & Bộ nhớ</h4>
+            <button onclick="alert('Đã xóa bộ nhớ đệm Bản đồ (Cache Layer)!')" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; text-align: left; margin-bottom: 10px;">🗺️ Xóa Cache Bản đồ</button>
+            <!-- NÚT GỌI BÁC SĨ -->
+            <button onclick="window.cuuHoDuLieuCalo()" style="width: 100%; padding: 10px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 10px; font-weight: bold; text-align: left; animation: catPulse 2s infinite;">🩺 Cấp cứu Dữ liệu (Lỗi Calo 0)</button>
+            </div>
 
                 <!-- NÚT CHỐT SỔ -->
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -7230,6 +7230,85 @@ Hãy trả lời câu hỏi sau của bạn ấy: "${text}"`;
         taiLichSuChat();
     }
 }
+
+    // ========================================================
+// 🩺 HÀM BÁC SĨ NGOẠI KHOA: CẤP CỨU LỖI CALO = 0 TRONG QUÁ KHỨ
+// ========================================================
+window.cuuHoDuLieuCalo = function() {
+    const user = localStorage.getItem('currentUser');
+    if (!user || typeof window.db === 'undefined') return alert("Lỗi mạng! Đảm bảo Firebase đang kết nối.");
+
+    if (!confirm("Bác sĩ Mèo sẽ quét toàn bộ lịch sử và đòi lại số Calo bị mất cho bạn. Bắt đầu chứ?")) return;
+
+    // Chặn người dùng bấm linh tinh trong lúc mổ
+    L.popup().setLatLng(map.getCenter()).setContent(`<div style="text-align:center; font-weight:bold; color:#28a745;">🩺 Đang quét dữ liệu...</div>`).openOn(map);
+
+    window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then(snap => {
+        let data = snap.val();
+        if (!data) {
+            map.closePopup();
+            return alert("Không có chuyến đi nào trong lịch sử cả!");
+        }
+
+        let promises = [];
+        let tongCaloPhucHoi = 0;
+        let soTheDaSua = 0;
+
+        for (let key in data) {
+            let rec = data[key];
+            let caloHienTai = parseFloat(rec.calo) || 0;
+            let quangDuongKm = parseFloat(rec.quang_duong) || 0;
+
+            // Bắt đúng bệnh: Có chạy mà hệ thống đớp mất Calo
+            if (caloHienTai === 0 && quangDuongKm > 0 && rec.loai_hinh !== 'trong_nha') {
+                
+                // Mổ xẻ thời gian (MM:SS hoặc HH:MM:SS) ra giây
+                let thoiGianArr = (rec.thoi_gian || "00:00").split(':');
+                let giayTroiQua = 0;
+                if (thoiGianArr.length === 2) {
+                    giayTroiQua = parseInt(thoiGianArr) * 60 + parseInt(thoiGianArr[1]);
+                } else if (thoiGianArr.length === 3) {
+                    giayTroiQua = parseInt(thoiGianArr) * 3600 + parseInt(thoiGianArr[1]) * 60 + parseInt(thoiGianArr[2]);
+                }
+
+                // Dùng môn thể thao lúc đó để tính lại
+                let oldMode = window.currentSportMode;
+                window.currentSportMode = rec.loai_hinh || 'run';
+                
+                // Đổ vào siêu công thức mới nhất anh em mình vừa code
+                let caloMoi = window.tinhCaloThucTe(quangDuongKm * 1000, giayTroiQua);
+                
+                window.currentSportMode = oldMode; // Trả lại hiện trạng
+
+                if (caloMoi > 0) {
+                    // Đẩy bản vá lên đám mây
+                    promises.push(window.db.ref('tien_trinh_tap_luyen/' + user + '/' + key).update({ calo: caloMoi.toFixed(1) }));
+                    tongCaloPhucHoi += caloMoi;
+                    soTheDaSua++;
+                }
+            }
+        }
+
+        if (soTheDaSua === 0) {
+            map.closePopup();
+            return alert("✅ Quét xong! Dữ liệu của bạn hoàn toàn sạch");
+        }
+
+        // Đợi vá xong tất cả các thẻ thì hoàn tiền vào Tổng EXP
+        Promise.all(promises).then(() => {
+            window.db.ref('nguoi_dung/' + user + '/thong_ke').transaction((thongKe) => {
+                if (thongKe) {
+                    thongKe.tong_calo = (thongKe.tong_calo || 0) + tongCaloPhucHoi;
+                }
+                return thongKe;
+            }).then(() => {
+                map.closePopup();
+                alert(`🎉 Phẫu thuật thành công!\n\nĐã cứu sống ${soTheDaSua} chuyến đi cũ và hoàn trả lại ${tongCaloPhucHoi.toFixed(1)} Kcal vào hệ thống Level.\n\nHãy tải lại trang (F5) để hệ thống ghi nhận cấp độ mới nhé!`);
+                if (typeof window.capNhatBangTichLuy === 'function') window.capNhatBangTichLuy();
+            });
+        });
+    });
+};
 // HÀM MỚI: CỘNG DỒN DỮ LIỆU LÊN DATABASE VĨNH VIỄN
 window.congDonThongKe = function(kmMoi, buocMoi, caloMoi, phutMoi) {
     const user = localStorage.getItem('currentUser');

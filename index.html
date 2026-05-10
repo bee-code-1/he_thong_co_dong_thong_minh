@@ -2817,7 +2817,8 @@ window.veToanBoTienTrinh = function(dataObj) {
                             <div style="font-weight: bold; color: #dc3545;">Thực tế: ${data.so_reps || data.so_rep_thuc_te || 0} cái</div>
                         </div>
                         <div style="text-align: center; font-size: 14px; font-weight: bold; color: #444; border-left: 2px dashed ${borderColor}; padding-left: 10px; min-width: 60px;">
-                            <div style="margin-bottom: 5px;">🔥 ${parseFloat(data.calo).toFixed(1)}</div>
+                            <!-- ĐÃ FIX CHỐNG NaN -->
+                            <div style="margin-bottom: 5px;">🔥 ${(parseFloat(data.calo) || 0).toFixed(1)}</div>
                             <div style="font-size: 12px;">kcal</div>
                         </div>
                     </div>`;
@@ -2833,11 +2834,12 @@ window.veToanBoTienTrinh = function(dataObj) {
                     <div style="display:flex; justify-content: space-between; width: 100%; align-items: center; pointer-events: none;">
                         <!-- Cột 1: Thông số chi tiết -->
                         <div style="flex: 1; text-align: left; font-size: 12px; line-height: 1.7; color: #555; white-space: nowrap;">
+                            <!-- ĐÃ FIX CHỐNG NaN TOÀN BỘ -->
                             <div>⏱ Thời gian: <span style="color: ${borderColor}; font-weight: bold;">${data.thoi_gian || "00:00"}</span></div>
-                            <div>⚡ Vận tốc TB: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.van_toc || 0).toFixed(2)} km/h</span></div>
-                            <div>📏 Quãng đường: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.quang_duong || 0).toFixed(2)} km</span></div>
-                            <div>👟 Bước: <span style="color: ${borderColor}; font-weight: bold;">${data.buoc_chan || "0"}</span></div>
-                            <div>🔥 Calo: <span style="color: ${borderColor}; font-weight: bold;">${parseFloat(data.calo || 0).toFixed(1)} kcal</span></div>
+                            <div>⚡ Vận tốc TB: <span style="color: ${borderColor}; font-weight: bold;">${(parseFloat(data.van_toc) || 0).toFixed(2)} km/h</span></div>
+                            <div>📏 Quãng đường: <span style="color: ${borderColor}; font-weight: bold;">${(parseFloat(data.quang_duong) || 0).toFixed(2)} km</span></div>
+                            <div>👟 Bước: <span style="color: ${borderColor}; font-weight: bold;">${parseInt(data.buoc_chan) || 0}</span></div>
+                            <div>🔥 Calo: <span style="color: ${borderColor}; font-weight: bold;">${(parseFloat(data.calo) || 0).toFixed(1)} kcal</span></div>
                         </div>
 
                         <!-- Cột 2: Thời gian 24h & Tên Hoạt Động -->

@@ -2499,23 +2499,23 @@ window.hienThiRecap = function() {
     }
 
     if(document.getElementById('recap-time') && document.getElementById('time-display'))
-        document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
+            document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
+            
+        if(document.getElementById('recap-distance') && document.getElementById('dist-display'))
+            document.getElementById('recap-distance').innerText = document.getElementById('dist-display').innerText;
 
-    if(document.getElementById('recap-distance') && document.getElementById('dist-display'))
-        document.getElementById('recap-distance').innerText = document.getElementById('dist-display').innerText + " km";
+        if(document.getElementById('recap-steps') && document.getElementById('step-display'))
+            document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
+            
+        if(document.getElementById('recap-calo') && document.getElementById('cal-display'))
+            document.getElementById('recap-calo').innerText = document.getElementById('cal-display').innerText;
 
-    if(document.getElementById('recap-steps') && document.getElementById('step-display'))
-        document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
-
-    if(document.getElementById('recap-calo') && document.getElementById('cal-display'))
-        document.getElementById('recap-calo').innerText = document.getElementById('cal-display').innerText;
-
-    let speedKmH = 0;
-    if (elapsedSeconds > 0 && totalDistanceMeter > 0) {
-        speedKmH = (totalDistanceMeter / 1000) / (elapsedSeconds / 3600);
-    }
-    const rSpeed = document.getElementById('recap-speed');
-    if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
+        let speedKmH = 0;
+        if (elapsedSeconds > 0 && totalDistanceMeter > 0) {
+            speedKmH = (totalDistanceMeter / 1000) / (elapsedSeconds / 3600);
+        }
+        const rSpeed = document.getElementById('recap-speed');
+        if(rSpeed) rSpeed.innerText = speedKmH.toFixed(2);
 
     // HIỆN BẢNG RECAP
     const rModal = document.getElementById('recap-modal');

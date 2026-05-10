@@ -8707,11 +8707,18 @@ if (window.visualViewport) {
         // Ép chiều cao màn hình chat bằng đúng khoảng nhìn thấy khi phím nảy lên
         if (catScreen && catScreen.classList.contains('active')) {
             catScreen.style.height = vh + 'px';
+            // ĐÃ FIX: Đổ một cái bóng nền màu xám siêu to khổng lồ xuống đáy để che bản đồ khi bị vuốt nảy
+            catScreen.style.boxShadow = "0 800px 0 #f0f2f5";
+            catScreen.style.overscrollBehavior = "none";
+            
             let catHistory = document.getElementById('cat-chat-history');
             if (catHistory) catHistory.scrollTop = catHistory.scrollHeight;
         }
         if (humanScreen && humanScreen.style.display !== 'none') {
             humanScreen.style.height = vh + 'px';
+            humanScreen.style.boxShadow = "0 800px 0 #f0f2f5";
+            humanScreen.style.overscrollBehavior = "none";
+            
             let humanHistory = document.getElementById('human-chat-history');
             if (humanHistory) humanHistory.scrollTop = humanHistory.scrollHeight;
         }
@@ -8729,13 +8736,19 @@ if (window.visualViewport) {
                 if(history) history.scrollTop = history.scrollHeight;
             }, 300); // Đợi bàn phím nảy lên hoàn toàn
         });
-        
-        // Khi thu bàn phím xuống thì trả lại nguyên trạng full màn
+
+        // Khi thu bàn phím xuống thì trả lại nguyên trạng full màn và gỡ váy che chắn
         input.addEventListener('blur', () => {
             const catScreen = document.getElementById('cat-chat-screen');
             const humanScreen = document.getElementById('human-chat-screen');
-            if (catScreen) catScreen.style.height = '100dvh';
-            if (humanScreen) humanScreen.style.height = '100dvh';
+            if (catScreen) {
+                catScreen.style.height = '100dvh';
+                catScreen.style.boxShadow = "none";
+            }
+            if (humanScreen) {
+                humanScreen.style.height = '100dvh';
+                humanScreen.style.boxShadow = "none";
+            }
         });
     }
 });

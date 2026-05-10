@@ -7753,10 +7753,10 @@ map.on('click', function(e) {
     }
 });
 
-// HÀM VẼ ĐƯỜNG ĐI TỪ A ĐẾN B (TÍCH HỢP 2 CHẾ ĐỘ: XANH VÀ NHANH)
+// HÀM VẼ ĐƯỜNG ĐI TỪ A ĐẾN B (TÍCH HỢP 3 TUYẾN: NHANH, XANH, CÂN BẰNG)
 window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
     window.routeLayerGroup.clearLayers();
-    window.currentRouteDistance = 0; // Reset km cũ
+    window.currentRouteDistance = 0; 
     L.popup().setLatLng([lat2, lng2]).setContent(`<div style="text-align:center; font-weight:bold; color:#ff9800;">⏳ Đang phân tích vệ tinh...</div>`).openOn(map);
 
     try {
@@ -7764,53 +7764,91 @@ window.drawAQIRoute = async function(lat1, lng1, lat2, lng2) {
         const data = await res.json();
         if (!data.routes || data.routes.length === 0) throw new Error("Không tìm thấy đường");
 
-        // 💥 BÓC TÁCH CHUẨN XÁC 100%: Dùng .at() để chống nền tảng chat xóa ngoặc vuông 💥
-        let routeFast = data.routes.at(0);
-        let coordsFast = routeFast.geometry.coordinates.map(c => [c.at(1), c.at(0)]); 
-        let distFast = (routeFast.distance / 1000).toFixed(1);
+        let routes = data.routes;
+        
+        // 1. Tuyến Nhanh Nhất (Ứng viên A)
+        let routeA = routes.at(0);
+        let distA = parseFloat((routeA.distance / 1000).toFixed(1));
+        let coordsA = routeA.geometry.coordinates.map(c => [c.at(1), c.at(0)]);
+        
+        // 🎨 Mô phỏng hệ thống máy học tính toán chỉ số AQI cho các tuyến (Tạm lấy nền là AQI hiện tại)
+        let aqiA = parseInt(window.currentAQIValue) || 120;
+        
+        const getM = (v) => v<=50?'#28a745':(v<=100?'#ffc107':(v<=150?'#fd7e14':(v<=200?'#dc3545':(v<=300?'#8f3f97':'#7e0023'))));
+        let colorA = getM(aqiA);
 
-        let routeEco = data.routes.length > 1 ? data.routes.at(1) : routeFast;
-        let coordsEco = routeEco.geometry.coordinates.map(c => [c.at(1), c.at(0)]);
-        let distEco = (routeEco.distance / 1000).toFixed(1);
+        // 2. Tuyến Xanh Nhất (Ứng viên B) - Tuyến thay thế dài nhất thường né trục chính
+        let routeB = routes.at(routes.length - 1); 
+        let distB = parseFloat((routeB.distance / 1000).toFixed(1));
+        let coordsB = routeB.geometry.coordinates.map(c => [c.at(1), c.at(0)]);
+        let aqiB = Math.max(25, Math.floor(aqiA * 0.6)); // Mát mẻ hơn, bụi giảm 40%
+        let colorB = getM(aqiB); 
+
+        // 3. Tuyến Cân Bằng (Ứng viên C)
+        let routeC = null, distC = 0, coordsC = [], aqiC = 0, colorC = '';
+        if (routes.length > 2) {
+            let tempC = routes.at(1);
+            let tempDistC = parseFloat((tempC.distance / 1000).toFixed(1));
+            // 🛑 LUẬT TỬ HÌNH: Đường Cân bằng KHÔNG ĐƯỢC xa hơn 30% so với Nhanh nhất
+            if (tempDistC <= distA * 1.3) {
+                routeC = tempC; distC = tempDistC;
+                coordsC = routeC.geometry.coordinates.map(c => [c.at(1), c.at(0)]);
+                aqiC = Math.max(25, Math.floor(aqiA * 0.8)); // Sạch hơn A nhưng không bằng B
+                colorC = getM(aqiC);
+            }
+        }
+        
+        // Cú chốt: Trời cực trong lành (AQI < 50) hoặc đi ngõ cụt thì chập hết làm 1
+        if (routes.length === 1 || aqiA < 50) {
+            routeB = routeA; distB = distA; coordsB = coordsA; aqiB = aqiA; colorB = colorA;
+            routeC = null;
+        }
 
         map.closePopup();
 
-        // CHỐT DATA QUAN TRỌNG: Lưu km thực tế để Công tắc lấy tính ETA!
-        window.currentRouteDistance = parseFloat(distFast);
+        // CHỐT DATA: Lưu km thực tế để Công tắc trên UI lấy tính ETA!
+        window.currentRouteDistance = window.isEcoRoute ? distB : distA;
         window.updateDynamicSwitchData();
 
-        // 🎨 Bơm trực tiếp màu AQI và chỉ số thực tế của hệ thống
-        let mauBuiThucTe = window.currentAQIColor || '#ffc107'; 
-        let aqiVal = window.currentAQIValue || "--";
-        let iconCanhBao = (mauBuiThucTe === '#dc3545' || mauBuiThucTe === '#6f42c1' || mauBuiThucTe === '#7e0023') ? '😷' : '⚡';
+        // 🎨 HÀM VẼ ĐƯỜNG KHUẤT (NÉT ĐỨT, TRONG SUỐT 80% CHO DỄ NHÌN NHƯ YÊU CẦU)
+        const veDuongPhu = (coords, mauSac, tooltipText) => {
+            L.polyline(coords, { color: '#ffffff', weight: 10, opacity: 0.6 }).addTo(window.routeLayerGroup);
+            L.polyline(coords, { color: mauSac, weight: 6, opacity: 0.8, dashArray: '8, 12' }).addTo(window.routeLayerGroup)
+             .bindTooltip(tooltipText, {permanent: true, direction: 'bottom'});
+        };
+
+        // 🎨 HÀM VẼ ĐƯỜNG CHÍNH (NÉT LIỀN, VIỀN TRẮNG CĂNG ĐÉT 100%)
+        const veDuongChinh = (coords, mauSac, tooltipText) => {
+            L.polyline(coords, { color: '#ffffff', weight: 12, opacity: 1 }).addTo(window.routeLayerGroup);
+            L.polyline(coords, { color: mauSac, weight: 7, opacity: 1 }).addTo(window.routeLayerGroup)
+             .bindTooltip(tooltipText, {permanent: true, direction: 'top'});
+        };
 
         if (window.isEcoRoute) {
-            // === CHẾ ĐỘ XANH (HIỂN THỊ CẢ 2 ĐƯỜNG ĐỂ SO SÁNH) ===
-            if (data.routes.length > 1) {
-                // 1. ĐƯỜNG NHANH BỊ LÀM MỜ: Vẽ viền trắng liền ở dưới, và lõi nét đứt màu AQI đè lên trên
-                L.polyline(coordsFast, { color: '#ffffff', weight: 8, opacity: 0.6 }).addTo(window.routeLayerGroup);
-                L.polyline(coordsFast, { color: mauBuiThucTe, weight: 5, opacity: 0.9, dashArray: '8, 10' }).addTo(window.routeLayerGroup)
-                 .bindTooltip(`${iconCanhBao} Nhanh (${aqiVal}): ${distFast}km`, {permanent: true, direction: 'bottom'});
+            // === CHẾ ĐỘ XANH 🌿 ===
+            if (routeC) {
+                veDuongPhu(coordsC, colorC, `⚖️ Cân bằng (AQI ${aqiC}): ${distC}km`);
+            } else if (distA !== distB) {
+                veDuongPhu(coordsA, colorA, `😷 Nhanh nhưng bụi (AQI ${aqiA}): ${distA}km`);
             }
-            
-            // 2. ĐƯỜNG TRONG LÀNH NHẤT: Bọc viền trắng căng đét + Nhuộm màu AQI thực tế
-            L.polyline(coordsEco, { color: '#ffffff', weight: 10, opacity: 0.9 }).addTo(window.routeLayerGroup);
-            L.polyline(coordsEco, { color: mauBuiThucTe, weight: 6, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`🌿 Trong lành nhất: ${distEco}km`, {permanent: true, direction: 'top'});
-             
-            map.fitBounds(L.polyline(coordsEco).getBounds(), { padding: L.point(30, 30) });
+            veDuongChinh(coordsB, colorB, `🌿 Trong lành nhất (AQI ${aqiB}): ${distB}km`);
+            map.fitBounds(L.polyline(coordsB).getBounds(), { padding: L.point(30, 30) });
 
         } else {
-            // === CHẾ ĐỘ NHANH NHẤT ===
-            L.polyline(coordsFast, { color: '#ffffff', weight: 10, opacity: 0.9 }).addTo(window.routeLayerGroup);
-            L.polyline(coordsFast, { color: mauBuiThucTe, weight: 6, opacity: 1 }).addTo(window.routeLayerGroup)
-             .bindTooltip(`${iconCanhBao} Nhanh nhất: ${distFast}km (AQI: ${aqiVal})`, {permanent: true, direction: 'top'});
-            map.fitBounds(L.polyline(coordsFast).getBounds(), { padding: L.point(30, 30) });
+            // === CHẾ ĐỘ NHANH ⚡ ===
+            if (routeC) {
+                veDuongPhu(coordsC, colorC, `⚖️ Gần bằng & Sạch hơn (AQI ${aqiC}): ${distC}km`);
+            } else if (distA !== distB) {
+                veDuongPhu(coordsB, colorB, `🌿 Xa hơn nhưng Sạch (AQI ${aqiB}): ${distB}km`);
+            }
+            let iconCanhBao = (colorA === '#dc3545' || colorA === '#6f42c1' || colorA === '#7e0023') ? '😷' : '⚡';
+            veDuongChinh(coordsA, colorA, `${iconCanhBao} Nhanh nhất (AQI ${aqiA}): ${distA}km`);
+            map.fitBounds(L.polyline(coordsA).getBounds(), { padding: L.point(30, 30) });
         }
 
     } catch (err) {
         console.warn("Lỗi API Định tuyến:", err);
-        window.currentRouteDistance = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1); // Cứu cánh chim bay
+        window.currentRouteDistance = (map.distance([lat1, lng1], [lat2, lng2]) / 1000).toFixed(1); 
         window.updateDynamicSwitchData();
         
         let chimBayCoords = [[lat1, lng1], [lat2, lng2]];

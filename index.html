@@ -2498,18 +2498,36 @@ window.hienThiRecap = function() {
         pauseBtnObj.style.backgroundColor = "#4CAF50";
     }
 
-    if(document.getElementById('recap-time') && document.getElementById('time-display'))
+     // 1. Chốt thời gian từ UI
+        if(document.getElementById('recap-time') && document.getElementById('time-display'))
             document.getElementById('recap-time').innerText = document.getElementById('time-display').innerText;
-            
-        if(document.getElementById('recap-distance') && document.getElementById('dist-display'))
-            document.getElementById('recap-distance').innerText = document.getElementById('dist-display').innerText;
 
-        if(document.getElementById('recap-steps') && document.getElementById('step-display'))
-            document.getElementById('recap-steps').innerText = document.getElementById('step-display').innerText;
-            
-        if(document.getElementById('recap-calo') && document.getElementById('cal-display'))
-            document.getElementById('recap-calo').innerText = document.getElementById('cal-display').innerText;
+        // 2. Chốt Quãng đường bằng con số thực tế trong não bộ
+        if(document.getElementById('recap-distance'))
+            document.getElementById('recap-distance').innerText = (totalDistanceMeter / 1000).toFixed(2) + " km";
 
+        // 3. TÍNH TOÁN LẠI TỪ ĐẦU LẦN CUỐI CÙNG TRƯỚC KHI CHỐT SỔ (BỌC THÉP TOÀN DIỆN)
+        let cUser = localStorage.getItem('currentUser');
+        let weight = 65; let stride = 0.7;
+        if (cUser) {
+            let parsed = JSON.parse(localStorage.getItem("appUser_" + cUser));
+            if (parsed && parsed.weight) weight = parseFloat(parsed.weight);
+            if (parsed && parsed.strideLength) stride = parseFloat(parsed.strideLength);
+        }
+        
+        // Tự tính lại số bước chân không cần copy giao diện
+        if(document.getElementById('recap-steps'))
+            document.getElementById('recap-steps').innerText = Math.floor(totalDistanceMeter * (1 / stride));
+            
+        // Tự chạy lại thuật toán Calo để lấy số chuẩn xác nhất
+        let finalCalo = 0;
+        if (typeof window.tinhCaloThucTe === 'function') {
+            finalCalo = window.tinhCaloThucTe(totalDistanceMeter, elapsedSeconds);
+        }
+        if(document.getElementById('recap-calo'))
+            document.getElementById('recap-calo').innerText = finalCalo.toFixed(1);
+
+        // 4. Tính Vận tốc TB
         let speedKmH = 0;
         if (elapsedSeconds > 0 && totalDistanceMeter > 0) {
             speedKmH = (totalDistanceMeter / 1000) / (elapsedSeconds / 3600);

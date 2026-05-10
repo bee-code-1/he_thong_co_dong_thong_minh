@@ -6,12 +6,12 @@
     <title>CMD Health</title>
     <!-- Icon hiển thị trên tab trình duyệt -->
     <link rel="icon" type="image/png" href="logo_app_nen_trang.png">
-    <!-- Khai báo cho iOS/Android biết đây là Web App xịn -->
+    <!-- Khai báo cho iOS/Android -->
     <meta name="apple-mobile-web-app-title" content="CMD Health">
     <meta name="application-name" content="CMD Health">
     <meta name="theme-color" content="#28a745">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> <!-- MỚI ADD VÀO ĐÂY -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -261,19 +261,25 @@
     animation: slideUpFade 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* CHỐNG BÔI ĐEN, COPY VÀ MENU TÌM KIẾM GOOGLE */
-#btn-flip-camera, 
-#camera-controls div, 
-.nav-item, 
-.action-btn, 
+/* CHỐNG BÔI ĐEN, COPY VÀ MENU TÌM KIẾM GOOGLE (BẢN NÂNG CẤP) */
+#btn-flip-camera,
+#camera-controls div,
+.nav-item,
+.action-btn,
 .top-left-btn,
 #btn-radar-share,
-.friend-connect-item {
+.friend-connect-item,
+#cat-chat-screen button,
+#human-chat-screen button,
+#cat-chat-screen > div:last-child,
+#human-chat-screen > div:last-child,
+#cat-suggest-container,
+#tab-4 > div:first-child {
     -webkit-user-select: none;      /* Dành cho Safari trên iPhone */
     -moz-user-select: none;         /* Dành cho Firefox */
     -ms-user-select: none;          /* Dành cho Edge/IE */
     user-select: none;              /* Chuẩn chung */
-    -webkit-touch-callout: none;    /* Chống hiện menu khi nhấn giữ lâu trên iOS */
+    -webkit-touch-callout: none;    /* Chống hiện menu kính lúp khi nhấn giữ lâu trên iOS */
 }
 
   /* HIỆU ỨNG THẢ CẢM XÚC (FLOATING REACTIONS)  */
@@ -5430,7 +5436,7 @@ window.xacNhanXoaTB = function(idTB) {
         const user = localStorage.getItem('currentUser') || "Khach";
         // Nếu xóa mất 2 tin hệ thống thì lưu cờ để không mọc lại nữa (Lưu theo từng tài khoản)
         if(idTB === 'sys_msg_1') localStorage.setItem('del_sys_msg_1_' + user, 'true');
-        if(idTB === 'sys_msg_2') localStorage.setItem('del_sys_msg_2_' + user, 'true');
+        if(idTB === 'sys_msg_2' || idTB === 'sys_msg_3') localStorage.setItem('del_sys_msg_3_' + user, 'true');
         window.luuThongBaoLocal();
     } else {
         // Reset vuốt nếu hủy
@@ -5450,7 +5456,7 @@ window.taiThongBaoLocal = function() {
         if(container) container.innerHTML = '';
     }
 
-    // ĐÃ FIX: TIÊM 2 THÔNG BÁO HỆ THỐNG (KIỂM TRA CỜ XÓA THEO TỪNG TÀI KHOẢN)
+    // ThÊM 2 THÔNG BÁO HỆ THỐNG (KIỂM TRA CỜ XÓA THEO TỪNG TÀI KHOẢN)
     if (localStorage.getItem('del_sys_msg_1_' + user) !== 'true') {
         window.themThongBaoHeThong(
             'sys_msg_1',
@@ -5461,12 +5467,12 @@ window.taiThongBaoLocal = function() {
         );
     }
 
-    if (localStorage.getItem('del_sys_msg_2_' + user) !== 'true') {
+    if (localStorage.getItem('del_sys_msg_3_' + user) !== 'true') {
         window.themThongBaoHeThong(
-            'sys_msg_2',
-            ' Hồ sơ trợ lý Mèo',
+            'sys_msg_3',
+            '😼 Hồ sơ trợ lý Mèo (Bản cập nhật)',
             'Hy vọng bạn sẽ sống hoà thuận cùng nó...',
-            `<b>Hãy nhớ:</b> Mèo không phải thú cưng, nó là huấn luyện viên cá nhân có quyền lực cao nhất ở đây. Nó có thể hơi xéo xắt, láo nháo, nhưng đó là vì cái bụng 6 múi của bạn.<br><br>Dưới đây là cách để giao tiếp với Mèo:<br><br>👆 <b>Chạm nhẹ:</b> ...? Ai mà biết được<br> ?? <b> <br>⏱️ <b>Nhấn giữ:</b> Nơi bạn tâm sự mục tiêu hoặc... tạm thời khóa mõm khi nó càu nhàu quá nhiều<br>🌪️ <b>Túm cổ kéo đi:</b> Nhẹ tay thôi, kéo gắt quá là nó mắng đấy.<br>📳 <b>Lắc điện thoại:</b> Mèo thù nhất cảm giác chóng mặt. Bạn mà lắc, nó có thể sẽ... chóng mặt ?<br><br><i>Lời khuyên từ đội ngũ phát triển:</i> Mèo rất thẳng thắn và đôi khi hơi láo quá mức, nhưng tất cả là vì cái bụng 6 múi của bạn. Hãy đối xử tốt với nó, và nó sẽ đưa bạn đến vạch đích một cách bớt đau khổ nhất..... hoặc không.`,
+            `<b>Hãy nhớ:</b> Mèo không phải thú cưng, nó là huấn luyện viên cá nhân có quyền lực cao nhất ở đây. Nó có thể hơi xéo xắt, láo nháo, nhưng đó là vì cái bụng 6 múi của bạn.<br><br>Dưới đây là cách để giao tiếp với Mèo:<br><br>👆 <b>Chạm nhẹ:</b> ...? Ai mà biết được<br>✌️ <b>Gõ đầu 2 cái:</b> Nó sẽ phán ngay thời tiết và chỉ số ô nhiễm<br>⏱️ <b>Nhấn giữ:</b> Nơi bạn tâm sự mục tiêu hoặc... tạm thời khóa mõm khi nó càu nhàu quá nhiều<br>🌪️ <b>Túm cổ kéo đi:</b> Nhẹ tay thôi, kéo gắt quá là nó mắng đấy.<br>📳 <b>Lắc điện thoại:</b> Mèo thù nhất cảm giác chóng mặt. Bạn mà lắc, nó có thể sẽ... chóng mặt ?<br><br><i>Lời khuyên từ đội ngũ phát triển:</i> Mèo rất thẳng thắn và đôi khi hơi láo quá mức, nhưng tất cả là vì cái bụng 6 múi của bạn. Hãy đối xử tốt với nó, và nó sẽ đưa bạn đến vạch đích một cách bớt đau khổ nhất..... hoặc không.`,
             '- Moè -'
         );
     }
@@ -5666,15 +5672,23 @@ window.caiDatNhacNhoHangNgay = function() {
     }
 };
 
-// HÀM ĐÁNH DẤU ĐÃ ĐỌC
+// HÀM ĐÁNH DẤU ĐÃ ĐỌC (LƯU LẠI CHỨ KHÔNG XÓA)
 window.danhDauDaDoc = function(idTB) {
     const el = document.getElementById(idTB);
     if (el && el.classList.contains('unread-msg')) {
-        el.classList.remove('unread-msg');
-        // Phục hồi lại màu xám mặc định cho nền tin nhắn
+        el.classList.remove('unread-msg'); // Tắt cờ chưa đọc
+        
         const content = el.querySelector('.swipe-content');
-        if (content) content.style.background = '#cccccc';
-        window.luuThongBaoLocal(); // Cập nhật vào HTML để nhớ mãi mãi
+        if (content) {
+            // Tắt màu xanh, trả về màu xám nền nã (phân biệt Thư hệ thống và Thư Locket)
+            if (idTB.startsWith('sys_msg')) {
+                el.style.borderColor = '#ddd'; // Tắt viền xanh
+                content.style.background = '#f5f5f5';
+            } else {
+                content.style.background = '#cccccc';
+            }
+        }
+        window.luuThongBaoLocal(); // Cập nhật lại DOM vào LocalStorage để nhớ mãi mãi kể cả khi F5
     }
 };
 
@@ -5687,30 +5701,32 @@ window.moGiayNote = function(tieuDe, noiDungFull, kyTen, idTB) {
     window.danhDauDaDoc(idTB); // Tự động đánh dấu đã đọc
 };
 
-// HÀM TIÊM THÔNG BÁO HỆ THỐNG (ĐÃ FIX: ĐỔ BÊ TÔNG, KHÔNG THỂ VUỐT XÓA)
+// HÀM TIÊM THÔNG BÁO HỆ THỐNG (ĐÃ MỞ KHÓA: ÁP DỤNG CƠ CHẾ TRƯỢT XÓA)
 window.themThongBaoHeThong = function(id, title, descShort, descFull, signature) {
     const container = document.getElementById('list-thong-bao-content');
     if(document.getElementById(id)) return;
-    
-    // ĐÃ FIX BỆNH "MISSING )": Mã hóa dấu ngoặc kép để không làm vỡ cấu trúc HTML onclick
+
     let safeDescFull = descFull.replace(/"/g, '&quot;').replace(/`/g, '\\`');
-
-    // Tạo khối HTML tĩnh, KHÔNG dùng class swipe-container để miễn nhiễm với hàm vuốt
+    
+    // Đã thay thế bằng cấu trúc Thẻ Trượt (Swipe) chuẩn xác
     const html = `
-    <div id="${id}" class="unread-msg" style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 12px; border: 2px solid #28a745; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div onclick="window.moGiayNote('${title}', \`${safeDescFull}\`, '${signature}', '${id}')" style="cursor: pointer; background: #eaffea; padding: 12px; display: flex; align-items: center; transition: background 0.4s ease;">
-
-            <div style="font-size: 35px; margin-right: 15px;">${id === 'sys_msg_1' ? '💌' : '😼'}</div>
-            <div style="flex: 1; text-align: left; line-height: 1.4;">
-                <div style="font-weight: bold; font-size: 15px; color: #004BAd; margin-bottom: 5px;">${title}</div>
-                <div style="font-size: 13px; color: #666; font-style: italic;">${descShort}</div>
+    <div id="${id}" class="swipe-container unread-msg" style="border: 2px solid #28a745; margin-bottom: 15px; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #dc3545; position: relative;">
+        <div class="swipe-actions" onclick="window.xacNhanXoaTB('${id}')" style="position: absolute; right: 0; top: 0; height: 100%; width: 80px; display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; cursor: pointer; z-index: 1;">🗑️</div>
+        
+        <div class="swipe-content" style="background: #eaffea; padding: 0; width: 100%; transition: transform 0.3s ease, background 0.4s ease; z-index: 2; position: relative;">
+            <div onclick="window.moGiayNote('${title}', \`${safeDescFull}\`, '${signature}', '${id}')" style="cursor: pointer; padding: 12px 15px; display: flex; align-items: center; width: 100%; box-sizing: border-box;">
+                <div style="font-size: 35px; margin-right: 15px; flex-shrink: 0;">${id.includes('sys_msg_1') ? '💌' : '😼'}</div>
+                <div style="flex: 1; text-align: left; line-height: 1.4;">
+                    <div style="font-weight: bold; font-size: 15px; color: #004BAd; margin-bottom: 5px;">${title}</div>
+                    <div style="font-size: 13px; color: #666; font-style: italic; white-space: normal;">${descShort}</div>
+                </div>
+                <!-- Icon cuốn sách -->
+                <div style="font-size: 20px; flex-shrink: 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));" title="Đọc thư">📖</div>
             </div>
-            <!-- Icon Ghim cố định -->
-            <div style="font-size: 20px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));" title="Thông báo cố định">📌</div>
         </div>
     </div>`;
     
-    container.insertAdjacentHTML('beforeend', html); // Ghim xuống dưới cùng hoặc trên cùng tùy cậu (để afterbegin nếu muốn lên top)
+    container.insertAdjacentHTML('beforeend', html); 
     window.luuThongBaoLocal();
 };
 

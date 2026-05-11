@@ -4980,9 +4980,9 @@ container.innerHTML = 'Không có thông báo mới.';
 return;
 }
 
-// 2. Nếu đang có chữ "Không có thông báo mới", xóa nó đi để nhường chỗ
+// 2. CHỈ RÚT DÒNG CHỮ TRỐNG RA (Không dùng innerHTML = '' để tránh xóa nhầm thư hệ thống)
 if (container.innerHTML.includes('Không có thông báo mới.')) {
-container.innerHTML = '';
+container.innerHTML = container.innerHTML.replace('Không có thông báo mới.', '');
 }
 
 let html = '';
@@ -5799,12 +5799,12 @@ window.themThongBaoHeThong = function(id, title, descShort, descFull, signature)
                 </div>
                 <!-- Icon cuốn sách -->
                 <div style="font-size: 20px; flex-shrink: 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));" title="Đọc thư">📖</div>
-            </div>
         </div>
-</div>`;
-// Đẩy thông báo hệ thống lên trên cùng 
-container.insertAdjacentHTML('afterbegin', html);
-window.luuThongBaoLocal();
+        </div>
+        </div>`;
+    // Đẩy thông báo hệ thống lên trên cùng (mới nhất hiển thị trước)
+    container.insertAdjacentHTML('afterbegin', html);
+    window.luuThongBaoLocal();
 };
 
 // HÀM THÔNG BÁO LOCKET (CẬP NHẬT GIAO DIỆN VUỐT)
@@ -8210,14 +8210,16 @@ window.timVaMoHoSo = function() {
 
 // 4. Mở Popup Thông Báo chuẩn UX
 window.moThongBao = function() {
-    // Ép hệ thống chạy lại hàm tạo thông báo riêng cho user mỗi khi ấn chuông
-    if (typeof window.taiThongBaoLocal === 'function') window.taiThongBaoLocal();
+// Ép hệ thống chạy lại hàm tạo thông báo riêng cho user mỗi khi ấn chuông
+if (typeof window.taiThongBaoLocal === 'function') window.taiThongBaoLocal();
+// FIX BUG: Gọi lại hàm vẽ bạn bè ngay lập tức để Firebase nhồi đè lên LocalStorage
+if (typeof window.veDanhSachThongBao === 'function') window.veDanhSachThongBao();
 
-    const modalTB = document.getElementById('modal-thong-bao');
-    if(modalTB) modalTB.style.display = 'flex';
-    // Tắt cái chấm đỏ (badge) đi vì người dùng đã mở xem rồi
-    const chamDo = document.getElementById('cham-do-thong-bao');
-    if(chamDo) chamDo.style.display = 'none';
+const modalTB = document.getElementById('modal-thong-bao');
+if(modalTB) modalTB.style.display = 'flex';
+// Tắt cái chấm đỏ (badge) đi vì người dùng đã mở xem rồi
+const chamDo = document.getElementById('cham-do-thong-bao');
+if(chamDo) chamDo.style.display = 'none';
 };
 
 // HỆ THỐNG CHAT 1-1

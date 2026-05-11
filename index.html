@@ -1129,7 +1129,13 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
             <input type="password" id="login-pass" placeholder="Mật khẩu" required>
             <button onclick="processAuth('login')">Đăng nhập</button>
             <p class="switch-link">Chưa có tài khoản? <a onclick="toggleAuthMode()">Đăng ký ngay</a></p>
+        <!--  TẢI APK CHO NGƯỜI MỚI -->
+        <hr style="border: 0.5px dashed #ccc; margin: 15px 0;">
+        <button onclick="window.open('https://drive.google.com/file/d/1p26tn6PPbpmyak1yTvSPgO9p73lzPhGo/view?usp=drivesdk', '_blank')" style="background: #28a745; color: white; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(40,167,69,0.3); border-radius: 20px; font-weight: bold; width: 100%; border: none; padding: 12px; font-size: 16px; cursor: pointer;">
+        <span style="font-size: 20px;">🎮</span> Tải bản Android (.APK)
+            </button>
         </div>
+        
         <div class="modal-content" id="register-form" style="display: none;">
             <h2>Đăng Ký Tài Khoản</h2>
             <input type="text" id="reg-user" placeholder="Tên đăng nhập mới" required>
@@ -1526,6 +1532,14 @@ NHẬN THƯỞNG
             <button onclick="alert('Đã xóa bộ nhớ đệm Bản đồ (Cache Layer)!')" style="width: 100%; padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 10px; font-weight: bold; text-align: left; margin-bottom: 10px;">🗺️ Xóa Cache Bản đồ</button>
             <!-- NÚT GỌI BÁC SĨ -->
             <button onclick="window.cuuHoDuLieuCalo()" style="width: 100%; padding: 10px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 10px; font-weight: bold; text-align: left; animation: catPulse 2s infinite;">🛠 Fix lỗi dữ liệu </button>
+            </div>
+
+            <!-- KHU VỰC 5: TẢI ỨNG DỤNG ANDROID -->
+            <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+            <h4 style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;"> Trải nghiệm Native App</h4>
+            <button onclick="window.open('https://drive.google.com/file/d/1p26tn6PPbpmyak1yTvSPgO9p73lzPhGo/view?usp=drivesdk', '_blank')" style="width: 100%; padding: 12px; background: #e8f5e9; color: #28a745; border: 1px solid #c3e6cb; border-radius: 10px; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+            <span style="font-size: 20px;">🎮</span> Tải ứng dụng (.APK)
+            </button>
             </div>
 
                 <!-- NÚT CHỐT SỔ -->

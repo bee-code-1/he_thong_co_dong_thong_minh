@@ -986,8 +986,9 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
     
 <!-- 4. POPUP THÔNG BÁO (HỒI SINH) -->
 <div id="modal-thong-bao" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto; backdrop-filter: blur(3px);">
-    <div onclick="event.stopPropagation()" style="background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; max-height: 70vh; overflow-y: auto; text-align: left; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        <span onclick="document.getElementById('modal-thong-bao').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
+<div onclick="event.stopPropagation()" style="background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 450px; max-height: 75vh; overflow-y: auto; overflow-x: hidden; text-align: left; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+
+    <span onclick="document.getElementById('modal-thong-bao').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
         <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">🔔 Thông báo</h3>
         
         <!-- Nơi Javascript nhồi thông báo Locket & Kết bạn vào đây -->
@@ -4965,22 +4966,38 @@ window.veDanhSachBanBe = function() {
 };
 
 window.veDanhSachThongBao = function() {
-    const container = document.getElementById('list-thong-bao-content');
-    if (window.loiMoiKetBan.length === 0) {
-        container.innerHTML = 'Không có thông báo mới.';
-        return;
-    }
-    let html = '';
-    window.loiMoiKetBan.forEach(nguoiGui => {
-        html += `<div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ddd;">
-            <div style="font-weight: bold; margin-bottom: 5px;">${nguoiGui} muốn kết bạn với bạn!</div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="window.chapNhanBan('${nguoiGui}')" style="flex: 1; background: #28a745; color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer;">Chấp nhận</button>
-                <button onclick="window.tuChoiBan('${nguoiGui}')" style="flex: 1; background: #6c757d; color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer;">Từ chối</button>
-            </div>
-        </div>`;
-    });
-    container.innerHTML = html;
+const container = document.getElementById('list-thong-bao-content');
+if (!container) return;
+
+// 1. Dọn dẹp thẻ bạn bè cũ để không bị nhân bản khi Firebase cập nhật
+document.querySelectorAll('.thong-bao-ket-ban-item').forEach(el => el.remove());
+
+if (window.loiMoiKetBan.length === 0) {
+// Nếu không có bất kỳ thông báo nào khác thì mới hiện chữ trống
+if (container.innerHTML.trim() === '') {
+container.innerHTML = 'Không có thông báo mới.';
+}
+return;
+}
+
+// 2. Nếu đang có chữ "Không có thông báo mới", xóa nó đi để nhường chỗ
+if (container.innerHTML.includes('Không có thông báo mới.')) {
+container.innerHTML = '';
+}
+
+let html = '';
+window.loiMoiKetBan.forEach(nguoiGui => {
+html += `<div class="thong-bao-ket-ban-item" style="background: #e8f5e9; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 2px solid #28a745; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative;">
+<div style="font-weight: bold; margin-bottom: 12px; color: #28a745; font-size: 15px;">👤 ${nguoiGui} muốn kết bạn với bạn!</div>
+<div style="display: flex; gap: 10px;">
+<button onclick="window.chapNhanBan('${nguoiGui}')" style="flex: 1; background: #28a745; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(40,167,69,0.3);">Chấp nhận</button>
+<button onclick="window.tuChoiBan('${nguoiGui}')" style="flex: 1; background: #e0e0e0; color: #dc3545; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer;">Từ chối</button>
+</div>
+</div>`;
+});
+
+// 3. Đẩy thông báo kết bạn MỚI NHẤT lên ĐẦU danh sách
+container.insertAdjacentHTML('afterbegin', html);
 };
 
 window.chapNhanBan = function(nguoiGui) {
@@ -5784,10 +5801,10 @@ window.themThongBaoHeThong = function(id, title, descShort, descFull, signature)
                 <div style="font-size: 20px; flex-shrink: 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));" title="Đọc thư">📖</div>
             </div>
         </div>
-    </div>`;
-    
-    container.insertAdjacentHTML('beforeend', html); 
-    window.luuThongBaoLocal();
+</div>`;
+// Đẩy thông báo hệ thống lên trên cùng 
+container.insertAdjacentHTML('afterbegin', html);
+window.luuThongBaoLocal();
 };
 
 // HÀM THÔNG BÁO LOCKET (CẬP NHẬT GIAO DIỆN VUỐT)

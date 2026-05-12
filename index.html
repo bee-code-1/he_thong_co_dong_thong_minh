@@ -8747,17 +8747,36 @@ document.addEventListener('click', function(e) {
 
 // 1. CHUYỂN MÀU NÚT ĐỊA HÌNH
 window.toggleDiaHinh = function(e) {
-    if(e) e.stopPropagation();
-    window.isHienDiaHinh = !window.isHienDiaHinh;
-    const btn = document.getElementById('btn-dia-hinh');
-    if (window.isHienDiaHinh) {
-        btn.classList.add('active-terrain');
-        if (!lopDiaHinh) lopDiaHinh = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 });
-        if (typeof map !== 'undefined') lopDiaHinh.addTo(map);
-    } else {
-        btn.classList.remove('active-terrain');
-        if (lopDiaHinh && typeof map !== 'undefined') map.removeLayer(lopDiaHinh);
-    }
+if(e) e.stopPropagation();
+window.isHienDiaHinh = !window.isHienDiaHinh;
+const btn = document.getElementById('btn-dia-hinh');
+
+if (window.isHienDiaHinh) {
+btn.classList.add('active-terrain');
+if (!lopDiaHinh) lopDiaHinh = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 });
+if (typeof map !== 'undefined') lopDiaHinh.addTo(map);
+
+// FIX BUG ĐỘ CAO: Kéo data ngay lập tức và Cập nhật lại UI Avatar
+if (typeof latestLatLng !== 'undefined' && latestLatLng) {
+fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${latestLatLng.lat},${latestLatLng.lng}`)
+.then(res => res.json())
+.then(apiData => {
+if (apiData && apiData.results && apiData.results.length > 0) {
+window.latestAltitude = apiData.results.elevation || 0;
+// Gọi lại hàm xử lý GPS với độ chính xác = 0 để ép vẽ lại chữ độ cao mà không làm sai lệch quãng đường
+if(typeof xuLyToaDoGPS === 'function') xuLyToaDoGPS(latestLatLng.lat, latestLatLng.lng, 0);
+}
+}).catch(e => console.log("Lỗi tải độ cao"));
+}
+} else {
+btn.classList.remove('active-terrain');
+if (lopDiaHinh && typeof map !== 'undefined') map.removeLayer(lopDiaHinh);
+
+// Ép vẽ lại avatar ngay lập tức để giấu chữ độ cao đi khi tắt
+if (typeof latestLatLng !== 'undefined' && latestLatLng) {
+if(typeof xuLyToaDoGPS === 'function') xuLyToaDoGPS(latestLatLng.lat, latestLatLng.lng, 0);
+}
+}
 };
 
 // 2. CHUYỂN MÀU NÚT LỘ TRÌNH A-B

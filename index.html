@@ -1514,13 +1514,13 @@ NHẬN THƯỞNG
                     </div>
                 </div>
 
-               <!-- KHU VỰC 3: TRẢI NGHIỆM TRỢ LÝ ẢO -->
+               <!-- KHU VỰC 3: ĐÓNG GÓP & FEEDBACK -->
 <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
-<h4 style="margin: 0 0 15px 0; color: #6f42c1; font-size: 16px;">🔊 Trợ lý Mèo AI</h4>
-<div style="display: flex; justify-content: space-between; align-items: center;">
-<span style="font-size: 14px; font-weight: bold; color: #444;">Mèo lải nhải (Voice/Chat)</span>
-<input type="checkbox" id="toggle-cat-voice" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleCatLaiNhaiSettings(this.checked)">
-</div>
+<h4 style="margin: 0 0 10px 0; color: #17a2b8; font-size: 16px;">💡 Đóng góp ý tưởng</h4>
+<p style="font-size: 13px; color: #666; margin-bottom: 12px; line-height: 1.4;">Phát hiện lỗi (bug) hoặc có tính năng mới muốn gợi ý cho Đội ngũ phát triển? Gửi ngay nhé!</p>
+<button onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSed3qBnJ1hRTKGyrvIIokcFqVWVg5_iTmOXdQs0o3q7hQT8gQ/viewform?usp=publish-editor', '_blank')" style="width: 100%; padding: 12px; background: #e0f7fa; color: #17a2b8; border: 1px solid #b2ebf2; border-radius: 10px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+<span>🚀</span> Báo lỗi / Gửi Feedback
+</button>
 </div>
 
                 <!-- KHU VỰC 4: QUẢN LÝ BỘ NHỚ -->
@@ -3992,12 +3992,21 @@ window.luuHoSo = function() {
 
     if (typeof window.db !== 'undefined') {
         window.db.ref('nguoi_dung/' + user).update({
-            tuoi: a, chieu_cao: h, can_nang: w, benh_ly: c
-        });
-    }
+           tuoi: a, chieu_cao: h, can_nang: w, benh_ly: c
+});
+}
 
-    alert("✅ Đã lưu thay đổi hồ sơ thành công!");
-    window.dongHoSo(); 
+// Đóng bảng cài đặt trước
+window.dongHoSo();
+
+// Bật Popup xịn thay cho alert mặc định
+window.moCustomAlert({
+type: 'alert', 
+icon: '✅', 
+title: 'Lưu thành công', 
+titleColor: '#28a745',
+message: 'Toàn bộ cài đặt của bạn đã được hệ thống cập nhật!'
+});
 };
 
 // === ĐĂNG XUẤT TÀI KHOẢN ===

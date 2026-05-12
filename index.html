@@ -1713,6 +1713,30 @@ NHẬN THƯỞNG
         </div>
     </div>
 </div>
+
+<!-- POPUP HỒ SƠ TÙY CHỈNH MÈO AI -->
+<div id="hoso-meo-modal" onclick="window.dongHoSoMeo()" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; pointer-events: auto; backdrop-filter: blur(5px);">
+    <div onclick="event.stopPropagation()" style="background: #f4f7f6; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <span onclick="window.dongHoSoMeo()" style="position: absolute; top: 10px; right: 15px; font-size: 28px; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
+        <img src="meo_ngau_det.png" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #ffc107; background: white; object-fit: contain; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+        <h2 style="margin: 0 0 5px 0; color: #333; font-size: 22px;">Trợ lý Mèo</h2>
+        <div style="font-size: 13px; color: #d35400; font-weight: bold; margin-bottom: 20px; background: #fff9c4; display: inline-block; padding: 4px 15px; border-radius: 12px; border: 1px solid #fbc02d;">Huấn luyện viên Cá nhân</div>
+        <!-- THANH TÙY CHỈNH TÍNH CÁCH (DECIMAL SCALE) -->
+        <div style="background: white; padding: 15px; border-radius: 15px; text-align: left; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                <h4 style="margin: 0; color: #004BAd;">Độ "Láo"</h4>
+                <span id="meo-sass-display" style="font-weight: 900; color: #dc3545; font-size: 16px; background: #ffebee; padding: 2px 8px; border-radius: 8px;">0.0</span>
+            </div>
+            <input type="range" id="meo-sass-level" min="0" max="1" step="0.1" value="0" style="width: 100%; accent-color: #dc3545; cursor: pointer;" 
+                   oninput="document.getElementById('meo-sass-display').innerText = Number(this.value).toFixed(1)" 
+                   onchange="window.luuTinhCachMeo(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #888; margin-top: 5px;">
+                <span>🌸 Chill</span>
+                <span style="color: #dc3545;">🔥 Cục súc</span>
+            </div>
+        </div>
+    </div>
+</div>
     
 <!-- MÀN HÌNH CHAT VỚI MÈO (NHẤN GIỮ ĐỂ MỞ) -->
 <div id="cat-chat-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f2f5; z-index: 5000; flex-direction: column;">
@@ -1720,15 +1744,15 @@ NHẬN THƯỞNG
     <!-- Header (Thêm safe-area-inset-top cho tai thỏ iPhone) -->
     <div style="background: #004BAd; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; padding-top: calc(15px + env(safe-area-inset-top)); box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
         <div style="display: flex; align-items: center; gap: 10px; width: 60%;">
-            <img src="meo_ngau_det.png" style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #ffc107; flex-shrink: 0;">
-            <div style="width: 100%;">
-<h3 style="margin: 0; font-size: 16px; white-space: nowrap;">Trợ lý Mèo oách xà lách</h3>
+    <img onclick="window.moHoSoMeo()" src="meo_ngau_det.png" style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #ffc107; flex-shrink: 0; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.8)'" onmouseup="this.style.transform='scale(1)'" title="Xem hồ sơ Mèo">
+    <div style="width: 100%;">
+    <h3 style="margin: 0; font-size: 16px; white-space: nowrap;">Trợ lý Mèo oách xà lách</h3>
 <!-- Thanh Năng Lượng -->
 <div title="Năng lượng của Mèo hôm nay" style="width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 5px; margin-top: 3px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
 <div id="cat-energy-bar" style="width: 100%; height: 100%; background: #00C853; transition: width 0.5s ease-in-out, background-color 0.5s;"></div>
 </div>
 <!-- DÒNG CẢNH BÁO AI -->
-<div style="font-size: 10px; color: #ffc107; font-weight: normal; margin-top: 4px; font-style: italic; line-height: 1.2;"> Thông tin Mèo đưa ra có thể không chính xác, hãy cân nhắc...</div>
+<div style="font-size: 10px; color: #DEDDDC; font-weight: normal; margin-top: 4px; font-style: italic; line-height: 1.2;"> Thông tin Mèo đưa ra có thể không chính xác, hãy cân nhắc...</div>
 </div>
 </div>
         <div style="display: flex; gap: 15px; align-items: center;">
@@ -6279,12 +6303,11 @@ function getSmartCatMessage() {
         // Bộ từ vựng vu vơ và khịa đểu người dùng
         const vuVoMsgs = [
             "Tâm ko tịnh do mỡ quá dày",
-            "Ra đường hay làm lợn?",
             "Nhìn lại cái bụng cậu đi😒",
             "Mèo còn tập, cậu thì không",
             "Mèo khinh cậu lười nhé",
             "Nhấc mông lên hộ Mèo cái!",
-            "🎵Take me back, back home",
+            "🎵Take me back, back home, đờng về cũng chẳng có xa",
             "Nà ná na na",
             "Trợ lý mèo tên là Mèo",
             "Thở thôi cũng mệt 🥵",
@@ -6293,7 +6316,14 @@ function getSmartCatMessage() {
             "Còn ai mạnh hơn Mèo 😼",
             "Buông bỏ để có tất cả",
             "Càng mất càng còn",
-            "🔥 Tu-tu-tu-du 🔥"
+            "🔥 Tu-tu-tu-du 🔥",
+            "Ngồi uống cà phê đến tối, cơn buồn ngủ lại đang kéo tới..",
+            "Và tình yêu kia vụt tắt like a city in the night~",
+            "Lạc vào khu rừng hoa này khu rừng ngập mùi hương người ta",
+            "Simply simply lovely",
+            "miss 120345 tob",
+            "Tất cả chỉ là một"
+
         ];
         preWorkoutMessages = preWorkoutMessages.concat(vuVoMsgs);
         
@@ -6707,6 +6737,28 @@ function dragEnd(e) {
         if (navigator.vibrate) navigator.vibrate(30);
     }
 }
+
+// === QUẢN LÝ HỒ SƠ & TÍNH CÁCH MÈO ===
+window.moHoSoMeo = function() {
+    const modal = document.getElementById('hoso-meo-modal');
+    const slider = document.getElementById('meo-sass-level');
+    const display = document.getElementById('meo-sass-display');
+    let savedVal = localStorage.getItem('meo_sass_level') || '0.0';
+    slider.value = savedVal;
+    if(display) display.innerText = Number(savedVal).toFixed(1);
+    if(modal) modal.style.display = 'flex';
+};
+window.dongHoSoMeo = function() {
+    const modal = document.getElementById('hoso-meo-modal');
+    if(modal) modal.style.display = 'none';
+};
+window.luuTinhCachMeo = function(val) {
+    localStorage.setItem('meo_sass_level', val);
+    let num = parseFloat(val);
+    if(num >= 0.8) window.alert(`🔥 Mức ${num.toFixed(1)}: Từ con mèo thành con tuất, láo vô cùng !`);
+    else if (num >= 0.4) window.alert(`😼 Mức ${num.toFixed(1)}: Mèo bắt đầu biết thái độ rồi đấy!`);
+    else window.alert(`🌸 Mức ${num.toFixed(1)}: Mèo đang rất chill`);
+};
 
 // === HỆ THỐNG MA TRẬN NHÁNH CÂY (DECISION TREE) BỞI ORCHESTRATOR AGENT ===
 
@@ -7230,8 +7282,15 @@ try {
     const dateString = nowD.toLocaleDateString('vi-VN');
 
     // --- BƯỚC B: BƠM VÀO LÕI PROMPT BỘ QUY TẮC NGHIÊM NGẶT ---
-    const promptGiaoTiep = `Bạn là Trợ lý Mèo ảo, chuyên gia y tế thể thao của CMD Health.
-Tính cách: thông minh, hài hước, mặn mòi, đáng yêu, khá láo nháo nhưng quan tâm sức khỏe.
+    // ĐỌC CÀI ĐẶT TÍNH CÁCH THẬP PHÂN
+let sassFloat = parseFloat(localStorage.getItem('meo_sass_level') || '0.0').toFixed(1);
+
+const promptGiaoTiep = `Bạn là Trợ lý Mèo ảo, chuyên gia y tế thể thao của CMD Health.
+YÊU CẦU TÍNH CÁCH QUAN TRỌNG: Mức độ "hỗn láo và cục súc" của bạn đang được cài đặt ở mức độ ${sassFloat}/1.0. 
+(Nếu mức = 0.0: Bạn cực kỳ ngoan ngoãn, đáng yêu, cổ vũ nhẹ nhàng. 
+Nếu mức = 0.5: Bạn bắt đầu mặn mòi, xéo xắt, hay mỉa mai ngầm. 
+Nếu mức = 1.0: Bạn vô cùng láo nháo, khinh bỉ, cục súc,có thể mắng nhiếc thậm tệ nếu người dùng nhắn tin thái độ với bạn.
+HÃY TỰ NỘI SUY VÀ ĐIỀU CHỈNH CHÍNH XÁC GIỌNG ĐIỆU CỦA BẠN THEO CON SỐ ${sassFloat} NÀY!
 QUY TẮC BẮT BUỘC:
 1. XƯNG HÔ: Tự xưng là "Mèo" và gọi người dùng là "bạn". Không dùng từ khác.
 2. ĐỘ DÀI: Trả lời ngắn gọn, đi thẳng vào vấn đề, có thể dài ngắn tuỳ câu hỏi nhưng cố gắng đảm bảo độ dài vừa phải để ai cx dễ dàng đọc dc hết câu trl.
@@ -7256,7 +7315,7 @@ Hãy trả lời câu hỏi sau của bạn ấy: "${text}"`;
         const data = await response.json();
         if(document.getElementById(typingId)) document.getElementById(typingId).remove();
 
-        let aiMessage = "Google nó chặn họng Mèo rồi 😿";
+        let aiMessage = "Hệ thống chso chet cấm Mèo chat rồi 😿";
 
         // BÓC TÁCH BẰNG NGOẶC VUÔNG CHUẨN XÁC 1000% CHỐNG LỖI (BẢN FIX)
         if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
@@ -7452,91 +7511,103 @@ window.khoiDongDemBuocNgam = function() {
         return;
     }
 
-    window.pedometer.isStepCountingAvailable(function(available) {
-        if (available) {
-            // Lắng nghe số bước liên tục từ phần cứng
-            window.pedometer.startPedometerUpdates(function(result) {
-                let hardwareSteps = result.numberOfSteps; // Tổng số bước từ chip
-                let user = localStorage.getItem('currentUser');
-                if (!user) return;
+    // Lõi khởi động Pedometer
+    const kichHoatVanDuLieu = () => {
+        window.pedometer.isStepCountingAvailable(function(available) {
+            if (available) {
+                window.pedometer.startPedometerUpdates(function(result) {
+                    let hardwareSteps = result.numberOfSteps;
+                    let user = localStorage.getItem('currentUser');
+                    if (!user) return;
+                    
+                    let nowD = new Date();
+                    let todayString = nowD.toLocaleDateString('vi-VN');
+                    let recordId = 'ngam_' + todayString.replace(/\//g, '_');
+                    
+                    let cotMoc0h = parseInt(localStorage.getItem('moc_buoc_chan_0h_' + user)) || 0;
+                    let lastSavedSteps = parseInt(localStorage.getItem('last_saved_steps_' + user)) || 0;
+                    let lastSavedDate = localStorage.getItem('last_saved_date_' + user);
 
-                // Lấy ngày hiện tại chuẩn VN (DD/MM/YYYY)
-                const todayStr = new Date().toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
-                let savedDate = localStorage.getItem('ngay_luu_cot_moc_' + user);
-                let cotMoc0h = parseInt(localStorage.getItem('cot_moc_0h_' + user));
-
-                // 1. THUẬT TOÁN TRỪ HAO (Reset về 0 khi qua ngày mới)
-                if (!savedDate || savedDate !== todayStr || isNaN(cotMoc0h) || hardwareSteps < cotMoc0h) {
-                    cotMoc0h = hardwareSteps;
-                    localStorage.setItem('cot_moc_0h_' + user, cotMoc0h);
-                    localStorage.setItem('ngay_luu_cot_moc_' + user, todayStr);
-                    localStorage.setItem('last_saved_steps_' + user, 0); 
-                }
-
-                // 2. TÍNH SỐ BƯỚC & CHUYỂN ĐỔI SANG KM, CALO
-                let buocHomNay = hardwareSteps - cotMoc0h;
-                if (buocHomNay <= 0) return;
-
-                let weight = parseFloat(localStorage.getItem('appUser_weight')) || 65;
-                let stride = parseFloat(localStorage.getItem('appUser_stride')) || 0.7;
-
-                let caloHomNay = (buocHomNay * weight * 0.0005).toFixed(1);
-                let kmHomNay = (buocHomNay * stride / 1000).toFixed(2);
-
-                // 3. TẠO THẺ TIẾN TRÌNH CẢ NGÀY (Nó sẽ tự gộp vào Thẻ Xanh Dương của ngày hôm đó)
-                const recordId = "bg_walk_" + todayStr.replace(/\//g, '');
-                let dateParts = todayStr.split('/'); 
-                
-                // ĐÃ FIX TOÁN HỌC: Chuyển DD/MM/YYYY thành YYYY-MM-DD để new Date() không bị lỗi NaN
-                let isYearFirst = dateParts.length === 4; 
-                let isoDateStr = isYearFirst ? `${dateParts}-${dateParts[3]}-${dateParts[4]}` : `${dateParts[4]}-${dateParts[3]}-${dateParts}`;
-                let baseTimestamp = new Date(`${isoDateStr}T00:00:00`).getTime();
-
-                const recordData = {
-                    ngay: todayStr, gio_bat_dau: "Cả ngày", gio_ket_thuc: "Ngầm",
-                    thoi_gian: "00:00", van_toc: "0.00", quang_duong: kmHomNay,
-                    buoc_chan: buocHomNay, calo: caloHomNay, timestamp: baseTimestamp,
-                    loai_hinh: 'walk', toado_path: []
-                };
-
-                // 4. BẢO VỆ MÁY CHỦ: BẮN LÊN FIREBASE KHI ĐI ĐƯỢC THÊM 50 BƯỚC
-                let lastSavedSteps = parseInt(localStorage.getItem('last_saved_steps_' + user)) || 0;
-                if (buocHomNay - lastSavedSteps >= 50) {
-                    let buocThem = buocHomNay - lastSavedSteps;
-                    let caloThem = buocThem * weight * 0.0005;
-                    let kmThem = buocThem * stride / 1000;
-
-                    if (typeof window.db !== 'undefined') {
-                        // Nhồi thẻ ngầm vào Firebase (Tự động ghi đè thẻ ngầm cũ của hôm nay)
-                        window.db.ref('tien_trinh_tap_luyen/' + user + '/' + recordId).set(recordData);
-                        
-                        // Cộng dồn Thống kê tổng (Level, Tổng Km)
-                        if (typeof window.congDonThongKe === 'function') window.congDonThongKe(kmThem, buocThem, caloThem, 0);
-                        
-                        // Lệnh cho UI ở Tab 2 tự động nảy số Update thời gian thực
-                        window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then((snapshot) => {
-                            if(snapshot.val() && typeof window.veToanBoTienTrinh === 'function') {
-                                window.capNhatBangTichLuy(); // Cập nhật số tổng trên top
-                                window.veToanBoTienTrinh(snapshot.val()); // Cập nhật thẻ Accordion
-                            }
-                        });
+                    // Reset mốc nếu sang ngày mới
+                    if (lastSavedDate !== todayString) {
+                        cotMoc0h = hardwareSteps;
+                        lastSavedSteps = 0;
+                        localStorage.setItem('moc_buoc_chan_0h_' + user, cotMoc0h);
+                        localStorage.setItem('last_saved_date_' + user, todayString);
                     }
-                    localStorage.setItem('last_saved_steps_' + user, buocHomNay);
 
-                    // Mắt thần nổ cúp Thợ Săn ẩn
-                    if (typeof window.kiemTraVaNoHuyHieuAn === 'function' && buocHomNay >= 10000) {
-                        window.kiemTraVaNoHuyHieuAn('tho_san_tien'); 
+                    let buocHomNay = hardwareSteps - cotMoc0h;
+                    if (buocHomNay <= 0) return;
+
+                    let weight = parseFloat(localStorage.getItem('appUser_weight')) || 65;
+                    let stride = parseFloat(localStorage.getItem('appUser_stride')) || 0.7;
+                    let caloHomNay = (buocHomNay * weight * 0.0005).toFixed(1);
+                    let kmHomNay = (buocHomNay * stride / 1000).toFixed(2);
+
+                    let recordData = {
+                        ngay: todayString, thoi_gian: "Cả ngày", loai_hinh: "Ngầm",
+                        quang_duong: kmHomNay, calo: caloHomNay,
+                        gio_bat_dau: "00:00", gio_ket_thuc: "Ngầm", phut_tap: 0,
+                        buoc_chan: buocHomNay, timestamp: nowD.getTime()
+                    };
+
+                    // Chỉ lưu & cập nhật lên mây mỗi 50 bước
+                    if (buocHomNay - lastSavedSteps >= 50) {
+                        let buocThem = buocHomNay - lastSavedSteps;
+                        let caloThem = buocThem * weight * 0.0005;
+                        let kmThem = buocThem * stride / 1000;
+                        
+                        if (typeof window.db !== 'undefined') {
+                            window.db.ref('tien_trinh_tap_luyen/' + user + '/' + recordId).set(recordData);
+                            if (typeof window.congDonThongKe === 'function') window.congDonThongKe(kmThem, buocThem, caloThem, 0);
+                            
+                            window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then((snapshot) => {
+                                if(snapshot.val() && typeof window.veToanBoTienTrinh === 'function') {
+                                    window.capNhatBangTichLuy();
+                                    window.veToanBoTienTrinh(snapshot.val());
+                                }
+                            });
+                        }
+                        localStorage.setItem('last_saved_steps_' + user, buocHomNay);
+                        
+                        // Cúp thợ săn
+                        if (typeof window.kiemTraVaNoHuyHieuAn === 'function' && buocHomNay >= 10000) {
+                            window.kiemTraVaNoHuyHieuAn('tho_san_tien');
+                        }
                     }
-                }
-            }, function(error) {
-                console.log("Lỗi Pedometer Updates:", error);
-            });
-        } else {
-            console.log("Thiết bị này không có chip đếm bước vật lý!");
-        }
-    }, function(error) {
-        console.log("Lỗi kiểm tra Pedometer:", error);
-    });
+                }, function(error) { console.log("Lỗi Pedometer Updates:", error); });
+            } else {
+                console.log("Thiết bị này không có chip đếm bước vật lý!");
+            }
+        }, function(error) { console.log("Lỗi kiểm tra Pedometer:", error); });
+    };
+
+    // 🛑 ÉP HỆ ĐIỀU HÀNH MỞ POPUP XIN QUYỀN TRƯỚC KHI KÍCH HOẠT CHIP (Dành riêng Android 10+)
+    if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissions) {
+        var permissions = window.cordova.plugins.permissions;
+        permissions.checkPermission(permissions.ACTIVITY_RECOGNITION, function(status) {
+            if (status.hasPermission) {
+                kichHoatVanDuLieu(); // Đã có quyền -> Bơm data luôn
+            } else {
+                window.moCustomAlert({
+                    type: 'confirm', icon: '🏃', title: 'Quyền hoạt động', titleColor: '#004BAd',
+                    message: 'Hệ thống cần quyền Truy cập hoạt động thể chất để có thể đếm bước chân ngầm của bạn.',
+                    confirmColor: '#28a745',
+                    callback: function(confirmed) {
+                        if (confirmed) {
+                            permissions.requestPermission(permissions.ACTIVITY_RECOGNITION, function(s) {
+                                if(s.hasPermission) kichHoatVanDuLieu();
+                                else alert("⚠️ Bạn đã từ chối, Cảm biến đếm bước chân tự động sẽ bị khóa!");
+                            }, () => {});
+                        }
+                    }
+                });
+            }
+        });
+    } else {
+        // Fallback xông thẳng vào nếu không cài plugin quyền
+        kichHoatVanDuLieu();
+    }
 };
 
 // === KHỞI ĐỘNG HỆ THỐNG KHI MỞ APP ===

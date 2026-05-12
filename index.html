@@ -1514,18 +1514,14 @@ NHẬN THƯỞNG
                     </div>
                 </div>
 
-                <!-- KHU VỰC 3: ÂM THANH & TRẢI NGHIỆM -->
-                <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
-                    <h4 style="margin: 0 0 15px 0; color: #6f42c1; font-size: 16px;">🔊 Âm thanh hệ thống</h4>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <span style="font-size: 14px; font-weight: bold; color: #444;">Hiệu ứng âm thanh (Pop, Up)</span>
-                        <input type="checkbox" id="toggle-sys-sound" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleAmThanhHeThong(this.checked)">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 14px; font-weight: bold; color: #444;">Mèo lải nhải (Voice/Chat)</span>
-                        <input type="checkbox" id="toggle-cat-voice" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleCatLaiNhaiSettings(this.checked)">
-                    </div>
-                </div>
+               <!-- KHU VỰC 3: TRẢI NGHIỆM TRỢ LÝ ẢO -->
+<div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+<h4 style="margin: 0 0 15px 0; color: #6f42c1; font-size: 16px;">🔊 Trợ lý Mèo AI</h4>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<span style="font-size: 14px; font-weight: bold; color: #444;">Mèo lải nhải (Voice/Chat)</span>
+<input type="checkbox" id="toggle-cat-voice" checked style="transform: scale(1.5); accent-color: #6f42c1;" onchange="window.toggleCatLaiNhaiSettings(this.checked)">
+</div>
+</div>
 
                 <!-- KHU VỰC 4: QUẢN LÝ BỘ NHỚ -->
             <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
@@ -1537,7 +1533,7 @@ NHẬN THƯỞNG
 
             <!-- KHU VỰC 5: TẢI ỨNG DỤNG ANDROID -->
             <div style="background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
-            <h4 style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;"> Trải nghiệm Native App</h4>
+            <h4 style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;">( v1.0.4.5 - 11/5/26)</h4>
             <button onclick="window.open('https://drive.google.com/file/d/1p26tn6PPbpmyak1yTvSPgO9p73lzPhGo/view?usp=drivesdk', '_blank')" style="width: 100%; padding: 12px; background: #e8f5e9; color: #28a745; border: 1px solid #c3e6cb; border-radius: 10px; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
             <span style="font-size: 20px;">🎮</span> Tải ứng dụng (.APK)
             </button>
@@ -2799,22 +2795,28 @@ window.veToanBoTienTrinh = function(dataObj) {
         let timeStr = `${phut}p${giay}s`;
         let ngayId = ngay.replace(/\//g, '');
 
-        // A. VẼ VIÊN THUỐC (PILL) HEADER NGÀY
-        html += `
-        <div class="daily-group" style="margin-bottom: 15px;">
-            <div onclick="window.moRongNgay('${ngayId}')" style="background: linear-gradient(135deg, #004BAd, #1565c0); color: white; padding: 12px 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,75,173,0.3); user-select: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-                <div style="font-weight: 900; font-size: 15px; white-space: nowrap;">📅 ${ngay}</div>
-                <div style="font-size: 12px; font-weight: bold; display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px;">
-                    <span>📏 ${g.tongKm.toFixed(1)}km</span>
-                    <span>👟 ${g.tongBuoc} bước</span>
-                    <span>🔥 ${g.tongCalo.toFixed(1)}kcal</span>
-                </div>
-            </div>
-            <div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
-        `;
+        // 1. LỌC TÌM CÁC BÀI TẬP THỰC SỰ (Bỏ qua thẻ "Ngầm" của Pedometer)
+let cacBaiTapThuc = g.items.filter(r => r.data.gio_ket_thuc !== "Ngầm");
+let isClickable = cacBaiTapThuc.length > 0;
+let clickEvent = isClickable ? `onclick="window.moRongNgay('${ngayId}')"` : '';
+let muiTen = isClickable ? `▼` : `🔒`; // Hiện nút khóa nếu chỉ có bước chân ngầm
 
-        // B. VẼ CÁC THẺ CON VỚI BỐ CỤC CHUẨN + HIỆU ỨNG TRƯỢT (SWIPE-TO-DELETE)
-        g.items.forEach(r => {
+// A. VẼ VIÊN THUỐC (PILL) HEADER NGÀY
+html += `
+<div class="daily-group" style="margin-bottom: 15px;">
+<div ${clickEvent} style="background: linear-gradient(135deg, #004BAd, #1565c0); color: white; padding: 12px 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; cursor: ${isClickable ? 'pointer' : 'default'}; box-shadow: 0 4px 6px rgba(0,75,173,0.3); user-select: none; transition: transform 0.2s;" ${isClickable ? `onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"` : ''}>
+<div style="font-weight: 900; font-size: 15px; white-space: nowrap;">📅 ${ngay} <span style="font-size:12px; opacity:0.8; margin-left:3px;">${muiTen}</span></div>
+<div style="font-size: 12px; font-weight: bold; display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px;">
+<span>📏 ${g.tongKm.toFixed(1)}km</span>
+<span>👟 ${g.tongBuoc} bước</span>
+<span>🔥 ${g.tongCalo.toFixed(1)}kcal</span>
+</div>
+</div>
+<div id="group-${ngayId}" style="display: none; padding-top: 15px; flex-direction: column; gap: 15px; transform-origin: top;">
+`;
+
+// B. CHỈ VẼ CÁC THẺ CON CHO BÀI TẬP THỰC SỰ (CÁC CHỈ SỐ NGẦM ĐÃ ĐƯỢC GỘP VÀO HEADER Ở TRÊN)
+cacBaiTapThuc.forEach(r => {
             let data = r.data;
             let recordKey = r.key;
             let isIndoor = data.loai_hinh === 'trong_nha';

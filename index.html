@@ -3699,10 +3699,20 @@ window.toggleRadarAndShare = function() {
 
                             const friendIcon = L.divIcon({ className: 'custom-gps-icon', html: customGPSHtml, iconSize: L.point(44, 55), iconAnchor: L.point(22, 55), popupAnchor: L.point(0, -50) });
                             const newMarker = L.marker([lat, lng], {icon: friendIcon});
-                            
-                            newMarker.bindPopup(`<b>${user}</b><br>Tình trạng: ${isFriend ? "Bạn bè" : "Người lạ"}`);
-                            if (banDoHienTai) newMarker.addTo(banDoHienTai);
-                            friendMarkers[user] = newMarker;
+
+// Giao diện Popup xịn xò có tích hợp nút Chỉ đường
+let btnStyle = "display:block; width:100%; padding:10px; margin-top:10px; background:#004BAd; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,75,173,0.3); transition: transform 0.2s;";
+let popupHTML = `
+<div style="text-align:center; min-width: 170px;">
+    <div style="font-size: 16px; font-weight: 900; color: #004BAd; margin-bottom: 5px;">${user}</div>
+    <div style="font-size: 12px; color: #28a745; background: #e8f5e9; padding: 3px 10px; border-radius: 12px; display: inline-block; font-weight: bold;">Trạng thái: ${isFriend ? "Bạn bè 🤝" : "Người lạ 👤"}</div>
+    <hr style="border: 0.5px dashed #ccc; margin: 12px 0 8px 0;">
+    <button style="${btnStyle}" onclick="window.routeFromCurrentTo(${lat}, ${lng})">📍 Chỉ đường đến đây</button>
+</div>`;
+
+newMarker.bindPopup(popupHTML);
+if (banDoHienTai) newMarker.addTo(banDoHienTai);
+friendMarkers[user] = newMarker;
                         }
                     }
                 }

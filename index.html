@@ -7696,6 +7696,7 @@ if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissio
     // Fallback xông thẳng vào nếu không cài plugin quyền (Dành cho bản Web Test)
     kichHoatVanDuLieu();
     }
+};
 // === HỆ THỐNG ĐẾM BƯỚC CHÂN TỰ ĐỘNG & BẤT TỬ (PEDOMETER CORDOVA) ===
 window.khoiDongDemBuocNgam = function() {
     if (typeof window.pedometer === 'undefined') {
@@ -9078,7 +9079,7 @@ if (window.visualViewport) {
             }, 300); // Đợi bàn phím nảy lên hoàn toàn
         });
 
-        // Khi thu bàn phím xuống thì trả lại nguyên trạng full màn và gỡ váy che chắn
+        // Khi thu bàn phím xuống thì trả lại nguyên trạng full màn
         input.addEventListener('blur', () => {
             const catScreen = document.getElementById('cat-chat-screen');
             const humanScreen = document.getElementById('human-chat-screen');

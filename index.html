@@ -906,21 +906,21 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
 
             <h3 style="margin: 0 0 10px 0; color: #28a745; text-align: center; border-bottom: 2px dashed #28a745; padding-bottom: 5px; font-size: 18px;">📜 Nhiệm Vụ Hôm Nay</h3>
 
-            <!-- Danh sách nhiệm vụ -->
+           <!-- Danh sách nhiệm vụ -->
             <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                 <div style="text-align: left;">
                     <div style="font-weight: bold; font-size: 14px; color: #333;">Uống 1 cốc nước 250ml</div>
                     <div style="font-size: 12px; color: #f57f17; font-weight: 900;">💰 +1 Xu</div>
                 </div>
-                <button onclick="window.nhanThuongNhiemVu(this, 1, 'Uống 1 cốc nước 250ml')" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Nhận</button>
+                <button id="btn-quest-water" onclick="window.nhanThuongNhiemVu('water', 1, this)" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s;">Nhận</button>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                 <div style="text-align: left;">
-                    <div style="font-weight: bold; font-size: 14px; color: #333;">Hoàn thành 1 bài tập nhà</div>
+                    <div style="font-weight: bold; font-size: 14px; color: #333;">Làm 1 bài tập tại nhà</div>
                     <div style="font-size: 12px; color: #f57f17; font-weight: 900;">💰 +2 Xu</div>
                 </div>
-                <button onclick="window.nhanThuongNhiemVu(this, 2, 'Tập luyện phục hồi tại nhà')" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Nhận</button>
+                <button id="btn-quest-indoor" onclick="window.nhanThuongNhiemVu('indoor', 2, this)" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s;">Nhận</button>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -928,7 +928,7 @@ background: #004BAd; color: white; transform: scale(1.1); box-shadow: 0 4px 8px 
                     <div style="font-weight: bold; font-size: 14px; color: #333;">Đi bộ 500 bước</div>
                     <div style="font-size: 12px; color: #f57f17; font-weight: 900;">💰 +3 Xu</div>
                 </div>
-                <button onclick="window.nhanThuongNhiemVu(this, 3, 'Đi bộ 500 bước chạm cỏ')" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Nhận</button>
+                <button id="btn-quest-steps" onclick="window.nhanThuongNhiemVu('steps', 3, this)" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s;">Nhận</button>
             </div>
 
             <div style="margin-top: auto; font-size: 11px; color: #888; text-align: center; font-style: italic;">Làm nhiệm vụ kiếm xu nộp sưu cho Mèo nhé!</div>
@@ -5426,25 +5426,106 @@ bạn cách ${userId} <span id="${distId}">đang tính...</span>
     });
 };
     
-// === BỘ NÃO GHI CHÚ VÀ NHIỆM VỤ HẰNG NGÀY ===
-window.nhanThuongNhiemVu = function(btn, xu, tenNV) {
-    let user = localStorage.getItem('currentUser');
+// === HỆ THỐNG KIỂM TRA & NHẬN THƯỞNG NHIỆM VỤ BỌC THÉP ===
+
+// 1. Quét trạng thái khi mới mở App (Khóa các nút đã nhận hôm nay)
+window.kiemTraTrangThaiNhiemVu = function() {
+    const user = localStorage.getItem('currentUser');
     if(!user) return;
-    let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
-    currentCoin += xu;
-    localStorage.setItem('user_coins_' + user, currentCoin);
-    if(typeof window.capNhatGiaoDienXu === 'function') window.capNhatGiaoDienXu();
-    if(typeof window.phatAmThanh === 'function') window.phatAmThanh('thanh_tuu');
-    if(typeof bungPhaoHoa === 'function') bungPhaoHoa(); // Tung tóe pháo hoa
+    const todayStr = new Date().toLocaleDateString('vi-VN');
 
-    // Khóa nút
-    btn.innerText = "Đã nhận";
-    btn.style.background = "#ccc";
-    btn.disabled = true;
+    ['water', 'indoor', 'steps'].forEach(loai => {
+        let btn = document.getElementById('btn-quest-' + loai);
+        if(btn && localStorage.getItem(`quest_${loai}_${user}_${todayStr}`) === 'true') {
+            btn.innerText = "Đã nhận";
+            btn.style.background = "#ccc";
+            btn.disabled = true;
+        }
+    });
+};
+window.addEventListener('load', () => { setTimeout(() => window.kiemTraTrangThaiNhiemVu(), 2000); });
 
-    // Gợi ý khoe lên Feed
-    if(confirm(`Tuyệt vời! Bạn nhận được ${xu} 💰.\nBạn có muốn đăng bài khoe thành tích này lên Cộng đồng không?`)) {
-        window.moTrangThaiGhiChu(`Tôi vừa hoàn thành nhiệm vụ: ${tenNV} và nhận được ${xu} 💰! 🔥`);
+// 2. Logic kiểm tra Database và Trả Xu
+window.nhanThuongNhiemVu = function(loai, xu, btn) {
+    const user = localStorage.getItem('currentUser');
+    if(!user) return;
+    const todayStr = new Date().toLocaleDateString('vi-VN');
+
+    // Chống Spam F5
+    if (localStorage.getItem(`quest_${loai}_${user}_${todayStr}`) === 'true') {
+        alert("Nhiệm vụ này đã nhận thưởng hôm nay rồi! Chờ đến 0h ngày mai nhé.");
+        return;
+    }
+
+    const xacNhanNhanThuong = () => {
+        let currentCoin = parseInt(localStorage.getItem('user_coins_' + user)) || 0;
+        currentCoin += xu;
+        localStorage.setItem('user_coins_' + user, currentCoin);
+        // Lưu cờ với Mác Ngày hiện tại (qua ngày mới tự động hết hiệu lực)
+        localStorage.setItem(`quest_${loai}_${user}_${todayStr}`, 'true');
+
+        if(typeof window.capNhatGiaoDienXu === 'function') window.capNhatGiaoDienXu();
+        if(typeof window.phatAmThanh === 'function') window.phatAmThanh('thanh_tuu');
+        if(typeof bungPhaoHoa === 'function') bungPhaoHoa();
+
+        btn.innerText = "Đã nhận";
+        btn.style.background = "#ccc";
+        btn.disabled = true;
+        
+        // XÓA BỎ THÔNG BÁO BẮT CHIA SẺ LÊN LOCKET GÂY PHIỀN PHỨC!
+        window.moCustomAlert({
+            type: 'alert', icon: '💰', title: 'Nhiệm vụ hoàn tất!', titleColor: '#f57f17',
+            message: `Hoàn thành xuất sắc! Đã cộng ${xu} Xu vào ví của bạn.`
+        });
+    };
+
+    // KIỂM TRA ĐIỀU KIỆN THEO LOẠI NHIỆM VỤ
+    if (loai === 'water') {
+        xacNhanNhanThuong(); // Tier 1: Cho nhận luôn để nuôi thói quen mở app
+    } else {
+        // Tier 2 & 3: Móc thẳng vào Firebase quét tiến trình hôm nay
+        btn.innerText = "Đang check...";
+        if (!window.db) {
+            alert("Lỗi mạng! Không thể kiểm tra dữ liệu từ vệ tinh.");
+            btn.innerText = "Nhận";
+            return;
+        }
+
+        window.db.ref('tien_trinh_tap_luyen/' + user).once('value').then(snap => {
+            let data = snap.val();
+            let passedIndoor = false;
+            let soBuocHomNay = 0;
+
+            if (data) {
+                for (let key in data) {
+                    let rec = data[key];
+                    if (rec.ngay === todayStr) {
+                        // Quét xem hôm nay có bài tập trong nhà nào không
+                        if (rec.loai_hinh === 'trong_nha') passedIndoor = true;
+                        // Cộng dồn toàn bộ số bước chân của hôm nay
+                        soBuocHomNay += (parseInt(rec.buoc_chan) || 0);
+                    }
+                }
+            }
+
+            // Đối chiếu kết quả
+            if (loai === 'indoor') {
+                if (passedIndoor) xacNhanNhanThuong();
+                else {
+                    alert(" Cậu chưa hoàn thành bài tập phục hồi nào trong Sổ tay hôm nay cả! Lừa Mèo à?");
+                    btn.innerText = "Nhận";
+                }
+            } else if (loai === 'steps') {
+                if (soBuocHomNay >= 500) xacNhanNhanThuong();
+                else {
+                    alert(` Lười chảy thây! Cậu mới đi được ${soBuocHomNay}/500 bước hôm nay. Lết xác đi bộ ngay!`);
+                    btn.innerText = "Nhận";
+                }
+            }
+        }).catch(err => {
+            alert("Lỗi quét dữ liệu! Thử lại sau.");
+            btn.innerText = "Nhận";
+        });
     }
 };
 

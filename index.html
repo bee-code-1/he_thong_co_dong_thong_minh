@@ -2596,7 +2596,7 @@ window.hienThiRecap = function() {
         
         // Mèo chúc mừng
         if (typeof catBubble !== 'undefined') {
-            const postMsgs = ["Đỉnh đấy! Mèo khen cậu ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi cậu", "Đến giờ đớp rồi 😋"];
+            const postMsgs = ["Đỉnh đấy! Mèo khen ", "Recap xịn, cho Mèo ké tí", "Người hôi rồi, tắm đi", "Đến giờ đớp rồi 😋"];
             catBubble.innerText = postMsgs[Math.floor(Math.random() * postMsgs.length)];
             catBubble.style.backgroundColor = '#fff9c4';
             catBubble.style.border = '2px solid #ffc107';
@@ -3262,7 +3262,7 @@ window.indoorPoseModel.onResults((results) => {
                         modalBg.style.backgroundColor = "#81c784"; 
                         setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
 
-                        if(window.reps === window.targetReps) window.meoNoi("Ngon lành! Cậu tập tốt lắm.");
+                        if(window.reps === window.targetReps) window.meoNoi("Ngon lành! Bạn tập tốt lắm.");
                     }
                 }
             }
@@ -3332,7 +3332,7 @@ else if (window.currentBaiTap === "cat_cow") {
                 modalBg.style.transition = "background-color 0.3s ease";
                 modalBg.style.backgroundColor = "#81c784"; // Chớp nền báo 1 rep
                 setTimeout(() => { modalBg.style.backgroundColor = "#e8f5e9"; }, 400);
-                if(window.reps === window.targetReps) window.meoNoi("Tuyệt vời! Cột sống của cậu đã được giải phóng!");
+                if(window.reps === window.targetReps) window.meoNoi("Tuyệt vời! Cột sống của bạn đã được giải phóng!");
             }
         }
     }
@@ -3475,7 +3475,7 @@ window.kiemTraMucTieuTrongNha = function() {
     document.getElementById('indoor-reps-display').innerText = `${window.reps} / ${window.targetReps}`;
     if (window.reps >= window.targetReps) {
         window.phatAmThanh('thanh_tuu');
-        window.meoNoi("Quá đỉnh! Cậu đã hoàn thành mục tiêu rồi!");
+        window.meoNoi("Quá đỉnh! Bạn đã hoàn thành mục tiêu rồi!");
         
         // Tắt camera, tắt đồng hồ
         window.ketThucTapTrongNha(true); 
@@ -3651,9 +3651,9 @@ window.chonCheDoTheThao = function(e, mode) {
 
     // Báo cho AI Mèo biết
     if (typeof catBubble !== 'undefined' && typeof catImgObj !== 'undefined') {
-        if (mode === 'walk') catBubble.innerText = "Đi bộ tản mạn à? Nhớ xoay khớp cổ chân nhé cậu! 😼";
+        if (mode === 'walk') catBubble.innerText = "Đi bộ tản mạn à? Nhớ xoay khớp cổ chân nhé ! 😼";
         else if (mode === 'cycle') catBubble.innerText = "Đạp xe bứt tốc à? Nhớ đi sát lề phải và cẩn thận xe cộ nhé! 🚴💨";
-        else catBubble.innerText = "Chạy bộ đốt mỡ hả? Cháy lên cậu ơi! 🔥";
+        else catBubble.innerText = "Chạy bộ đốt mỡ hả? Cháy lên 🔥";
 
         catImgObj.src = getAnhMacDinh();
         catBubble.style.backgroundColor = '#e3f2fd';
@@ -5512,13 +5512,13 @@ window.nhanThuongNhiemVu = function(loai, xu, btn) {
             if (loai === 'indoor') {
                 if (passedIndoor) xacNhanNhanThuong();
                 else {
-                    alert(" Cậu chưa hoàn thành bài tập phục hồi nào trong Sổ tay hôm nay cả! Lừa Mèo à?");
+                    alert(" Bạn chưa hoàn thành bài tập phục hồi nào trong Sổ tay hôm nay cả! Lừa Mèo à?");
                     btn.innerText = "Nhận";
                 }
             } else if (loai === 'steps') {
                 if (soBuocHomNay >= 500) xacNhanNhanThuong();
                 else {
-                    alert(` Lười chảy thây! Cậu mới đi được ${soBuocHomNay}/500 bước hôm nay. Lết xác đi bộ ngay!`);
+                    alert(` Lười chảy thây! Bạn mới đi được ${soBuocHomNay}/500 bước hôm nay. Lết xác đi bộ ngay!`);
                     btn.innerText = "Nhận";
                 }
             }
@@ -7003,9 +7003,9 @@ window.xuLyGoiYTuDong = function(cauHoi) {
         // 🎲 NHÁNH 4 CÂU HỎI VU VƠ 
         if (cauHoi === 'Mèo làm được gì?') {
             const arr = [
-                "Mèo có thể soi thấu lượng mỡ thừa của cậu, đánh hơi thấy khói bụi cách đây chục cây số, và chửi cậu mỗi khi cậu lười! Đủ xịn chưa? 😼",
+                "Mèo có thể soi thấu lượng mỡ thừa của bạn, đánh hơi thấy khói bụi cách đây chục cây số, và mắng mỗi khi bạn lười! Đủ xịn chưa? 😼",
                 "Làm chúa tể thế giới! 🌍 Còn việc phụ là nhắc nhở cái đứa đang cầm điện thoại xách mông lên đi tập để kéo dài tuổi thọ. 😾",
-                "Đo nhiệt độ, tính calo, vẽ lộ trình né khói bụi, và tấu hài mua vui cho cậu. Mèo gánh còng lưng cái app này đấy! Lo mà đi tập đi! 🐟"
+                "Đo nhiệt độ, tính calo, vẽ lộ trình né khói bụi, và tấu hài mua vui cho bạn. Mèo gánh còng lưng cái app này đấy! Lo mà đi tập đi! 🐟"
             ];
             aiMessage = arr[Math.floor(Math.random() * arr.length)];
             nextButtonsHTML = btnLoop;
@@ -7670,34 +7670,35 @@ window.khoiDongDemBuocNgam = function() {
         }, function(error) { console.log("Lỗi kiểm tra Pedometer:", error); });
     };
 
-    // 🛑 ÉP HỆ ĐIỀU HÀNH MỞ POPUP XIN QUYỀN TRƯỚC KHI KÍCH HOẠT CHIP (Dành riêng Android 10+)
-    if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissions) {
-        var permissions = window.cordova.plugins.permissions;
-        permissions.checkPermission(permissions.ACTIVITY_RECOGNITION, function(status) {
-            if (status.hasPermission) {
-                kichHoatVanDuLieu(); // Đã có quyền -> Bơm data luôn
-            } else {
-                window.moCustomAlert({
-                    type: 'confirm', icon: '🏃', title: 'Quyền hoạt động', titleColor: '#004BAd',
-                    message: 'Hệ thống cần quyền Truy cập hoạt động thể chất để có thể đếm bước chân ngầm của bạn.',
-                    confirmColor: '#28a745',
-                    callback: function(confirmed) {
-                        if (confirmed) {
-                            permissions.requestPermission(permissions.ACTIVITY_RECOGNITION, function(s) {
-                                if(s.hasPermission) kichHoatVanDuLieu();
-                                else alert("⚠️ Bạn đã từ chối, Cảm biến đếm bước chân tự động sẽ bị khóa!");
-                            }, () => {});
-                        }
-                    }
-                });
-            }
-        });
-    } else {
-        // Fallback xông thẳng vào nếu không cài plugin quyền
-        kichHoatVanDuLieu();
-    }
-};
+   // 🛑 ÉP HỆ ĐIỀU HÀNH MỞ POPUP XIN QUYỀN TRƯỚC KHI KÍCH HOẠT CHIP (Dành riêng Android 10+)
+if (window.cordova && window.cordova.plugins && window.cordova.plugins.permissions) {
+    var permissions = window.cordova.plugins.permissions;
+    // BẮT BUỘC DÙNG CHUỖI STRING THÔ VÌ HẰNG SỐ ACTIVITY_RECOGNITION BỊ LỖI UNDEFINED TRÊN CORDOVA
+    var reqPerm = 'android.permission.ACTIVITY_RECOGNITION'; 
 
+    permissions.checkPermission(reqPerm, function(status) {
+        if (status.hasPermission) {
+            kichHoatVanDuLieu(); // Đã có quyền -> Bơm data luôn
+        } else {
+            window.moCustomAlert({
+                type: 'confirm', icon: '🏃', title: 'Quyền hoạt động', titleColor: '#004BAd',
+                message: 'Hệ thống cần quyền Truy cập hoạt động thể chất để có thể lấy dữ liệu đếm bước chân ngầm của bạn.',
+                confirmColor: '#28a745',
+                callback: function(confirmed) {
+                    if (confirmed) {
+                        permissions.requestPermission(reqPerm, function(s) {
+                            if(s.hasPermission) kichHoatVanDuLieu();
+                            else alert("⚠️ Bạn đã từ chối, Cảm biến đếm bước chân tự động sẽ bị khóa!");
+                        }, () => {});
+                    }
+                }
+            });
+        }
+    });
+} else {
+    // Fallback xông thẳng vào nếu không cài plugin quyền (Dành cho bản Web Test)
+    kichHoatVanDuLieu();
+}
 // === KHỞI ĐỘNG HỆ THỐNG KHI MỞ APP ===
 window.addEventListener('load', function() {
     setTimeout(() => {
@@ -8022,7 +8023,7 @@ window.moBangSoTay = function(loai) {
     const dsDiaDiem = JSON.parse(localStorage.getItem('diadiem_canhan_' + user)) || [];
     
     if (dsDiaDiem.length === 0) {
-        content.innerHTML = `<div style="font-size:13px; color:#888; margin-top:10px; font-style:italic;">Cậu chưa lưu địa điểm nào cả. Hãy tìm trên bản đồ và lưu lại nhé!</div>`;
+        content.innerHTML = `<div style="font-size:13px; color:#888; margin-top:10px; font-style:italic;">Bạn chưa lưu địa điểm nào cả. Hãy tìm trên bản đồ và lưu lại nhé!</div>`;
     } else {
         let html = '';
         dsDiaDiem.forEach((diem) => {
